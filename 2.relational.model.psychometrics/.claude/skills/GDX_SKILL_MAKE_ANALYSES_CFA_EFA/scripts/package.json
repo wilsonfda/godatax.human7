@@ -1,0 +1,13 @@
+{
+  "name": "gdx-skill-make-analyses-cfa-efa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB fetcher for the GDX_SKILL_MAKE_ANALYSES_CFA_EFA skill: reads the Career Adapt-Abilities Scale (CAAS) raw item responses and precomputed dimension scores straight from Firebird (GDX_PSY_ITEM_RESPONSE / GDX_PSY_VARIABLE_RESULT) over the wire protocol (no native client library needed), instead of the .sav file.",
+  "main": "fetch_career_adaptability_items.js",
+  "scripts": {
+    "fetch": "node fetch_career_adaptability_items.js"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9"
+  }
+}

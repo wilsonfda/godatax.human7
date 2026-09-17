@@ -1,0 +1,6 @@
+# Regenerable artifacts (re-run fetch_career_adaptability_items.js / run_*_from_db.py
+# to recreate them) -- not committed, unlike the .sav-sourced originals in
+# ../../../analyses.CFA and ../../../analyses.EFA (samples.SQL/09-11), which stay
+# the authoritative record of that run.
+data/
+output/
