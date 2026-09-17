@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="Arial, Helvetica, sans-serif">
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <text x="800" y="70" text-anchor="middle" font-size="36" font-weight="700" fill="#1A1F36">Model 1 — Link Prediction</text>
+  <text x="800" y="105" text-anchor="middle" font-size="19" fill="#5B6478">Suggesting missing septenary-level mappings from the knowledge graph</text>
+
+  <!-- pipeline arrows -->
+  <defs>
+    <marker id="arrow1" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#9AA3B2"/>
+    </marker>
+  </defs>
+  <line x1="330" y1="330" x2="368" y2="330" stroke="#9AA3B2" stroke-width="3" marker-end="url(#arrow1)"/>
+  <line x1="630" y1="330" x2="668" y2="330" stroke="#9AA3B2" stroke-width="3" marker-end="url(#arrow1)"/>
+  <line x1="930" y1="330" x2="968" y2="330" stroke="#9AA3B2" stroke-width="3" marker-end="url(#arrow1)"/>
+  <line x1="1230" y1="330" x2="1268" y2="330" stroke="#9AA3B2" stroke-width="3" marker-end="url(#arrow1)"/>
+
+  <!-- Card 1: Knowledge Graph -->
+  <g transform="translate(70,160)">
+    <rect width="260" height="340" rx="14" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="2"/>
+    <circle cx="130" cy="16" r="16" fill="#4C51BF"/>
+    <text x="130" y="21" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">1</text>
+    <!-- mini graph icon -->
+    <g transform="translate(60,50)">
+      <line x1="15" y1="20" x2="70" y2="15" stroke="#C7CCDA" stroke-width="2"/>
+      <line x1="15" y1="20" x2="40" y2="70" stroke="#C7CCDA" stroke-width="2"/>
+      <line x1="70" y1="15" x2="100" y2="55" stroke="#C7CCDA" stroke-width="2"/>
+      <line x1="40" y1="70" x2="100" y2="55" stroke="#C7CCDA" stroke-width="2"/>
+      <circle cx="15" cy="20" r="9" fill="#4C51BF"/>
+      <circle cx="70" cy="15" r="9" fill="#4C51BF"/>
+      <circle cx="40" cy="70" r="9" fill="#4C51BF"/>
+      <circle cx="100" cy="55" r="9" fill="#4C51BF"/>
+    </g>
+    <text x="130" y="175" text-anchor="middle" font-size="19" font-weight="700" fill="#1A1F36">Knowledge Graph</text>
+    <text x="130" y="205" text-anchor="middle" font-size="14.5" fill="#5B6478">55 tables → nodes</text>
+    <text x="130" y="226" text-anchor="middle" font-size="14.5" fill="#5B6478">70 foreign keys → edges</text>
+    <text x="130" y="258" text-anchor="middle" font-size="13.5" fill="#8891A3">(GDX_SKILL_GODATAX_HUMAN7_BY_SPU)</text>
+  </g>
+
+  <!-- Card 2: Embeddings -->
+  <g transform="translate(370,160)">
+    <rect width="260" height="340" rx="14" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="2"/>
+    <circle cx="130" cy="16" r="16" fill="#0F9B8E"/>
+    <text x="130" y="21" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">2</text>
+    <!-- vector grid icon -->
+    <g transform="translate(65,55)">
+      <rect x="0" y="0" width="130" height="58" rx="6" fill="#E7F7F5" stroke="#0F9B8E" stroke-width="1.5"/>
+      <rect x="10" y="10" width="14" height="38" fill="#0F9B8E" opacity="0.85"/>
+      <rect x="32" y="18" width="14" height="30" fill="#0F9B8E" opacity="0.65"/>
+      <rect x="54" y="8" width="14" height="40" fill="#0F9B8E" opacity="0.9"/>
+      <rect x="76" y="24" width="14" height="24" fill="#0F9B8E" opacity="0.5"/>
+      <rect x="98" y="14" width="14" height="34" fill="#0F9B8E" opacity="0.75"/>
+    </g>
+    <text x="130" y="175" text-anchor="middle" font-size="19" font-weight="700" fill="#1A1F36">Node Embeddings</text>
+    <text x="130" y="205" text-anchor="middle" font-size="14.5" fill="#5B6478">Neo4j GDS · FastRP</text>
+    <text x="130" y="226" text-anchor="middle" font-size="14.5" fill="#5B6478">Each node → a vector encoding</text>
+    <text x="130" y="247" text-anchor="middle" font-size="14.5" fill="#5B6478">its neighborhood</text>
+  </g>
+
+  <!-- Card 3: Classifier -->
+  <g transform="translate(670,160)">
+    <rect width="260" height="340" rx="14" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="2"/>
+    <circle cx="130" cy="16" r="16" fill="#D97706"/>
+    <text x="130" y="21" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">3</text>
+    <!-- classifier icon: scale/balance -->
+    <g transform="translate(65,50)">
+      <line x1="65" y1="10" x2="65" y2="65" stroke="#D97706" stroke-width="3"/>
+      <line x1="20" y1="25" x2="110" y2="25" stroke="#D97706" stroke-width="3"/>
+      <circle cx="20" cy="25" r="12" fill="none" stroke="#D97706" stroke-width="2.5"/>
+      <circle cx="110" cy="25" r="12" fill="none" stroke="#D97706" stroke-width="2.5"/>
+      <text x="20" y="30" text-anchor="middle" font-size="13" fill="#D97706" font-weight="700">+</text>
+      <text x="110" y="30" text-anchor="middle" font-size="13" fill="#D97706" font-weight="700">−</text>
+    </g>
+    <text x="130" y="175" text-anchor="middle" font-size="19" font-weight="700" fill="#1A1F36">Classifier</text>
+    <text x="130" y="205" text-anchor="middle" font-size="14.5" fill="#5B6478">Trained on the 19 existing</text>
+    <text x="130" y="226" text-anchor="middle" font-size="14.5" fill="#5B6478">VARIABLE → LEVEL mappings</text>
+    <text x="130" y="255" text-anchor="middle" font-size="13.5" fill="#8891A3">positives vs. sampled non-edges</text>
+  </g>
+
+  <!-- Card 4: Ranked Suggestions -->
+  <g transform="translate(970,160)">
+    <rect width="260" height="340" rx="14" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="2"/>
+    <circle cx="130" cy="16" r="16" fill="#2563EB"/>
+    <text x="130" y="21" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">4</text>
+    <!-- ranked bars icon -->
+    <g transform="translate(55,50)">
+      <rect x="0" y="8" width="120" height="14" rx="4" fill="#2563EB"/>
+      <rect x="0" y="30" width="85" height="14" rx="4" fill="#60A5FA"/>
+      <rect x="0" y="52" width="55" height="14" rx="4" fill="#BFDBFE"/>
+    </g>
+    <text x="130" y="175" text-anchor="middle" font-size="19" font-weight="700" fill="#1A1F36">Ranked Suggestions</text>
+    <text x="130" y="205" text-anchor="middle" font-size="14.5" fill="#5B6478">Every "UNKNOWN" variable</text>
+    <text x="130" y="226" text-anchor="middle" font-size="14.5" fill="#5B6478">scored against all 7 levels</text>
+    <text x="130" y="255" text-anchor="middle" font-size="13.5" fill="#8891A3">top-3 candidates, with scores</text>
+  </g>
+
+  <!-- Card 5: Human Review -->
+  <g transform="translate(1270,160)">
+    <rect width="260" height="340" rx="14" fill="#FFFFFF" stroke="#E1E4EA" stroke-width="2"/>
+    <circle cx="130" cy="16" r="16" fill="#059669"/>
+    <text x="130" y="21" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">5</text>
+    <!-- checkmark icon -->
+    <g transform="translate(90,55)">
+      <circle cx="30" cy="30" r="30" fill="#E6F7F1"/>
+      <path d="M15,31 L25,42 L46,17" fill="none" stroke="#059669" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <text x="130" y="175" text-anchor="middle" font-size="19" font-weight="700" fill="#1A1F36">Human Review</text>
+    <text x="130" y="205" text-anchor="middle" font-size="14.5" fill="#5B6478">Accepted suggestion added to</text>
+    <text x="130" y="226" text-anchor="middle" font-size="14.5" fill="#5B6478">knowledge.js with justification</text>
+    <text x="130" y="255" text-anchor="middle" font-size="13.5" fill="#8891A3">model suggests, a person decides</text>
+  </g>
+
+  <!-- Caveat banner -->
+  <g transform="translate(70,560)">
+    <rect width="1460" height="120" rx="14" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="2"/>
+    <g transform="translate(30,30)">
+      <polygon points="30,4 58,54 2,54" fill="#EF4444"/>
+      <text x="30" y="45" text-anchor="middle" font-size="26" font-weight="700" fill="#FFFFFF">!</text>
+    </g>
+    <text x="110" y="35" font-size="19" font-weight="700" fill="#991B1B">Caveat: only 19 labeled examples today</text>
+    <text x="110" y="62" font-size="15.5" fill="#7F1D1D">Cross-validate, surface only high-confidence predictions, and grow the label set before trusting the model.</text>
+    <text x="110" y="86" font-size="15.5" fill="#7F1D1D">Treat this as a triage aid that ranks candidates for review — not a classifier that replaces the judgment call.</text>
+  </g>
+
+  <text x="800" y="860" text-anchor="middle" font-size="14" fill="#9AA3B2">GDX_HUMAN / 10.gdx.machine.learning — see Septenary_Link_Prediction_and_Community_Detection.md for full detail</text>
+</svg>
