@@ -1,0 +1,13 @@
+{
+  "name": "gdx-skill-new-study",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read-only Firebird catalog check for the GDX_SKILL_NEW_STUDY skill (same godatax.human database as GDX_SKILL_LOAD_RLT_MODEL_DB / GDX_SKILL_RECORD_NEW_STUDY, over the wire protocol, no native client library needed).",
+  "main": "check_catalog.js",
+  "scripts": {
+    "check": "node check_catalog.js"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9"
+  }
+}

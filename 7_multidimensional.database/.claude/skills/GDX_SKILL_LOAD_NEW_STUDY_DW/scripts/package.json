@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-load-new-study-dw",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader/writer for the GDX_SKILL_LOAD_NEW_STUDY_DW skill: loads one study's data from the five GDX_HUMAN OLTP schemas into the godatax_human_dw_model_firebird25.sql star schema, over the Firebird wire protocol (no native client library needed).",
+  "main": "load_new_study_dw.js",
+  "scripts": {
+    "load": "node load_new_study_dw.js",
+    "dry-run": "node load_new_study_dw.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9"
+  }
+}

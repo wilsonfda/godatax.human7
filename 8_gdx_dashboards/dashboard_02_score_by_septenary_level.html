@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Average Psychometric Score by Septenary Level</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 20px 20px 12px;
+    border: 1px solid var(--grid); overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 2px 8px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 4px 2px 10px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 8px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Average Psychometric Score by Septenary Level</h1>
+  <p class="subtitle">Mean <code>DW_FACT_PSY_VARIABLE_RESULT.RAW_SCORE</code> (1-5 scale) across all participants, grouped by the <code>DW_DIM_SEPTENARY_LEVEL</code> each variable resolves to. Level 1 (Physical Body) has no bar: no psychometric variable in this dataset maps to it (see GoDataX_Human_7_DW.md).</p>
+  <div class="chart-card">
+    <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show table</button></div>
+    
+    <svg class="chart-svg" viewBox="0 0 900 460" role="img" aria-label="Average Psychometric Score by Septenary Level">
+      <line class="grid-line" x1="56" x2="876" y1="400" y2="400"/>
+    <text class="axis-label" x="48" y="404" text-anchor="end">0</text>
+<line class="grid-line" x1="56" x2="876" y1="324" y2="324"/>
+    <text class="axis-label" x="48" y="328" text-anchor="end">1</text>
+<line class="grid-line" x1="56" x2="876" y1="248" y2="248"/>
+    <text class="axis-label" x="48" y="252" text-anchor="end">2</text>
+<line class="grid-line" x1="56" x2="876" y1="172" y2="172"/>
+    <text class="axis-label" x="48" y="176" text-anchor="end">3</text>
+<line class="grid-line" x1="56" x2="876" y1="96" y2="96"/>
+    <text class="axis-label" x="48" y="100" text-anchor="end">4</text>
+<line class="grid-line" x1="56" x2="876" y1="20" y2="20"/>
+    <text class="axis-label" x="48" y="24" text-anchor="end">5</text>
+      <line class="baseline" x1="56" x2="876" y1="400" y2="400"/>
+      <rect class="bar" x="77.86666666666667" y="183.39999999999998" width="92.93333333333332" height="216.60000000000002" rx="3" fill="#2a78d6"
+        data-tip="<strong>Vital/Etheric Body</strong><br>avg 2.85 (n=846)"></rect>
+      <text class="axis-label" x="124.33333333333334" y="175.39999999999998" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">2.85</text>
+      <text class="axis-label" x="124.33333333333334" y="420" text-anchor="middle">Vital/Etheric Body</text>
+<rect class="bar" x="214.53333333333333" y="113.48000000000002" width="92.93333333333332" height="286.52" rx="3" fill="#2a78d6"
+        data-tip="<strong>Astral Body</strong><br>avg 3.77 (n=1269)"></rect>
+      <text class="axis-label" x="261" y="105.48000000000002" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">3.77</text>
+      <text class="axis-label" x="261" y="420" text-anchor="middle">Astral Body</text>
+<rect class="bar" x="351.2" y="103.59999999999997" width="92.93333333333332" height="296.40000000000003" rx="3" fill="#2a78d6"
+        data-tip="<strong>Lower Mental Body</strong><br>avg 3.9 (n=1269)"></rect>
+      <text class="axis-label" x="397.66666666666663" y="95.59999999999997" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">3.9</text>
+      <text class="axis-label" x="397.66666666666663" y="420" text-anchor="middle">Lower Mental Body</text>
+<rect class="bar" x="487.8666666666667" y="107.39999999999998" width="92.93333333333332" height="292.6" rx="3" fill="#2a78d6"
+        data-tip="<strong>Higher Mental Body</strong><br>avg 3.85 (n=1692)"></rect>
+      <text class="axis-label" x="534.3333333333334" y="99.39999999999998" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">3.85</text>
+      <text class="axis-label" x="534.3333333333334" y="420" text-anchor="middle">Higher Mental Body</text>
+<rect class="bar" x="624.5333333333333" y="158.32" width="92.93333333333332" height="241.68" rx="3" fill="#2a78d6"
+        data-tip="<strong>Buddhic Body</strong><br>avg 3.18 (n=1269)"></rect>
+      <text class="axis-label" x="671" y="150.32" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">3.18</text>
+      <text class="axis-label" x="671" y="420" text-anchor="middle">Buddhic Body</text>
+<rect class="bar" x="761.1999999999999" y="93.71999999999997" width="92.93333333333332" height="306.28000000000003" rx="3" fill="#2a78d6"
+        data-tip="<strong>Atmic Body/Spirit</strong><br>avg 4.03 (n=423)"></rect>
+      <text class="axis-label" x="807.6666666666666" y="85.71999999999997" text-anchor="middle" fill="var(--ink-secondary)" font-size="11">4.03</text>
+      <text class="axis-label" x="807.6666666666666" y="420" text-anchor="middle">Atmic Body/Spirit</text>
+      <text class="axis-label" x="16" y="30" transform="rotate(-90 16 30)" text-anchor="end">Average raw score (1-5)</text>
+    </svg>
+    <table class="data-table"><thead><tr><th>Level</th><th>Average score</th><th>N (person x variable)</th></tr></thead>
+      <tbody><tr><td>Vital/Etheric Body</td><td>2.85</td><td>846</td></tr><tr><td>Astral Body</td><td>3.77</td><td>1269</td></tr><tr><td>Lower Mental Body</td><td>3.9</td><td>1269</td></tr><tr><td>Higher Mental Body</td><td>3.85</td><td>1692</td></tr><tr><td>Buddhic Body</td><td>3.18</td><td>1269</td></tr><tr><td>Atmic Body/Spirit</td><td>4.03</td><td>423</td></tr></tbody></table>
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    const svgEl = document.querySelector('.chart-svg');
+    const tableEl = document.querySelector('.data-table');
+    const showingTable = tableEl.classList.toggle('visible');
+    svgEl.classList.toggle('hidden-by-table', showingTable);
+    this.textContent = showingTable ? 'Show chart' : 'Show table';
+  });
+  
+    document.querySelectorAll('.bar').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });
+</script>
+</body>
+</html>

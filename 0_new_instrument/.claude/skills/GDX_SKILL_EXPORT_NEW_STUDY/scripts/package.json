@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-export-new-study",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader + Excel writer for the GDX_SKILL_EXPORT_NEW_STUDY skill: reads a new study's instruments/items/alternatives from Firebird and writes a blank .xlsx questionnaire to send to participants.",
+  "main": "export_new_study.js",
+  "scripts": {
+    "export": "node export_new_study.js"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9",
+    "exceljs": "^4.4.0"
+  }
+}

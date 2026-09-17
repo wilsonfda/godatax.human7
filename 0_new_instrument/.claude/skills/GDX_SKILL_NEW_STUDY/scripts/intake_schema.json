@@ -1,0 +1,129 @@
+{
+  "$comment": "Documentation of the intake contract between GDX_SKILL_NEW_STUDY (writer) and GDX_SKILL_RECORD_NEW_STUDY (reader). This is not enforced by a JSON-Schema library at runtime -- validate_intake.py hand-checks the same rules so neither skill needs an extra dependency. Column length limits are copied from psychometrics_model_firebird25.sql; keep them in sync if the DDL changes.",
+  "type": "object",
+  "required": ["study", "instruments"],
+  "properties": {
+    "study": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": {"type": "string", "maxLength": 200, "description": "GDX_PSY_STUDY.TITLE"},
+        "objective": {"type": ["string", "null"], "maxLength": 1000, "description": "GDX_PSY_STUDY.OBJECTIVE"},
+        "method": {"type": ["string", "null"], "maxLength": 1000, "description": "GDX_PSY_STUDY.METHOD"},
+        "start_date": {"type": ["string", "null"], "format": "date", "description": "GDX_PSY_STUDY.START_DATE, YYYY-MM-DD"},
+        "end_date": {"type": ["string", "null"], "format": "date", "description": "GDX_PSY_STUDY.END_DATE, YYYY-MM-DD"},
+        "status": {"type": "string", "enum": ["PLANNED", "ACTIVE", "COMPLETED", "CANCELLED"], "default": "PLANNED", "description": "GDX_PSY_STUDY.STATUS"}
+      }
+    },
+    "instruments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "phenomenon_name", "constructs", "variables", "items"],
+        "properties": {
+          "name": {"type": "string", "maxLength": 160, "description": "GDX_PSY_INSTRUMENT.NAME -- checked against check_catalog.js output before asking; must not collide with an existing instrument unless the user is intentionally adding a new version."},
+          "version": {"type": ["string", "null"], "maxLength": 30, "description": "GDX_PSY_INSTRUMENT.VERSION -- a short year/edition tag ONLY (e.g. '2024'), never the full author citation (VARCHAR(30) -- see catalog.py's truncation warning)."},
+          "type": {"type": "string", "maxLength": 50, "description": "GDX_PSY_INSTRUMENT.TYPE, e.g. LIKERT_SCALE, SINGLE_ITEM, SEMANTIC_DIFFERENTIAL, VISUAL_ANALOG."},
+          "description": {"type": ["string", "null"], "maxLength": 1000, "description": "GDX_PSY_INSTRUMENT.DESCRIPTION -- put full author citation here."},
+          "instructions": {"type": ["string", "null"], "description": "GDX_PSY_INSTRUMENT.INSTRUCTIONS (BLOB, no hard limit) -- the instruction text shown to a respondent before the items."},
+          "phenomenon_name": {"type": "string", "maxLength": 120, "description": "GDX_PSY_PHENOMENON.NAME -- must be UNIQUE in the whole database; reuse an existing one (see check_catalog.js) if this instrument measures a phenomenon already cataloged."},
+          "phenomenon_description": {"type": ["string", "null"], "maxLength": 1000},
+          "constructs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name", "definition"],
+              "properties": {
+                "name": {"type": "string", "maxLength": 120, "description": "GDX_PSY_CONSTRUCT.NAME -- UNIQUE database-wide."},
+                "domain": {"type": "string", "maxLength": 60, "default": "PSYCHOMETRIC_NEW"},
+                "definition": {"type": "string", "maxLength": 1000},
+                "weight_in_instrument": {"type": "number", "default": 1, "description": "GDX_PSY_INSTRUMENT_CONSTRUCT.WEIGHT"}
+              }
+            }
+          },
+          "variables": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["construct_name", "name", "indicator_name"],
+              "properties": {
+                "construct_name": {"type": "string", "description": "Must match a constructs[].name in this same instrument."},
+                "name": {"type": "string", "maxLength": 150, "description": "GDX_PSY_VARIABLE.NAME -- unique per construct."},
+                "description": {"type": ["string", "null"], "maxLength": 1000},
+                "operational_definition": {"type": ["string", "null"], "maxLength": 1000},
+                "variable_type": {"type": "string", "maxLength": 40, "default": "PSYCHOLOGICAL"},
+                "measurement_level": {"type": ["string", "null"], "maxLength": 30, "description": "NOMINAL, ORDINAL, INTERVAL or RATIO."},
+                "indicator_name": {"type": "string", "maxLength": 150, "description": "GDX_PSY_INDICATOR.NAME -- unique per variable; usually '<Variable name> (score)'."},
+                "indicator_description": {"type": ["string", "null"], "maxLength": 1000},
+                "indicator_type": {"type": ["string", "null"], "maxLength": 30},
+                "measurement_unit": {"type": ["string", "null"], "maxLength": 40},
+                "direction": {"type": ["string", "null"], "maxLength": 15, "description": "POSITIVE if a higher raw score means more of the construct, NEGATIVE if less."},
+                "min_value": {"type": ["number", "null"]},
+                "max_value": {"type": ["number", "null"]}
+              }
+            }
+          },
+          "response_anchor_sets": {
+            "type": "array",
+            "description": "Named, reusable groups of response alternatives, so a 30-item Likert instrument only has to state its 5 anchors once instead of once per item.",
+            "items": {
+              "type": "object",
+              "required": ["key", "alternatives"],
+              "properties": {
+                "key": {"type": "string", "description": "Local id referenced by items[].anchor_set. Not persisted as-is; each item still gets its own GDX_PSY_ITEM_ALTERNATIVE rows."},
+                "alternatives": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "object",
+                    "required": ["order", "label", "numeric_value"],
+                    "properties": {
+                      "order": {"type": "integer", "description": "GDX_PSY_ITEM_ALTERNATIVE.ALTERNATIVE_ORDER"},
+                      "label": {"type": "string", "maxLength": 300, "description": "GDX_PSY_ITEM_ALTERNATIVE.LABEL"},
+                      "numeric_value": {"type": "number", "description": "GDX_PSY_ITEM_ALTERNATIVE.NUMERIC_VALUE"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["order", "statement_text", "response_type", "variable_name"],
+              "properties": {
+                "order": {"type": "integer", "description": "GDX_PSY_INSTRUMENT_ITEM.ITEM_ORDER -- unique within the instrument."},
+                "statement_text": {"type": "string", "description": "GDX_PSY_INSTRUMENT_ITEM.STATEMENT_TEXT (BLOB, no hard limit) -- the exact wording read by the respondent."},
+                "response_type": {"type": "string", "maxLength": 30, "description": "GDX_PSY_INSTRUMENT_ITEM.RESPONSE_TYPE, e.g. LIKERT_5, LIKERT_7, BINARY, SINGLE_ITEM."},
+                "anchor_set": {"type": ["string", "null"], "description": "Must match a response_anchor_sets[].key in this same instrument; null only for response types with no fixed alternatives (e.g. open text)."},
+                "required": {"type": "integer", "enum": [0, 1], "default": 1, "description": "GDX_PSY_INSTRUMENT_ITEM.REQUIRED"},
+                "weight": {"type": "number", "default": 1, "description": "GDX_PSY_INSTRUMENT_ITEM.WEIGHT"},
+                "variable_name": {"type": "string", "description": "Which variables[].name (dimension) this item feeds. An item that loads on more than one dimension can be listed with extra_variables (see below)."},
+                "reversed": {"type": "integer", "enum": [0, 1], "default": 0, "description": "GDX_PSY_INDICATOR_ITEM.REVERSED -- 1 if this item is reverse-scored for its indicator."},
+                "indicator_item_weight": {"type": "number", "default": 1, "description": "GDX_PSY_INDICATOR_ITEM.WEIGHT (defaults to items[].weight if omitted)."},
+                "extra_variables": {
+                  "type": "array",
+                  "description": "Optional: additional (variable_name, reversed, indicator_item_weight) entries for an item that also loads on other dimensions besides variable_name.",
+                  "items": {
+                    "type": "object",
+                    "required": ["variable_name"],
+                    "properties": {
+                      "variable_name": {"type": "string"},
+                      "reversed": {"type": "integer", "enum": [0, 1], "default": 0},
+                      "indicator_item_weight": {"type": "number", "default": 1}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instrument x Kundalini Chakra: Average Score</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 20px 20px 12px;
+    border: 1px solid var(--grid); overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 2px 8px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 4px 2px 10px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 8px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Instrument x Kundalini Chakra: Average Score</h1>
+  <p class="subtitle">The same (instrument, level) averages as chart 3, relabeled through <code>DW_DIM_CHAKRA</code> (each chakra maps 1:1 to a septenary level, see <code>chakras_model_firebird25.sql</code>) -- reads the identical pattern through the energetic/chakra lens instead of the abstract "level" lens.</p>
+  <div class="chart-card">
+    <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show table</button></div>
+    
+    <svg class="chart-svg" viewBox="0 0 858 456" role="img" aria-label="Instrument x Kundalini Chakra: Average Score">
+      <rect class="cell" x="191" y="21" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="21" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="21" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Manipura (Solar Plexus)</strong><br>no data"></rect>
+        <rect class="cell" x="467" y="21" width="90" height="32" rx="4"
+          fill="#0d366b"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Anahata (Heart)</strong><br>avg 4.18 (n=423)"></rect>
+        <text x="512" y="41" text-anchor="middle" font-size="11" fill="#ffffff">4.18</text><rect class="cell" x="559" y="21" width="90" height="32" rx="4"
+          fill="#0d366b"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Vishuddha (Throat)</strong><br>avg 4.08 (n=846)"></rect>
+        <text x="604" y="41" text-anchor="middle" font-size="11" fill="#ffffff">4.08</text><rect class="cell" x="651" y="21" width="90" height="32" rx="4"
+          fill="#0d366b"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Ajna (Third Eye)</strong><br>avg 3.99 (n=423)"></rect>
+        <text x="696" y="41" text-anchor="middle" font-size="11" fill="#ffffff">3.99</text><rect class="cell" x="743" y="21" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Career Adapt-Abilities Scale</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="55" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Hardiness</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="55" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Hardiness</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="55" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Hardiness</strong> x <strong>Manipura (Solar Plexus)</strong><br>no data"></rect>
+        <rect class="cell" x="467" y="55" width="90" height="32" rx="4"
+          fill="#184f95"
+          data-tip="<strong>Hardiness</strong> x <strong>Anahata (Heart)</strong><br>avg 3.77 (n=423)"></rect>
+        <text x="512" y="75" text-anchor="middle" font-size="11" fill="#ffffff">3.77</text><rect class="cell" x="559" y="55" width="90" height="32" rx="4"
+          fill="#0d366b"
+          data-tip="<strong>Hardiness</strong> x <strong>Vishuddha (Throat)</strong><br>avg 4.03 (n=423)"></rect>
+        <text x="604" y="75" text-anchor="middle" font-size="11" fill="#ffffff">4.03</text><rect class="cell" x="651" y="55" width="90" height="32" rx="4"
+          fill="#cde2fb"
+          data-tip="<strong>Hardiness</strong> x <strong>Ajna (Third Eye)</strong><br>avg 2.81 (n=423)"></rect>
+        <text x="696" y="75" text-anchor="middle" font-size="11" fill="var(--ink)">2.81</text><rect class="cell" x="743" y="55" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Hardiness</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="89" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="89" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="89" width="90" height="32" rx="4"
+          fill="#184f95"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Manipura (Solar Plexus)</strong><br>avg 3.79 (n=423)"></rect>
+        <text x="420" y="109" text-anchor="middle" font-size="11" fill="#ffffff">3.79</text><rect class="cell" x="467" y="89" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Anahata (Heart)</strong><br>no data"></rect>
+        <rect class="cell" x="559" y="89" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Vishuddha (Throat)</strong><br>no data"></rect>
+        <rect class="cell" x="651" y="89" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Ajna (Third Eye)</strong><br>no data"></rect>
+        <rect class="cell" x="743" y="89" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Job Satisfaction Scale</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="123" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="123" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="123" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Manipura (Solar Plexus)</strong><br>no data"></rect>
+        <rect class="cell" x="467" y="123" width="90" height="32" rx="4"
+          fill="#184f95"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Anahata (Heart)</strong><br>avg 3.77 (n=423)"></rect>
+        <text x="512" y="143" text-anchor="middle" font-size="11" fill="#ffffff">3.77</text><rect class="cell" x="559" y="123" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Vishuddha (Throat)</strong><br>no data"></rect>
+        <rect class="cell" x="651" y="123" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Ajna (Third Eye)</strong><br>no data"></rect>
+        <rect class="cell" x="743" y="123" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Perceived Control of Life</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="157" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="157" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="157" width="90" height="32" rx="4"
+          fill="#184f95"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Manipura (Solar Plexus)</strong><br>avg 3.91 (n=423)"></rect>
+        <text x="420" y="177" text-anchor="middle" font-size="11" fill="#ffffff">3.91</text><rect class="cell" x="467" y="157" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Anahata (Heart)</strong><br>no data"></rect>
+        <rect class="cell" x="559" y="157" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Vishuddha (Throat)</strong><br>no data"></rect>
+        <rect class="cell" x="651" y="157" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Ajna (Third Eye)</strong><br>no data"></rect>
+        <rect class="cell" x="743" y="157" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Personal Satisfaction</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="191" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="191" width="90" height="32" rx="4"
+          fill="#9ec5f4"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Svadhisthana (Sacral)</strong><br>avg 3 (n=423)"></rect>
+        <text x="328" y="211" text-anchor="middle" font-size="11" fill="var(--ink)">3</text><rect class="cell" x="375" y="191" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Manipura (Solar Plexus)</strong><br>no data"></rect>
+        <rect class="cell" x="467" y="191" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Anahata (Heart)</strong><br>no data"></rect>
+        <rect class="cell" x="559" y="191" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Vishuddha (Throat)</strong><br>no data"></rect>
+        <rect class="cell" x="651" y="191" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Ajna (Third Eye)</strong><br>no data"></rect>
+        <rect class="cell" x="743" y="191" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Positivity Ratio Scale</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="225" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="225" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="225" width="90" height="32" rx="4"
+          fill="#256abf"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Manipura (Solar Plexus)</strong><br>avg 3.61 (n=423)"></rect>
+        <text x="420" y="245" text-anchor="middle" font-size="11" fill="#ffffff">3.61</text><rect class="cell" x="467" y="225" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Anahata (Heart)</strong><br>no data"></rect>
+        <rect class="cell" x="559" y="225" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Vishuddha (Throat)</strong><br>no data"></rect>
+        <rect class="cell" x="651" y="225" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Ajna (Third Eye)</strong><br>no data"></rect>
+        <rect class="cell" x="743" y="225" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Satisfaction With Life Scale</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="259" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="259" width="90" height="32" rx="4"
+          fill="#cde2fb"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Svadhisthana (Sacral)</strong><br>avg 2.71 (n=423)"></rect>
+        <text x="328" y="279" text-anchor="middle" font-size="11" fill="var(--ink)">2.71</text><rect class="cell" x="375" y="259" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Manipura (Solar Plexus)</strong><br>no data"></rect>
+        <rect class="cell" x="467" y="259" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Anahata (Heart)</strong><br>no data"></rect>
+        <rect class="cell" x="559" y="259" width="90" height="32" rx="4"
+          fill="#6da7ec"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Vishuddha (Throat)</strong><br>avg 3.23 (n=423)"></rect>
+        <text x="604" y="279" text-anchor="middle" font-size="11" fill="var(--ink)">3.23</text><rect class="cell" x="651" y="259" width="90" height="32" rx="4"
+          fill="#cde2fb"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Ajna (Third Eye)</strong><br>avg 2.75 (n=423)"></rect>
+        <text x="696" y="279" text-anchor="middle" font-size="11" fill="var(--ink)">2.75</text><rect class="cell" x="743" y="259" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Student Engagement Scale</strong> x <strong>Sahasrara (Crown)</strong><br>no data"></rect>
+        <rect class="cell" x="191" y="293" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Muladhara (Root)</strong><br>no data"></rect>
+        <rect class="cell" x="283" y="293" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Svadhisthana (Sacral)</strong><br>no data"></rect>
+        <rect class="cell" x="375" y="293" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Manipura (Solar Plexus)</strong><br>no data"></rect>
+        <rect class="cell" x="467" y="293" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Anahata (Heart)</strong><br>no data"></rect>
+        <rect class="cell" x="559" y="293" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Vishuddha (Throat)</strong><br>no data"></rect>
+        <rect class="cell" x="651" y="293" width="90" height="32" rx="4"
+          fill="var(--grid)"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Ajna (Third Eye)</strong><br>no data"></rect>
+        <rect class="cell" x="743" y="293" width="90" height="32" rx="4"
+          fill="#0d366b"
+          data-tip="<strong>Undocumented Organizational Block (hypothesis - an1-an11)</strong> x <strong>Sahasrara (Crown)</strong><br>avg 4.03 (n=423)"></rect>
+        <text x="788" y="313" text-anchor="middle" font-size="11" fill="#ffffff">4.03</text>
+      <text class="axis-label" x="180" y="41" text-anchor="end">Career Adapt-Abilities Scale</text>
+<text class="axis-label" x="180" y="75" text-anchor="end">Hardiness</text>
+<text class="axis-label" x="180" y="109" text-anchor="end">Job Satisfaction Scale</text>
+<text class="axis-label" x="180" y="143" text-anchor="end">Perceived Control of Life</text>
+<text class="axis-label" x="180" y="177" text-anchor="end">Personal Satisfaction</text>
+<text class="axis-label" x="180" y="211" text-anchor="end">Positivity Ratio Scale</text>
+<text class="axis-label" x="180" y="245" text-anchor="end">Satisfaction With Life Scale</text>
+<text class="axis-label" x="180" y="279" text-anchor="end">Student Engagement Scale</text>
+<text class="axis-label" x="180" y="313" text-anchor="end">Undocumented Organizational Block (hypothesis - an1-an11)</text>
+      <text class="axis-label" x="236" y="344" text-anchor="middle"
+        transform="rotate(-28 236 344)">Muladhara (Root)</text>
+<text class="axis-label" x="328" y="344" text-anchor="middle"
+        transform="rotate(-28 328 344)">Svadhisthana (Sacral)</text>
+<text class="axis-label" x="420" y="344" text-anchor="middle"
+        transform="rotate(-28 420 344)">Manipura (Solar Plexus)</text>
+<text class="axis-label" x="512" y="344" text-anchor="middle"
+        transform="rotate(-28 512 344)">Anahata (Heart)</text>
+<text class="axis-label" x="604" y="344" text-anchor="middle"
+        transform="rotate(-28 604 344)">Vishuddha (Throat)</text>
+<text class="axis-label" x="696" y="344" text-anchor="middle"
+        transform="rotate(-28 696 344)">Ajna (Third Eye)</text>
+<text class="axis-label" x="788" y="344" text-anchor="middle"
+        transform="rotate(-28 788 344)">Sahasrara (Crown)</text>
+    </svg>
+    <div class="legend"><span>Low</span><div style="display:flex;gap:2px"><span class="legend-swatch" style="background:#cde2fb"></span><span class="legend-swatch" style="background:#9ec5f4"></span><span class="legend-swatch" style="background:#6da7ec"></span><span class="legend-swatch" style="background:#3987e5"></span><span class="legend-swatch" style="background:#256abf"></span><span class="legend-swatch" style="background:#184f95"></span><span class="legend-swatch" style="background:#0d366b"></span></div><span>High</span>
+      <span style="margin-left:8px;color:var(--muted)">gray = no linked variable</span></div>
+    <table class="data-table"><thead><tr><th>Instrument</th><th>Muladhara (Root)</th><th>Svadhisthana (Sacral)</th><th>Manipura (Solar Plexus)</th><th>Anahata (Heart)</th><th>Vishuddha (Throat)</th><th>Ajna (Third Eye)</th><th>Sahasrara (Crown)</th></tr></thead>
+      <tbody><tr><td>Career Adapt-Abilities Scale</td><td>—</td><td>—</td><td>—</td><td>4.18</td><td>4.08</td><td>3.99</td><td>—</td></tr><tr><td>Hardiness</td><td>—</td><td>—</td><td>—</td><td>3.77</td><td>4.03</td><td>2.81</td><td>—</td></tr><tr><td>Job Satisfaction Scale</td><td>—</td><td>—</td><td>3.79</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Perceived Control of Life</td><td>—</td><td>—</td><td>—</td><td>3.77</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Personal Satisfaction</td><td>—</td><td>—</td><td>3.91</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Positivity Ratio Scale</td><td>—</td><td>3</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Satisfaction With Life Scale</td><td>—</td><td>—</td><td>3.61</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>Student Engagement Scale</td><td>—</td><td>2.71</td><td>—</td><td>—</td><td>3.23</td><td>2.75</td><td>—</td></tr><tr><td>Undocumented Organizational Block (hypothesis - an1-an11)</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>4.03</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    const svgEl = document.querySelector('.chart-svg');
+    const tableEl = document.querySelector('.data-table');
+    const showingTable = tableEl.classList.toggle('visible');
+    svgEl.classList.toggle('hidden-by-table', showingTable);
+    this.textContent = showingTable ? 'Show chart' : 'Show table';
+  });
+  
+    document.querySelectorAll('.cell').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "gdx-skill-godatax-human7-by-spu",
+  "version": "1.0.0",
+  "description": "Exports the GDX_HUMAN relational schema (psychometrics, septenary constitution, kundalini/chakras, Five Ways, cardiac coherence, DW) into a Neo4j property graph, driven by Firebird RDB$ catalog introspection (no hardcoded table/column/FK list).",
+  "main": "export_graph.js",
+  "scripts": {
+    "export": "node export_graph.js",
+    "dry-run": "node export_graph.js --dry-run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "neo4j-driver": "^6.2.0",
+    "node-firebird": "^2.16.0"
+  }
+}

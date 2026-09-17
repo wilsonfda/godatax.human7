@@ -1,0 +1,83 @@
+{
+  "_comment": "Worked example for GDX_SKILL_NEW_STUDY / GDX_SKILL_RECORD_NEW_STUDY. A short, fictitious 2-item scale, kept tiny on purpose to show every part of the shape (study, one instrument, one construct, one variable/indicator, one shared anchor set, two items feeding the same indicator, one of them reverse-scored). Real intakes will usually have many more items and possibly several variables per construct.",
+  "study": {
+    "title": "Pilot Study of Workplace Resilience in Remote Teams",
+    "objective": "Explore whether a short resilience scale predicts self-reported burnout in fully remote employees.",
+    "method": "Cross-sectional online self-report questionnaire, single wave.",
+    "start_date": "2026-10-01",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Brief Workplace Resilience Scale",
+      "version": "2026",
+      "type": "LIKERT_SCALE",
+      "description": "Authors: fictitious example instrument created for this worked example, not a real published scale.",
+      "instructions": "Read each statement and choose the response that best describes how you have felt at work over the last two weeks.",
+      "phenomenon_name": "Workplace Resilience",
+      "phenomenon_description": "Capacity to sustain effective functioning under work-related adversity.",
+      "constructs": [
+        {
+          "name": "Workplace Resilience",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Capacity to sustain effective functioning under work-related adversity.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Workplace Resilience",
+          "name": "Recovery From Setbacks",
+          "description": "How quickly and completely the respondent bounces back after a work setback.",
+          "operational_definition": "Mean of items 1-2 of the Brief Workplace Resilience Scale.",
+          "variable_type": "PSYCHOLOGICAL",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Recovery From Setbacks (score)",
+          "indicator_description": "Mean Likert score of the two items feeding this dimension.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "AGREE_5",
+          "alternatives": [
+            {"order": 1, "label": "Strongly disagree", "numeric_value": 1},
+            {"order": 2, "label": "Disagree", "numeric_value": 2},
+            {"order": 3, "label": "Neither agree nor disagree", "numeric_value": 3},
+            {"order": 4, "label": "Agree", "numeric_value": 4},
+            {"order": 5, "label": "Strongly agree", "numeric_value": 5}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "When something goes wrong at work, I usually recover quickly.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "AGREE_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Recovery From Setbacks",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 2,
+          "statement_text": "A single bad day at work tends to throw off my whole week.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "AGREE_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Recovery From Setbacks",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

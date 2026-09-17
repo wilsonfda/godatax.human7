@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-load-cc-maps-db",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB executor for the GDX_SKILL_LOAD_CC_MAPS_DB skill: associates cardiac-coherence participants (GDX_CC_PERSON/GDX_CC_SESSION) with a psychometric study by inserting GDX_PSY_STUDY_PARTICIPANT rows, over the Firebird wire protocol (no native client library needed).",
+  "main": "load_cc_maps.js",
+  "scripts": {
+    "load": "node load_cc_maps.js",
+    "dry-run": "node load_cc_maps.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9"
+  }
+}

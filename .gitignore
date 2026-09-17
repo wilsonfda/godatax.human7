@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# Environment / secrets
+.env
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

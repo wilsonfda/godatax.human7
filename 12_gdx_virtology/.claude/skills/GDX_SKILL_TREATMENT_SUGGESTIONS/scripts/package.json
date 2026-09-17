@@ -1,0 +1,17 @@
+{
+  "name": "gdx-skill-treatment-suggestions",
+  "version": "1.0.0",
+  "description": "Ranks the lowest-scoring GDX_HUMAN psychometric indicators (7_multidimensional.database) and suggests, from the 33 Virtology virtues, which one addresses each one as a treatment suggestion.",
+  "main": "generate_suggestions.js",
+  "scripts": {
+    "generate": "node generate_suggestions.js",
+    "sample": "node generate_suggestions.js --sample"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}

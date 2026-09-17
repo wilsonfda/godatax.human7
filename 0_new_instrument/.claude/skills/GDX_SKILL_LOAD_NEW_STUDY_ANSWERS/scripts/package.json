@@ -1,0 +1,15 @@
+{
+  "name": "gdx-skill-load-new-study-answers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Excel reader + DB writer for the GDX_SKILL_LOAD_NEW_STUDY_ANSWERS skill: reads a filled-in GDX_SKILL_EXPORT_NEW_STUDY workbook and inserts the participant's GDX_PSY_PERSON/GDX_PSY_STUDY_PARTICIPANT/GDX_PSY_APPLICATION/GDX_PSY_ITEM_RESPONSE rows over the Firebird wire protocol (no native client library needed).",
+  "main": "load_new_study_answers.js",
+  "scripts": {
+    "load": "node load_new_study_answers.js",
+    "dry-run": "node load_new_study_answers.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9",
+    "exceljs": "^4.4.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-load-sept-maps-db",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB executor for the GDX_SKILL_LOAD_SEPT_MAPS_DB skill: scans GDX_PSY_INSTRUMENT/GDX_PSY_VARIABLE and loads their relation into GDX_PSY_SEPT_LEVEL_PSY_MAP over the Firebird wire protocol (no native client library needed).",
+  "main": "load_sept_maps.js",
+  "scripts": {
+    "load": "node load_sept_maps.js",
+    "dry-run": "node load_sept_maps.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9"
+  }
+}
