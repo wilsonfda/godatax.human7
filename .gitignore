@@ -13,6 +13,7 @@ node_modules/
 # Environment / secrets
 .env
 !.env.example
+Neo4j-*-Created-*.txt
 
 # OS
 .DS_Store

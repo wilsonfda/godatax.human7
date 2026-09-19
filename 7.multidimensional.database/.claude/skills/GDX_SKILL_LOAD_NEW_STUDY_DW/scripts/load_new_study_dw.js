@@ -160,11 +160,70 @@ async function findVariable(db, constructId, name) {
   return rows[0] || null;
 }
 
+/** Fallback scope resolution for a study with no new_study_intake/<slug>/
+ * intake.json "instruments" section -- i.e. a study that predates the
+ * GDX_SKILL_NEW_STUDY interview pipeline entirely (loaded the older way, via
+ * GDX_SKILL_LOAD_RLT_MODEL_DB's .sav import). There is nothing to read the
+ * scope FROM in that case, so this derives it from what is actually applied
+ * for this study in the OLTP instead: every GDX_PSY_VARIABLE that has at
+ * least one real GDX_PSY_VARIABLE_RESULT row through this study's
+ * applications. This is deliberately narrower than "every variable that
+ * exists" -- it picks up exactly the variables this study has real computed
+ * results for (including ones added after the study's original load, e.g. a
+ * variable backfilled from raw item responses later), nothing hypothetical
+ * and nothing borrowed from another study. */
+async function resolveScopeFromDatabase(db, studyId) {
+  const varRows = await query(db, `
+    SELECT DISTINCT V.ID_VARIABLE, V.NAME, V.OPERATIONAL_DEFINITION, V.ID_CONSTRUCT
+    FROM GDX_PSY_VARIABLE V
+    JOIN GDX_PSY_VARIABLE_RESULT VR ON VR.ID_VARIABLE = V.ID_VARIABLE
+    JOIN GDX_PSY_APPLICATION A ON A.ID_APPLICATION = VR.ID_APPLICATION
+    WHERE A.ID_STUDY = ?`, [studyId]);
+
+  const constructs = new Map(); // ID_CONSTRUCT -> row
+  const instrumentIds = new Set();
+  const variables = [];
+  for (const v of varRows) {
+    if (!constructs.has(v.ID_CONSTRUCT)) {
+      const cRows = await query(db, 'SELECT ID_CONSTRUCT, NAME, DOMAIN FROM GDX_PSY_CONSTRUCT WHERE ID_CONSTRUCT = ?', [v.ID_CONSTRUCT]);
+      if (cRows[0]) constructs.set(v.ID_CONSTRUCT, cRows[0]);
+    }
+    // Same FIRST-1 instrument resolution godatax_human_dw_etl_firebird25.sql
+    // uses for DW_DIM_VARIABLE.ID_INSTRUMENT (1:1 in this dataset today).
+    const instRows = await query(db,
+      'SELECT FIRST 1 ID_INSTRUMENT FROM GDX_PSY_INSTRUMENT_CONSTRUCT WHERE ID_CONSTRUCT = ?', [v.ID_CONSTRUCT]);
+    const instrumentId = instRows[0] ? instRows[0].ID_INSTRUMENT : null;
+    if (instrumentId !== null) instrumentIds.add(instrumentId);
+    variables.push({ ...v, ID_INSTRUMENT: instrumentId });
+  }
+
+  const instruments = [];
+  for (const id of instrumentIds) {
+    const rows = await query(db, 'SELECT ID_INSTRUMENT, NAME, VERSION, TYPE, ACTIVE FROM GDX_PSY_INSTRUMENT WHERE ID_INSTRUMENT = ?', [id]);
+    if (rows[0]) instruments.push(rows[0]);
+  }
+
+  const items = [];
+  for (const inst of instruments) {
+    const rows = await query(db,
+      'SELECT ID_ITEM, ID_INSTRUMENT, ITEM_ORDER, RESPONSE_TYPE FROM GDX_PSY_INSTRUMENT_ITEM WHERE ID_INSTRUMENT = ?',
+      [inst.ID_INSTRUMENT]);
+    items.push(...rows);
+  }
+
+  return { instruments, constructs: [...constructs.values()], variables, items, derivedFromDatabase: true };
+}
+
 /** Resolves the intake's instruments/constructs/variables/items against the
  * real Firebird rows GDX_SKILL_RECORD_NEW_STUDY already created. Throws
  * (rather than skipping) if something the intake describes isn't in the
- * database yet -- same discipline as GDX_SKILL_LOAD_SEPT_MAPS_DB. */
-async function resolveScope(db, intake) {
+ * database yet -- same discipline as GDX_SKILL_LOAD_SEPT_MAPS_DB. Falls back
+ * to resolveScopeFromDatabase() for a study whose intake.json has no
+ * "instruments" section at all (see that function's own comment). */
+async function resolveScope(db, intake, studyId) {
+  if (!intake.instruments || intake.instruments.length === 0) {
+    return resolveScopeFromDatabase(db, studyId);
+  }
   const instruments = [];
   const constructs = new Map(); // NAME -> row
   const variables = []; // { ...row, ID_INSTRUMENT }
@@ -522,7 +581,11 @@ async function main() {
     }
     const studyId = studyRows[0].ID_STUDY;
 
-    const scope = await resolveScope(db, intake);
+    const scope = await resolveScope(db, intake, studyId);
+    if (scope.derivedFromDatabase) {
+      console.log(`No "instruments" section in this study's intake.json -- scope derived directly from ` +
+        `GDX_PSY_VARIABLE_RESULT/GDX_PSY_APPLICATION for ID_STUDY=${studyId} instead.`);
+    }
     console.log(`Scope: study "${studyTitle}" (slug "${args.study}", ID_STUDY=${studyId}), ` +
       `${scope.instruments.length} instrument(s), ${scope.variables.length} variable(s), ${scope.items.length} item(s).`);
 

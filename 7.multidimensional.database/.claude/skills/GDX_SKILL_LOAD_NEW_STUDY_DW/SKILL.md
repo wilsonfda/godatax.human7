@@ -52,6 +52,30 @@ variables belong to this study, then resolves each one's real id in Firebird by 
   `GDX_PSY_STUDY_PARTICIPANT` (the same table `GDX_SKILL_LOAD_CC_MAPS_DB` populates) — only sessions
   belonging to a person enrolled in **this** study are loaded.
 
+### Fallback for a study with no `instruments[]` in its intake.json
+
+A study that predates the `GDX_SKILL_NEW_STUDY` interview pipeline entirely (loaded the older way, via
+`GDX_SKILL_LOAD_RLT_MODEL_DB`'s `.sav` import — e.g. `ID_STUDY=1`, see `8.gdx.dashboards/Dashboards_DW_Explanation.md`
+§9.1/§11) has no `intake.json` with an `instruments[]` section to read scope from. `resolveScope()`
+detects this (`!intake.instruments || intake.instruments.length === 0`) and calls
+`resolveScopeFromDatabase(db, studyId)` instead: it derives scope directly from what the OLTP already
+shows applied for this study — every `GDX_PSY_VARIABLE` with at least one real `GDX_PSY_VARIABLE_RESULT`
+row through this study's applications, each variable's instrument resolved the same `FIRST 1` way
+`godatax_human_dw_etl_firebird25.sql` does. This is narrower than "every variable that exists" — it's
+exactly the variables this study has real computed results for, including one added to the OLTP after
+the study's original load (e.g. a variable backfilled from raw item responses that were always there
+but never aggregated — see the §11 case). Nothing hypothetical, nothing borrowed from another study.
+
+**Performance note for a large legacy study:** this fallback fixes *scope resolution* for such a study,
+but `loadItemResponseFacts()`/`loadVariableResultFacts()` still re-check every fact row for the whole
+study one existence-query at a time (pre-existing behavior, unrelated to this fallback) — for a study
+with hundreds of people and dozens of instruments already fully loaded, a full run re-validates
+thousands of already-present rows just to pick up a handful of new ones, and can take well over an hour
+against a remote DB. For a narrow addition (one new variable's results, say), loading just that
+variable's rows directly with the same insert-if-missing shape this skill uses is far faster — see
+`8.gdx.dashboards/Dashboards_DW_Explanation.md` §11's real example of doing exactly that instead of
+running this skill end-to-end for `ID_STUDY=1`.
+
 ## What is bootstrapped once, not scoped by study
 
 `DW_DIM_DATE`, `DW_DIM_SEPTENARY_LEVEL`, `DW_DIM_CHAKRA`, `DW_DIM_FIVE_WAY` are global reference

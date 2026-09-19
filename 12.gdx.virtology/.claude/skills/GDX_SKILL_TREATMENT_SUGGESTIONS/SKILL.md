@@ -1,23 +1,37 @@
 ---
 name: GDX_SKILL_TREATMENT_SUGGESTIONS
-description: Ranks the lowest-scoring GDX_HUMAN psychometric indicators (7.multidimensional.database) and suggests, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which one addresses each one as a treatment suggestion. Writes a timestamped Markdown report to 12.gdx.virtology/. Use when the user asks for virtue/treatment suggestions based on the psychometric data.
+description: Ranks the lowest-scoring psychometric indicators of ONE study (via --study <slug>) in GDX_HUMAN (7.multidimensional.database) and suggests, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which one addresses each one as a treatment suggestion. Writes a timestamped Markdown report to 12.gdx.virtology/. Use when the user asks for virtue/treatment suggestions based on a specific GDX_HUMAN study's psychometric data.
 ---
 
 # GDX_SKILL_TREATMENT_SUGGESTIONS
 
 Reads the real, live average score of every psychometric variable that has a
-septenary-level mapping, ranks them from lowest to highest (the lowest
-scores are read as the neediest indicators), and for each one suggests one
-of the **33 Virtology virtues** (`Virtology_Knowledge_Base.md`) as a
-treatment target, with a short justification. Output is a single timestamped
-Markdown file in `12.gdx.virtology/`.
+septenary-level mapping, **for one study**, ranks them from lowest to
+highest (the lowest scores are read as the neediest indicators), and for
+each one suggests one of the **33 Virtology virtues**
+(`Virtology_Knowledge_Base.md`) as a treatment target, with a short
+justification. Output is a single timestamped Markdown file in
+`12.gdx.virtology/`.
+
+## Scoped to one study
+
+Every run requires `--study <slug>` — the same slug `GDX_SKILL_NEW_STUDY` /
+`GDX_SKILL_MAKE_DASHBOARS_DW` / `GDX_SKILL_LOAD_NEW_STUDY_DW` use for
+`new_study_intake/<slug>/intake.json`. The slug resolves to the study's
+title (from its `intake.json`), the title resolves to `GDX_PSY_STUDY.ID_STUDY`,
+and the ranking query joins `DW_DIM_PERSON` on `ID_STUDY = ?` so the "lowest
+scores" are always this one study's own participants — never blended with
+another study's people the way an unscoped average across the whole DW would
+be. Running the skill again for a different study produces a completely
+separate report; it never mixes two studies' scores into one ranking.
 
 ## What it reads
 
 `7.multidimensional.database`'s `DW_FACT_PSY_VARIABLE_RESULT` joined to
-`DW_DIM_VARIABLE` and `DW_DIM_SEPTENARY_LEVEL` — the same DW built by the
-scripts in that folder and already consumed by `8.gdx.dashboards`. This
-skill is **read-only**: it never writes to Firebird or Neo4j.
+`DW_DIM_VARIABLE`, `DW_DIM_SEPTENARY_LEVEL`, and `DW_DIM_PERSON` (for the
+`ID_STUDY` filter) — the same DW built by the scripts in that folder and
+already consumed by `8.gdx.dashboards`. This skill is **read-only**: it
+never writes to Firebird or Neo4j.
 
 ## What it will never do
 
@@ -38,15 +52,24 @@ skill is **read-only**: it never writes to Firebird or Neo4j.
 ```
 cd 12.gdx.virtology/.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/scripts
 npm install                          # once, installs node-firebird
-node generate_suggestions.js --sample --dry-run   # sanity check: embedded sample data, prints only, writes nothing
+node generate_suggestions.js --study <slug> --sample --dry-run   # sanity check: embedded sample data, prints only, writes nothing
 # copy ../.env.example to ../.env and fill in GDX_HUMAN_FB_PASSWORD, or export the vars directly
-node generate_suggestions.js --top 10             # real run against the live DW, top 10 lowest indicators
-node generate_suggestions.js                      # real run, default top 8
+node generate_suggestions.js --study <slug> --top 10             # real run against the live DW, top 10 lowest indicators for that study
+node generate_suggestions.js --study <slug>                      # real run, default top 8
 ```
 
-Output: `12.gdx.virtology/Treatment_Suggestions_<YYYYMMDD_HHMMSS>.md` (one
-file per run — old runs are never overwritten, so a history of analyses
-accumulates naturally in the folder).
+`--study <slug>` is **required** — the same slug `GDX_SKILL_NEW_STUDY` used
+for `new_study_intake/<slug>/intake.json` (resolved automatically from this
+script's location; pass `--intake-dir <path>` if that intake lives somewhere
+else). In real mode, the slug's `intake.json` must already exist and its
+`study.title` must already be a row in `GDX_PSY_STUDY` — the skill errors
+out with a clear message otherwise. In `--sample` mode, a missing
+`intake.json` is not an error: the report just falls back to a generic
+"Sample Study" title.
+
+Output: `12.gdx.virtology/Treatment_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`
+(one file per run — old runs are never overwritten, so a history of
+analyses accumulates naturally in the folder, one thread per study).
 
 ## Extending it
 

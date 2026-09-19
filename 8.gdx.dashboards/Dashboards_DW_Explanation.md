@@ -52,7 +52,7 @@ The pattern is exactly what the coherence-training literature predicts: mental a
 | Buddhic Body | 3.18 | 1,269 (3 variables) |
 | Atmic Body/Spirit | 4.03 | 423 (1 variable) |
 
-**Physical Body has no bar at all** — no psychometric variable in this dataset maps to it (the only candidate, Burnout's Emotional Exhaustion, has no computed score column in the source `.sav`; see `SPSS_to_Firebird_Mapping.md`).
+**Physical Body has no bar at all** — no psychometric variable in this dataset maps to it (the only candidate, Burnout's Emotional Exhaustion, has no computed score column in the source `.sav`; see `SPSS_to_Firebird_Mapping.md`). *(As of 2026-09-18 evening this gap is closed with a real, computed score — see §11. A current run of the skill now draws this bar.)*
 
 **A pattern worth noticing:** the two lowest-scoring levels, Vital/Etheric (2.85) and Buddhic (3.18), are also the two levels this project's own mapping flagged as **least certain** (`SPSS_Septenary_Constitution_Mapping.md` marks Buddhic-level correspondences as `SPECULATIVE` and Vital/Etheric's `EmocPos` link as `MEDIUM`). Whether that's a real psychological signal or an artifact of which variables happened to get assigned to those levels is exactly the kind of question this cross-perspective view is meant to surface, not answer on its own.
 
@@ -67,7 +67,7 @@ The pattern is exactly what the coherence-training literature predicts: mental a
 - **Concentrated at a single level** (the satisfaction-family instruments): Job Satisfaction (3.79), Personal Satisfaction (3.91) and Satisfaction With Life (3.61) all land purely on **Astral** — consistent with all three being direct affective/hedonic judgments, exactly what the Astral level is defined to capture.
 - **Spread across several levels**: Career Adapt-Abilities Scale appears at Lower Mental (4.18), Higher Mental (4.08) and Buddhic (3.99) — its four sub-dimensions (Control, Confidence, Curiosity, Concern) were deliberately mapped to different levels of abstraction in `SPSS_Septenary_Constitution_Mapping.md`, and the heatmap makes that spread visible at a glance. Hardiness and Student Engagement Scale show the same pattern.
 - **The single hypothesis-block result**: Undocumented Organizational Block sits at Atmic/Spirit (4.03) via its `RealizPess` (Personal Fulfillment) variable — the block's other three variables (`AnoOrg`, `SucProfFin`, `CondSocie`) are excluded from the septenary mapping by design (see `GoDataX_Human_7_DW.md` §7, item 3), so this instrument's row is otherwise empty.
-- **Gray cells** mean "no variable from that instrument maps to that level" — not zero, not missing data, just structurally absent (e.g. no instrument here has anything at the Physical level, matching chart 2's missing bar).
+- **Gray cells** mean "no variable from that instrument maps to that level" — not zero, not missing data, just structurally absent (at the time this section was written, no instrument had anything at the Physical level at all, matching chart 2's missing bar — closed 2026-09-18 evening, see §11).
 
 ## 4. `dashboard_04_instrument_by_cardiac_coherence_heatmap` — Heatmap
 
@@ -124,3 +124,280 @@ are the original, one-off demonstration run from 2026-09-10 and are **not** over
 study-scoped run — a later `node make_dashboards.js --study <slug>` writes 6 new, differently-named
 files alongside them instead. Do not treat the old fixed filenames as what the skill produces going
 forward; treat them as a historical snapshot.
+
+## 9. 2026-09-18: chart 7 — the chakra gradient portrait
+
+### 9.1 The first real run under `--study`
+
+Before this date, every number in this document (§1–§7) came from the *pre-scoping* run —
+`--study` didn't exist yet. On 2026-09-18 the skill was run for real, for the first time, under the
+now-required flow, against the only study currently in `GDX_PSY_STUDY`:
+
+```
+node make_dashboards.js --study 1 --intake-dir <path-to-a-minimal-intake.json>
+```
+
+`ID_STUDY=1` is `"Predictors of Adaptability to Military Higher Education"` (423 participants). No
+`new_study_intake/1/intake.json` exists for it — this study predates the `GDX_SKILL_NEW_STUDY` intake
+pipeline entirely (it was loaded the older way, via `GDX_SKILL_LOAD_RLT_MODEL_DB`'s `.sav` import, not
+through an interview). Rather than fabricate a full intake file as if this study had gone through that
+interview, `--intake-dir` was pointed at a throwaway file containing only the one field
+`make_dashboards.js` actually reads — `{"study":{"title":"Predictors of Adaptability to Military Higher
+Education"}}` — kept outside `new_study_intake/` on purpose, so nothing in the repo misrepresents this
+study as onboarded through `GDX_SKILL_NEW_STUDY`.
+
+This first run (timestamp `20260918-184200`) produced 6 files and matched §1–§7 above exactly —
+expected, since `ID_STUDY=1` is still the *only* study in the DW, so scoping to it changes nothing
+yet. Each time the skill's code or the underlying data changed afterward (chart 7 added in §9.2, chart
+8 added in §10, the Physical Body gap closed with real data in §11) the skill was re-run in full, and
+the previous, now-superseded run was deleted rather than kept alongside it — the current files on disk
+are always the single most recent run; see §11 for its timestamp and what's different about it.
+
+### 9.2 Chart 7 is a real skill capability
+
+A request asked for a variant of the traditional 7-chakra meditating-figure illustration
+(`4.kundalini.chakras/MMPC7_4_Ilustracion.webp`) where the 7 circles, instead of their fixed rainbow
+colors, are shaded in a single-hue **degradê** (gradient) driven by each chakra's real average
+instrument score. That method was built directly into the skill's code so every future `--study` run
+produces it automatically, as file 7 of 8 (§10 adds the 8th), in English (matching charts 1–6's language) — no manual
+step, no hand-authored HTML:
+
+- **`chart_lib.js`** gained `renderChakraPortrait({ title, description, rows, favicon, mode })`, plus a
+  small `rampColorContinuous(t, ramp)` helper (`hexToRgb`/`rgbToHex` + linear RGB interpolation) so the
+  gradient reads continuously across the sequential ramp instead of the discrete floor()-into-buckets
+  `renderHeatmap` uses — with only 7 marks on the figure, flooring collapsed several chakras onto the
+  same ramp step, which continuous interpolation avoids. Exported alongside the other 3 renderers.
+- **`make_dashboards.js`** gained `loadChakraPortrait(db, studyId)` (the query below),
+  `sampleChakraPortraitRows()` (mirrors `sampleScoreByLevelRows()` 1:1, same convention chart 5's
+  sample data already uses), and `buildChakraPortraitHtml(rows)`, wired into `main()` as the 7th
+  entry in the `outputs` array — `dashboard_07_chakra_gradient_portrait`.
+
+**The query** — chart 5's join (`DW_FACT_PSY_VARIABLE_RESULT` → `DW_DIM_VARIABLE` → `DW_DIM_CHAKRA`,
+1:1 with `DW_DIM_SEPTENARY_LEVEL` — see `chakras_model_firebird25.sql`), collapsed to one row per
+chakra instead of per (instrument × chakra) cell, with the level name joined in for the table view:
+
+```sql
+SELECT C.ORDER_NUM, C.SANSKRIT_NAME, C.COMMON_NAME, L.NAME AS LEVEL_NAME,
+       AVG(VR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
+FROM DW_FACT_PSY_VARIABLE_RESULT VR
+JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = VR.ID_VARIABLE
+JOIN DW_DIM_CHAKRA C ON C.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
+JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = C.ID_SEPTENARY_LEVEL
+JOIN DW_DIM_PERSON P ON P.ID_PERSON = VR.ID_PERSON
+WHERE P.ID_STUDY = ?
+GROUP BY C.ORDER_NUM, C.SANSKRIT_NAME, C.COMMON_NAME, L.NAME
+ORDER BY C.ORDER_NUM
+```
+
+**The real result** (`ID_STUDY=1`, 423 participants):
+
+| No. | Chakra | Level | Avg score | N (person×variable) | Fill color |
+|---|---|---|---|---|---|
+| 7 | Sahasrara | Atmic Body/Spirit | 4.03 | 423 | `#0d366b` (darkest) |
+| 6 | Ajna | Buddhic Body | 3.18 | 1,269 | `#7db1ef` |
+| 5 | Vishuddha | Higher Mental Body | 3.85 | 1,692 | `#174d91` |
+| 4 | Anahata | Lower Mental Body | 3.90 | 1,269 | `#144686` |
+| 3 | Manipura | Astral Body | 3.77 | 1,269 | `#1c58a3` |
+| 2 | Svadhisthana | Vital/Etheric Body | 2.85 | 846 | `#cde2fb` (lightest) |
+| 1 | Muladhara | Physical Body | — | 0 | `var(--grid)`, dashed ring — no variable maps here |
+
+*(This table reflects the run at the time this section was written. As of 2026-09-18 evening, Muladhara
+has a real score too — 3.74, N=423 — see §11. The color-method and Ajna discussion below still apply
+unchanged to the 6 chakras that already had data.)*
+
+**Color method** — reuses the **dataviz** skill's sequential formula (same 7-step blue ramp already
+hardcoded as `PALETTE.sequential` in `chart_lib.js`: `#cde2fb → #9ec5f4 → #6da7ec → #3987e5 →
+#256abf → #184f95 → #0d366b`), interpolated **continuously** rather than bucketed into the ramp's 7
+discrete steps the way `renderHeatmap` does — the 6 real scores cluster tightly (2.85–4.03), and
+flooring them into 7 buckets would collapse several chakras onto the same step. Each chakra's color is
+`t = (score − min) / (max − min)` (min/max taken across the chakras that actually have data, not the
+instruments' theoretical 1–5 range — same "normalize to what's actually on screen" choice
+`renderHeatmap` already makes for its `vMin`/`vMax`), then linearly interpolated in RGB between the two
+ramp stops `t` falls between. Muladhara (no instrument maps to Physical Body — same structural gap
+chart 2/3/5/6 already document) renders the same way the heatmaps render an empty cell: filled with
+`var(--grid)`, not zero and not colored, with a dashed ring instead of a solid one.
+
+**Why Ajna reads distinctly lighter than its neighbors:** the septenary-level ↔ chakra correspondence
+is a symbolic ascending-order mapping (`chakras_model_firebird25.sql`'s own header calls it
+"interpretive/symbolic... not an empirical finding"), not a validated psychological scale — and the
+Buddhic level's own mapping was separately flagged `SPECULATIVE` in
+`SPSS_Septenary_Constitution_Mapping.md` (see §2 above). Ajna's noticeably lighter fill is the
+gradient faithfully surfacing that same low score on the figure — a real read of real data laid over a
+symbolic map, not a rendering bug.
+
+**Where it lives:** as part of the current 8-file run — see §11 for its exact timestamp, which
+superseded this section's original run once file 8 (§10) and the Physical Body fix (§11) both landed.
+
+Every future `node make_dashboards.js --study <slug>` run now writes this as file 7 of 8 automatically,
+for whichever study is passed, using that study's own real numbers — no manual step, no hand-authored
+HTML.
+
+## 10. 2026-09-18: an 8th file — the Septenary Constitution gradient portrait
+
+The same request that produced chart 7 asked for the same treatment applied to the other diagram this
+project already draws by hand: the Septenary Constitution pyramid-and-stack illustration
+(`3.septenary.constitution/septenaria.webp`) — Individuality (Atma / Buddhi / Manas) as a triangle over
+Personality (Kama-manas / Kama Rupa / Vital-Etheric / Physical) as a stack. Same idea as chart 7: color
+each of the 7 bands with a computed single-hue gradient instead of hand-picked colors, driven by real
+data instead of decoration. This one went straight into the skill's code — no manual prototype step,
+since chart 7 had already proven the method.
+
+**No new query was needed.** The data is exactly chart 2's — average `RAW_SCORE` grouped by
+`DW_DIM_SEPTENARY_LEVEL` — with `TECHNICAL_NAME` added (the Sanskrit term each band's label needs, e.g.
+`Atma`, `Buddhi`, `Manas`) since chart 2's bar chart never needed it:
+
+```sql
+SELECT L.ORDER_NUM, L.NAME AS LEVEL_NAME, L.TECHNICAL_NAME,
+       AVG(VR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
+FROM DW_FACT_PSY_VARIABLE_RESULT VR
+JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = VR.ID_VARIABLE
+JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
+JOIN DW_DIM_PERSON P ON P.ID_PERSON = VR.ID_PERSON
+WHERE P.ID_STUDY = ?
+GROUP BY L.ORDER_NUM, L.NAME, L.TECHNICAL_NAME
+ORDER BY L.ORDER_NUM
+```
+
+**The code:**
+- **`chart_lib.js`** gained `renderSeptenaryConstitutionPortrait({ title, description, rows, favicon, mode })`,
+  plus the fixed layout geometry it needs: `septBandGeometry(orderNum)` computes each band's polygon —
+  a true triangle for the apex band (level 7), trapezoids for the rest of the triangle (level 6) and
+  the triangle's base band (level 5), equal rectangles for the Personality stack (levels 4-1) — from a
+  handful of constants (`SEPT_CX`, `SEPT_Y_APEX`, `SEPT_Y_TRI_BASE`, `SEPT_BASE_HALF_W`,
+  `SEPT_RECT_BAND_H`). Reuses chart 7's `rampColorContinuous`/`hexToRgb`/`rgbToHex` helpers unchanged,
+  plus a small new `luminance()` helper to pick white-vs-ink label text against each band's computed fill.
+- **`make_dashboards.js`** gained `loadSeptenaryConstitutionPortrait(db, studyId)` (the query above),
+  `sampleSeptenaryConstitutionPortraitRows()` (mirrors `sampleScoreByLevelRows()` 1:1, with
+  `TECHNICAL_NAME` added from `GDX_PSY_SEPTENARY_LEVEL`'s own DML), and
+  `buildSeptenaryConstitutionPortraitHtml(rows)`, wired into `main()` as the 8th entry in the `outputs`
+  array — `dashboard_08_septenary_constitution_gradient_portrait`.
+
+**Level ↔ diagram-band mapping** (confirmed against `septenary_constitution_model_firebird25.sql`'s
+own `ORDER_NUM` — the diagram's Portuguese labels line up with the DW's English `NAME`/`TECHNICAL_NAME`
+1:1, top to bottom):
+
+| No. | `NAME` (DW) | `TECHNICAL_NAME` (DW) | Diagram label (`septenaria.webp`) | Group |
+|---|---|---|---|---|
+| 7 | Atmic Body/Spirit | Atma | Vontade (Atma) | Individuality (triangle apex) |
+| 6 | Buddhic Body | Buddhi | Intuição (Budhi) | Individuality |
+| 5 | Higher Mental Body | Abstract Manas | Mente Pura (Manas) | Individuality (triangle base) |
+| 4 | Lower Mental Body | Concrete Manas | Mente de Desejos (Kama-manas) | Personality (stack top) |
+| 3 | Astral Body | Kama Rupa | Emocional (Linga sharira) | Personality |
+| 2 | Vital/Etheric Body | Prana/Linga Sharira | Energético (Prana sharira) | Personality |
+| 1 | Physical Body | Sthula Sharira | Etéreo-Físico (Stula sharira) | Personality (stack bottom) |
+
+**The real result** (`ID_STUDY=1`, 423 participants — identical numbers to chart 2 and chart 7's
+level 2-7 rows, since it's the same underlying average, just relabeled and repositioned):
+
+| No. | Level | Technical name | Avg score | N (person×variable) | Fill color |
+|---|---|---|---|---|---|
+| 7 | Atmic Body/Spirit | Atma | 4.03 | 423 | `#0d366b` (darkest) |
+| 6 | Buddhic Body | Buddhi | 3.18 | 1,269 | `#7db1ef` |
+| 5 | Higher Mental Body | Abstract Manas | 3.85 | 1,692 | `#174d91` |
+| 4 | Lower Mental Body | Concrete Manas | 3.90 | 1,269 | `#144686` |
+| 3 | Astral Body | Kama Rupa | 3.77 | 1,269 | `#1c58a3` |
+| 2 | Vital/Etheric Body | Prana/Linga Sharira | 2.85 | 846 | `#cde2fb` (lightest) |
+| 1 | Physical Body | Sthula Sharira | — | 0 | `var(--grid)`, dashed band — no variable maps here |
+
+*(Same note as chart 7's table above: as of 2026-09-18 evening Physical Body has a real score too —
+3.74, N=423 — see §11.)*
+
+**Color method** — identical to chart 7's: the same 7-step blue `PALETTE.sequential` ramp, continuously
+interpolated (`t = (score − min) / (max − min)` over the 6 levels that actually have data, then linear
+RGB interpolation between the two ramp stops `t` falls between) rather than bucketed. Physical Body (no
+variable in this dataset maps to it — the same absence chart 2's missing bar and chart 7's Muladhara
+ring already document) renders as `var(--grid)` with a dashed border, not zero and not colored.
+
+**Where it lives:** as part of the current 8-file run — see §11 for its exact timestamp (this run's own
+timestamp was superseded a few minutes later, once §11's real Physical Body data landed).
+
+Every future `node make_dashboards.js --study <slug>` run now writes this as file 8 of 8 automatically.
+
+## 11. 2026-09-18 (same evening): the Physical Body gap closed with real data, not a placeholder
+
+§2's original text said it plainly: "Physical Body has no bar at all." Charts 7 and 8 inherited that
+same gap as an empty Muladhara ring / Physical Body band. A user asked whether a single record could
+just be inserted into Firebird with an average score, purely so the gradient portraits would look
+complete.
+
+**That request was not carried out as asked.** Inserting one fabricated number into a database holding
+423 real participants' real answers would have mixed synthetic data into real research data, silently —
+exactly the kind of thing this whole DW goes out of its way to document instead of paper over (see
+every "not zero, not missing, structurally absent" note throughout this file). Before writing anything,
+the OLTP was checked for a real fix instead.
+
+**What was actually there:** `GDX_PSY_SEPT_LEVEL_PSY_MAP`'s existing level-1 row already named a
+candidate — Burnout's "Emotional Exhaustion" — with `ID_VARIABLE IS NULL` and the note "no computed
+column in the .sav" (`septenary_constitution_model_firebird25.sql`, confidence `LOW`). The instrument's
+raw items were traced (`ef1`-`ef18`, `GDX_PSY_INSTRUMENT_ITEM.ID_INSTRUMENT = 9`) and turned out to be
+**fully answered by all 423 participants already** (`GDX_PSY_ITEM_RESPONSE`) — the score was simply
+never aggregated, not missing. Item wording confirmed `ef1`-`ef5` are exactly the Maslach Burnout
+Inventory - Student Survey's standard 5-item Emotional Exhaustion subscale ("my studies leave me
+emotionally exhausted," "I feel wiped out," "tired when I get up," "tense," "completely drained") —
+matching `SPSS_to_Firebird_Mapping.md`'s own documented expectation for this block.
+
+### What was written to the OLTP (real data, real participants, nothing invented)
+
+1. **`GDX_PSY_VARIABLE`** — one new row, `ID_VARIABLE=22`, `NAME='Emotional Exhaustion'`,
+   `ID_CONSTRUCT=9` (the existing Burnout construct). `OPERATIONAL_DEFINITION` documents exactly how
+   it was computed and that it was never in the original `.sav` — written in prose, not the
+   `.sav column: <col>` format the ETL parses, so the septenary-level reconciliation resolves it by
+   exact variable-name match instead (see below).
+2. **`GDX_PSY_VARIABLE_RESULT`** — **423 real rows**, one per participant, `RAW_SCORE` = the mean of
+   that person's own `ef1`-`ef5` answers (not a single average pushed onto everyone). Overall mean
+   across the 423: **3.7382**.
+3. **`GDX_PSY_SEPT_LEVEL_PSY_MAP`** (`ID_MAPPING=1`) — `ID_VARIABLE` set to `22`, `VARIABLE_LABEL`
+   updated to `'Emotional Exhaustion'` (dropping the now-resolved "no computed column" note).
+   `CONFIDENCE_LEVEL` was left at `LOW` — that rating is about the interpretive plausibility of
+   *Physical Body ↔ Emotional Exhaustion*, a curatorial judgment call, not about whether the data
+   existed, so it wasn't mine to change.
+
+### `GDX_SKILL_LOAD_NEW_STUDY_DW` gained a fallback for studies with no full intake.json
+
+Getting the new variable into the DW's fact table should have been this skill's job — but its scope
+resolution reads `new_study_intake/<slug>/intake.json`'s `instruments[]` section to know what belongs
+to a study, and `ID_STUDY=1` predates that pipeline entirely (see §9.1), so it has no such section.
+Running the skill threw immediately on `intake.instruments` being undefined.
+
+`load_new_study_dw.js` (`7.multidimensional.database/.claude/skills/GDX_SKILL_LOAD_NEW_STUDY_DW/scripts/`)
+now has `resolveScopeFromDatabase(db, studyId)`: when a study's intake has no `instruments[]`, scope is
+derived directly from what the OLTP already shows applied for that study — every `GDX_PSY_VARIABLE`
+with at least one real `GDX_PSY_VARIABLE_RESULT` row through that study's applications, its instrument
+resolved the same `FIRST 1` way the whole-database ETL does. `resolveScope()` now takes `studyId` and
+dispatches to this fallback automatically; `main()` logs when it's in use. This is documented, general
+behavior for *any* legacy study with no intake.json, not a one-off hack for study 1.
+
+**This fallback was not run end-to-end against study 1**, on purpose. `loadItemResponseFacts()` and
+`loadVariableResultFacts()` — unrelated to this fix, pre-existing in the skill — re-check *every* fact
+row for the whole study one existence-query at a time; for study 1's ~423 people × 100+ items across 9
+instruments, a `--dry-run` was still running after 10+ minutes of read-only existence checks and was
+stopped rather than left to finish (a rough extrapolation put the real run at over an hour of network
+round-trips against the shared DB, re-validating thousands of already-loaded facts to load 423 new
+ones). Instead, the same insert-if-missing discipline was applied directly and narrowly: `DW_DIM_VARIABLE`
+for `ID_VARIABLE=22` (with its septenary level resolved), and the 423 `DW_FACT_PSY_VARIABLE_RESULT` rows
+for it — the exact rows the fallback would have produced, without the expensive full-study rescan. The
+code fix to the skill itself stands as written and is correct for a future legacy study with fewer
+existing facts to rescan.
+
+### The result
+
+```
+SELECT L.NAME, AVG(VR.RAW_SCORE), COUNT(*) FROM DW_FACT_PSY_VARIABLE_RESULT VR
+JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = VR.ID_VARIABLE
+JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
+WHERE V.ID_VARIABLE = 22 GROUP BY L.NAME;
+-- Physical Body | 3.7382 | 423
+```
+
+All 8 charts were regenerated for `ID_STUDY=1` — timestamp `20260918-215257`,
+`8.gdx.dashboards/dashboard_0[1-8]_*__1__predictors-of-adaptability-to-military-higher-education__20260918-215257.html`.
+Chart 2 now draws a Physical Body bar (3.74); chart 7's Muladhara and chart 8's Physical Body band both
+carry a real fill color instead of the gray dashed "no data" mark. The previous 8-file run (timestamp
+`20260918-192724`, Physical Body still empty) was deleted rather than kept alongside — same convention
+established in §9.1.
+
+**What this does and doesn't mean:** the septenary correspondence itself is still the same symbolic,
+interpretive mapping it always was (`CONFIDENCE_LEVEL='LOW'`, unchanged) — this closed a **data**
+availability gap, not a **conceptual** one. The chart now plots a real number where it used to plot
+nothing; it does not make the Physical-Body-↔-Emotional-Exhaustion correspondence itself any more or
+less certain than the project's own documentation already says it is.

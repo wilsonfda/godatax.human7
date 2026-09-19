@@ -3,7 +3,7 @@
  * GDX_SKILL_MAKE_DASHBOARS_DW
  *
  * Reads GDX_HUMAN's DW (7.multidimensional.database, see GoDataX_Human_7_DW.md)
- * and generates 6 self-contained HTML charts:
+ * and generates 8 self-contained HTML charts:
  *
  *   1. Line (multi-dimension)  - dashboard_01_physiological_response.html
  *      Cardiac-coherence metrics (coherence index, heart rate, RMSSD, SDNN)
@@ -39,6 +39,25 @@
  *           (1, 2, 3, 7) are entirely empty here even though they may have
  *           data in chart 3/5.
  *
+ *   7. Chakra gradient portrait - dashboard_07_chakra_gradient_portrait.html
+ *      The traditional 7-chakra meditating-figure illustration (folder 4),
+ *      but with each chakra's circle colored by a computed single-hue
+ *      gradient (dataviz-skill sequential ramp, continuously interpolated)
+ *      instead of its fixed rainbow color -- driven by chart 5's join
+ *      collapsed to one average RAW_SCORE per chakra. Muladhara renders with
+ *      no ring when no variable maps to it, same convention the heatmaps use
+ *      for an empty cell.
+ *
+ *   8. Septenary Constitution gradient portrait -
+ *      dashboard_08_septenary_constitution_gradient_portrait.html
+ *      The Septenary Constitution diagram (folder 3, septenaria.webp): an
+ *      Individuality triangle (Atma/Buddhi/Manas) over a Personality stack
+ *      (Kama-manas/Kama Rupa/Vital-Etheric/Physical), each band colored by
+ *      the same computed gradient method as chart 7 -- driven by chart 2's
+ *      exact data (average RAW_SCORE per septenary level), replotted as this
+ *      figure instead of a bar. Physical Body renders with no fill when no
+ *      variable maps to it.
+ *
  * Usage:
  *   node make_dashboards.js --study <slug> [--out-dir <path>] [--sample] [--intake-dir <path>]
  *
@@ -64,7 +83,9 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
-const { renderLineChart, renderBarChart, renderHeatmap } = require('./chart_lib');
+const {
+  renderLineChart, renderBarChart, renderHeatmap, renderChakraPortrait, renderSeptenaryConstitutionPortrait,
+} = require('./chart_lib');
 
 function parseArgs(argv) {
   const args = { outDir: null, sample: false, study: null, intakeDir: null };
@@ -449,8 +470,109 @@ function buildFiveWayHeatmapHtml(rows) {
     description: 'Average <code>RAW_SCORE</code> per instrument, joined through <code>DW_DIM_FIVE_WAY.ID_SEPTENARY_LEVEL</code>. ' +
       'Ways map many-to-one to a level (Prima/Secunda Via share Lower Mental, Tertia/Quarta share Higher Mental), so a level\'s ' +
       'score repeats across every way built on it. Levels with no way at all (Physical, Vital/Etheric, Astral, Atmic/Spirit) are ' +
-      'empty here even when chart 3/5 have data for them -- see <code>five_ways_septenary_map_firebird25.sql</code>.',
+      'empty here even when chart 3/5 have data. See five_ways_septenary_map_firebird25.sql.',
     favicon: '⛪',
+  });
+}
+
+// --- Chart 7: Chakra gradient portrait ---------------------------------------
+// Same join as chart 5, collapsed to one row per chakra (not per instrument):
+// the average score across every instrument whose variables map to that
+// chakra's septenary level. Colors the traditional 7-chakra illustration's
+// circles with a computed single-hue gradient instead of the fixed rainbow.
+async function loadChakraPortrait(db, studyId) {
+  return query(db, `
+    SELECT C.ORDER_NUM, C.SANSKRIT_NAME, C.COMMON_NAME, L.NAME AS LEVEL_NAME,
+           AVG(VR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
+    FROM DW_FACT_PSY_VARIABLE_RESULT VR
+    JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = VR.ID_VARIABLE
+    JOIN DW_DIM_CHAKRA C ON C.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
+    JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = C.ID_SEPTENARY_LEVEL
+    JOIN DW_DIM_PERSON P ON P.ID_PERSON = VR.ID_PERSON
+    WHERE P.ID_STUDY = ?
+    GROUP BY C.ORDER_NUM, C.SANSKRIT_NAME, C.COMMON_NAME, L.NAME
+    ORDER BY C.ORDER_NUM`, [studyId]);
+}
+
+function sampleChakraPortraitRows() {
+  // Mirrors sampleScoreByLevelRows() 1:1 (chakra:level is 1:1 by design),
+  // relabeled through DW_DIM_CHAKRA -- no row for ORDER_NUM 1 (Muladhara /
+  // Physical Body), same absence sampleScoreByLevelRows() already has.
+  const data = [
+    [2, 'Svadhisthana', 'Sacral Chakra', 'Vital/Etheric Body', 3.41, 846],
+    [3, 'Manipura', 'Solar Plexus Chakra', 'Astral Body', 3.78, 1692],
+    [4, 'Anahata', 'Heart Chakra', 'Lower Mental Body', 3.95, 1269],
+    [5, 'Vishuddha', 'Throat Chakra', 'Higher Mental Body', 3.62, 1692],
+    [6, 'Ajna', 'Third Eye Chakra', 'Buddhic Body', 3.29, 1269],
+    [7, 'Sahasrara', 'Crown Chakra', 'Atmic Body/Spirit', 4.03, 423],
+  ];
+  return data.map(([ORDER_NUM, SANSKRIT_NAME, COMMON_NAME, LEVEL_NAME, AVG_SCORE, N]) =>
+    ({ ORDER_NUM, SANSKRIT_NAME, COMMON_NAME, LEVEL_NAME, AVG_SCORE, N }));
+}
+
+function buildChakraPortraitHtml(rows) {
+  if (rows.length === 0) return null;
+  const cleaned = rows.map((r) => ({ ...r, AVG_SCORE: r.AVG_SCORE === null ? null : round2(r.AVG_SCORE) }));
+  return renderChakraPortrait({
+    title: 'Chakra Gradient Portrait: Average Score by Chakra',
+    description: 'The traditional 7-chakra meditating-figure illustration, with each circle colored by a single-hue gradient ' +
+      '(light = lower, dark = higher) instead of the fixed rainbow -- driven by the real average <code>RAW_SCORE</code> across every ' +
+      'instrument whose variables map to that chakra\'s septenary level (same join as chart 5, collapsed to one row per chakra). ' +
+      'Muladhara (Physical Body) has no ring: no variable in this dataset maps to it -- see GoDataX_Human_7_DW.md. The ' +
+      'chakra&harr;level correspondence itself is a symbolic/interpretive mapping (see chakras_model_firebird25.sql), not an empirical finding.',
+    rows: cleaned,
+    favicon: '🧘',
+  });
+}
+
+// --- Chart 8: Septenary Constitution gradient portrait -----------------------
+// Same data as chart 2 (average RAW_SCORE by septenary level), with
+// TECHNICAL_NAME added for the figure's labels, replotted as the
+// Individuality-triangle-over-Personality-stack diagram
+// (3.septenary.constitution/septenaria.webp) instead of a bar chart.
+async function loadSeptenaryConstitutionPortrait(db, studyId) {
+  return query(db, `
+    SELECT L.ORDER_NUM, L.NAME AS LEVEL_NAME, L.TECHNICAL_NAME,
+           AVG(VR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
+    FROM DW_FACT_PSY_VARIABLE_RESULT VR
+    JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = VR.ID_VARIABLE
+    JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
+    JOIN DW_DIM_PERSON P ON P.ID_PERSON = VR.ID_PERSON
+    WHERE P.ID_STUDY = ?
+    GROUP BY L.ORDER_NUM, L.NAME, L.TECHNICAL_NAME
+    ORDER BY L.ORDER_NUM`, [studyId]);
+}
+
+function sampleSeptenaryConstitutionPortraitRows() {
+  // Mirrors sampleScoreByLevelRows() 1:1, with TECHNICAL_NAME added (same
+  // values as GDX_PSY_SEPTENARY_LEVEL's DML) -- no row for ORDER_NUM 1
+  // (Physical Body / Sthula Sharira), same absence sampleScoreByLevelRows()
+  // already has.
+  const data = [
+    [2, 'Vital/Etheric Body', 'Prana/Linga Sharira', 3.41, 846],
+    [3, 'Astral Body', 'Kama Rupa', 3.78, 1692],
+    [4, 'Lower Mental Body', 'Concrete Manas', 3.95, 1269],
+    [5, 'Higher Mental Body', 'Abstract Manas', 3.62, 1692],
+    [6, 'Buddhic Body', 'Buddhi', 3.29, 1269],
+    [7, 'Atmic Body/Spirit', 'Atma', 4.03, 423],
+  ];
+  return data.map(([ORDER_NUM, LEVEL_NAME, TECHNICAL_NAME, AVG_SCORE, N]) =>
+    ({ ORDER_NUM, LEVEL_NAME, TECHNICAL_NAME, AVG_SCORE, N }));
+}
+
+function buildSeptenaryConstitutionPortraitHtml(rows) {
+  if (rows.length === 0) return null;
+  const cleaned = rows.map((r) => ({ ...r, AVG_SCORE: r.AVG_SCORE === null ? null : round2(r.AVG_SCORE) }));
+  return renderSeptenaryConstitutionPortrait({
+    title: 'Septenary Constitution Gradient Portrait: Average Score by Level',
+    description: 'The Septenary Constitution diagram (Individuality triangle -- Atma/Buddhi/Manas -- over the Personality ' +
+      'stack -- Kama-manas/Kama Rupa/Vital-Etheric/Physical), each band colored by the same single-hue gradient as chart 7 ' +
+      '(light = lower, dark = higher) -- driven by the real average <code>RAW_SCORE</code> across every construct/variable ' +
+      'mapped to that level (<code>GDX_PSY_SEPT_LEVEL_PSY_MAP</code> via <code>DW_DIM_VARIABLE.ID_SEPTENARY_LEVEL</code>), ' +
+      'the exact data chart 2 already plots as a bar. Physical Body has no band color: no variable in this dataset maps to ' +
+      'it -- see GoDataX_Human_7_DW.md.',
+    rows: cleaned,
+    favicon: '🔺',
   });
 }
 
@@ -478,7 +600,8 @@ async function main() {
 
   let db = null;
   let physiologicalRows, scoreByLevelRows, instrumentByLevelRows,
-    instrumentByCoherenceRows, instrumentByChakraRows, instrumentByFiveWayRows;
+    instrumentByCoherenceRows, instrumentByChakraRows, instrumentByFiveWayRows, chakraPortraitRows,
+    septenaryPortraitRows;
 
   if (args.sample) {
     console.log('Using embedded --sample data (no database connection).');
@@ -488,6 +611,8 @@ async function main() {
     instrumentByCoherenceRows = sampleInstrumentByCoherenceRows();
     instrumentByChakraRows = sampleInstrumentByChakraRows();
     instrumentByFiveWayRows = sampleInstrumentByFiveWayRows();
+    chakraPortraitRows = sampleChakraPortraitRows();
+    septenaryPortraitRows = sampleSeptenaryConstitutionPortraitRows();
   } else {
     const options = {
       host: requireEnv('GDX_HUMAN_FB_HOST'),
@@ -509,6 +634,8 @@ async function main() {
     instrumentByCoherenceRows = await loadInstrumentByCoherence(db, studyId);
     instrumentByChakraRows = await loadInstrumentByChakra(db, studyId);
     instrumentByFiveWayRows = await loadInstrumentByFiveWay(db, studyId);
+    chakraPortraitRows = await loadChakraPortrait(db, studyId);
+    septenaryPortraitRows = await loadSeptenaryConstitutionPortrait(db, studyId);
   }
 
   if (db) db.detach();
@@ -520,6 +647,8 @@ async function main() {
     [buildFilename('dashboard_04_instrument_by_cardiac_coherence_heatmap', args.study, studyTitle, timestamp), buildCoherenceHeatmapHtml(instrumentByCoherenceRows)],
     [buildFilename('dashboard_05_instrument_by_kundalini_chakra_heatmap', args.study, studyTitle, timestamp), buildChakraHeatmapHtml(instrumentByChakraRows)],
     [buildFilename('dashboard_06_instrument_by_five_ways_heatmap', args.study, studyTitle, timestamp), buildFiveWayHeatmapHtml(instrumentByFiveWayRows)],
+    [buildFilename('dashboard_07_chakra_gradient_portrait', args.study, studyTitle, timestamp), buildChakraPortraitHtml(chakraPortraitRows)],
+    [buildFilename('dashboard_08_septenary_constitution_gradient_portrait', args.study, studyTitle, timestamp), buildSeptenaryConstitutionPortraitHtml(septenaryPortraitRows)],
   ];
 
   for (const [filename, html] of outputs) {

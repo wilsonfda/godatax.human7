@@ -1,21 +1,21 @@
 ---
 name: GDX_SKILL_MAKE_DASHBOARS_DW
-description: Generates 6 self-contained HTML charts (multi-dimension line, bar, and 4 heatmaps) from the GDX_HUMAN data warehouse (7.multidimensional.database), scoped to one study passed in via --study <slug>, each an interesting cross-perspective read on the data described in GoDataX_Human_7_DW.md. Use when the user asks for dashboards, charts, or visualizations of a specific GDX_HUMAN study.
+description: Generates 8 self-contained HTML charts (multi-dimension line, bar, 4 heatmaps, a chakra gradient portrait, and a Septenary Constitution gradient portrait) from the GDX_HUMAN data warehouse (7.multidimensional.database), scoped to one study passed in via --study <slug>, each an interesting cross-perspective read on the data described in GoDataX_Human_7_DW.md. Use when the user asks for dashboards, charts, or visualizations of a specific GDX_HUMAN study.
 ---
 
 # GDX_SKILL_MAKE_DASHBOARS_DW
 
-Reads `7.multidimensional.database` (see `GoDataX_Human_7_DW.md`) and writes 6 standalone `.html` chart files, each openable directly in a browser — no server, no external CDN, no native dependency (pure `node-firebird` wire-protocol connection, same as the other two `GDX_SKILL_*` skills in `GDX_HUMAN`).
+Reads `7.multidimensional.database` (see `GoDataX_Human_7_DW.md`) and writes 8 standalone `.html` chart files, each openable directly in a browser — no server, no external CDN, no native dependency (pure `node-firebird` wire-protocol connection, same as the other two `GDX_SKILL_*` skills in `GDX_HUMAN`).
 
 ## Scoped to one study
 
 Every run requires `--study <slug>` — the same slug `GDX_SKILL_NEW_STUDY` used for
-`new_study_intake/<slug>/intake.json`. All 6 charts are filtered to **only that study's people**:
+`new_study_intake/<slug>/intake.json`. All 8 charts are filtered to **only that study's people**:
 the slug resolves to the study's title (from its `intake.json`), the title resolves to
 `GDX_PSY_STUDY.ID_STUDY`, and every chart query joins `DW_DIM_PERSON` on `ID_STUDY = ?` (the same
 column `GDX_SKILL_LOAD_NEW_STUDY_DW` populates when it first loads a person for that study — see
 `GoDataX_Human_7_DW.md` section 8). Running the skill again for a different study produces a
-completely separate set of 6 files; it never mixes two studies' people into one chart.
+completely separate set of 8 files; it never mixes two studies' people into one chart.
 
 Every output filename carries the study's slug, its title (slugified), and the moment that run was
 generated — `dashboard_0N_<chart>__<slug>__<title-slug>__<YYYYMMDD-HHMMSS>.html` — so re-running for
@@ -23,7 +23,7 @@ the same study later (e.g. after more participants answer) never overwrites an e
 
 Charts follow the **dataviz** skill's method: fixed categorical hue order, single-hue sequential ramp for magnitude, thin marks, a legend, direct labels, hover tooltips, light/dark theme via CSS custom properties, and a table-view fallback toggle on every chart.
 
-## The 6 charts
+## The 8 charts
 
 | # | File (base name, before the `__<slug>__<title>__<timestamp>` suffix) | Type | What it shows | Why this form |
 |---|---|---|---|---|
@@ -33,15 +33,17 @@ Charts follow the **dataviz** skill's method: fixed categorical hue order, singl
 | 4 | `dashboard_04_instrument_by_cardiac_coherence_heatmap` | Heatmap | Average score per (instrument × cardiac-coherence `STRESS_CLASS`) cell, this study only | Same reasoning as #3, applied to the physiological perspective. No direct fact links an instrument to a session, so this joins through the shared `DW_DIM_PERSON` — it only has data for people who did both the psychometric battery and a coherence session, within this study. |
 | 5 | `dashboard_05_instrument_by_kundalini_chakra_heatmap` | Heatmap | Average score per (instrument × chakra) cell, this study only | Each chakra maps 1:1 to a septenary level (`DW_DIM_CHAKRA.ID_SEPTENARY_LEVEL`), so this is chart 3's exact numbers, relabeled through the energetic/chakra lens instead of the "level" lens. |
 | 6 | `dashboard_06_instrument_by_five_ways_heatmap` | Heatmap | Average score per (instrument × Aquinas's Five Ways) cell, this study only | Ways map N:1 to a level (several ways can share one — see `five_ways_septenary_map_firebird25.sql`), so a level's score repeats across every way built on it; levels with no way at all (Physical, Vital/Etheric, Astral, Atmic/Spirit) are empty here even where chart 3/5 have data. |
+| 7 | `dashboard_07_chakra_gradient_portrait` | Figure (meditating silhouette, 7 marks) | The traditional 7-chakra illustration (`4.kundalini.chakras/MMPC7_4_Ilustracion.webp`), each chakra's circle colored by a computed single-hue gradient instead of its fixed rainbow color, driven by chart 5's join collapsed to **one average score per chakra** | Same relation as chart 5, at coarser grain: not "which instrument scores what at this chakra" but "what does this chakra score, overall" — read as a picture instead of a table. Uses the dataviz sequential ramp, continuously interpolated between steps (not floored into buckets the way the heatmaps are) since only 7 marks are on screen and the real scores cluster tightly. |
+| 8 | `dashboard_08_septenary_constitution_gradient_portrait` | Figure (Individuality triangle over Personality stack, 7 bands) | The Septenary Constitution diagram (`3.septenary.constitution/septenaria.webp`), each of its 7 bands colored by the same computed single-hue gradient as chart 7, driven by chart 2's exact data (**one average score per septenary level**) | Chart 2's bar-chart numbers, replotted onto the diagram they were always secretly describing — the triangle (Atma/Buddhi/Manas, levels 7-6-5) over the stack (Kama-manas/Kama Rupa/Vital-Etheric/Physical, levels 4-3-2-1). Same continuous-interpolation method as chart 7, for the same reason (only 7 bands on screen, real scores cluster tightly). |
 
-All four heatmaps share one pivot helper (`buildInstrumentHeatmapHtml` in `make_dashboards.js`) — only the query and the fixed column list differ between them. All 6 queries join `DW_DIM_PERSON` and filter `WHERE P.ID_STUDY = ?` on the id resolved from `--study`.
+All four heatmaps share one pivot helper (`buildInstrumentHeatmapHtml` in `make_dashboards.js`) — only the query and the fixed column list differ between them. All 8 queries join `DW_DIM_PERSON` and filter `WHERE P.ID_STUDY = ?` on the id resolved from `--study`.
 
 ## Running it
 
 ```
 cd 8.gdx.dashboards/.claude/skills/GDX_SKILL_MAKE_DASHBOARS_DW/scripts
 npm install                 # once, installs node-firebird
-node make_dashboards.js --sample --study <slug>     # sanity check: embedded sample data, no DB connection, writes 6 files
+node make_dashboards.js --sample --study <slug>     # sanity check: embedded sample data, no DB connection, writes 8 files
 # copy ../.env.example to ../.env and fill in GDX_HUMAN_FB_PASSWORD, or export the vars directly
 node make_dashboards.js --study <slug>              # real run against the live DW, scoped to that one study
 ```
@@ -57,9 +59,11 @@ an error: the filename just falls back to a generic "Sample Study" title.
 Output defaults to `8.gdx.dashboards/` (pass `--out-dir <path>` to change it), with filenames shaped
 `dashboard_0N_<chart>__<study-slug>__<study-title-slug>__<YYYYMMDD-HHMMSS>.html` — see "Output
 filenames" below. A chart is skipped (not written) if its query returns no rows for this study —
-check the console output before assuming all 6 exist (e.g. chart 1 and chart 4 both depend on
+check the console output before assuming all 8 exist (e.g. chart 1 and chart 4 both depend on
 `DW_FACT_CC_HRV_WINDOW`, which is empty until a cardiac-coherence session is loaded for a person, in
-this study, that already exists in `DW_DIM_PERSON` — see `GoDataX_Human_7_DW.md` §6).
+this study, that already exists in `DW_DIM_PERSON` — see `GoDataX_Human_7_DW.md` §6; chart 7 is
+skipped only if chart 5's underlying join returns nothing at all for this study, and chart 8 only if
+chart 2's underlying join returns nothing, since both are the same joins at a coarser grain).
 
 ## Output filenames
 
@@ -72,7 +76,7 @@ dashboard_02_score_by_septenary_level__workplace-resilience-pilot__workplace-res
 - `<study-slug>` — the literal `--study` value.
 - `<study-title-slug>` — the study's `GDX_PSY_STUDY.TITLE` (from its `intake.json`), lowercased,
   accents stripped, non-alphanumeric runs collapsed to `-`, capped at 60 characters.
-- `<timestamp>` — `YYYYMMDD-HHMMSS`, the moment this run started (one shared timestamp for all 6
+- `<timestamp>` — `YYYYMMDD-HHMMSS`, the moment this run started (one shared timestamp for all 8
   files in a single run).
 
 This means two different runs — for two different studies, or the same study re-run later — never
@@ -80,7 +84,7 @@ collide or overwrite each other's files.
 
 ## Files in this skill
 
-- `scripts/chart_lib.js` — the 3 renderers (`renderLineChart`, `renderBarChart`, `renderHeatmap`) plus the shared self-contained HTML page shell and the reference palette (dataviz skill default — swap the hex values here to retheme)
-- `scripts/make_dashboards.js` — connects (or `--sample`), runs the 6 queries, shapes the data, writes the 6 `.html` files
+- `scripts/chart_lib.js` — the 5 renderers (`renderLineChart`, `renderBarChart`, `renderHeatmap`, `renderChakraPortrait`, `renderSeptenaryConstitutionPortrait`) plus the shared self-contained HTML page shell and the reference palette (dataviz skill default — swap the hex values here to retheme)
+- `scripts/make_dashboards.js` — connects (or `--sample`), runs the 8 queries, shapes the data, writes the 8 `.html` files
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)

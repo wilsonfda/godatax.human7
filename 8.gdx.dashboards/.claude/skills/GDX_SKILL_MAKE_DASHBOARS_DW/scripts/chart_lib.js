@@ -313,4 +313,232 @@ function renderHeatmap({ title, description, rows, cols, cells, favicon, mode = 
   return pageShell({ title, description, favicon, bodyHtml, script });
 }
 
-module.exports = { renderLineChart, renderBarChart, renderHeatmap, PALETTE };
+/** Interpolates continuously between the steps of a sequential ramp (t in
+ * [0,1]) instead of the discrete floor()-into-buckets renderHeatmap uses --
+ * with only 7 marks on the portrait, flooring collapsed several chakras onto
+ * the same ramp step. */
+function hexToRgb(hex) {
+  return { r: parseInt(hex.slice(1, 3), 16), g: parseInt(hex.slice(3, 5), 16), b: parseInt(hex.slice(5, 7), 16) };
+}
+function rgbToHex(r, g, b) {
+  const toHex = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+function rampColorContinuous(t, ramp) {
+  const p = t * (ramp.length - 1);
+  const lo = Math.max(0, Math.min(ramp.length - 2, Math.floor(p)));
+  const frac = p - lo;
+  const c0 = hexToRgb(ramp[lo]), c1 = hexToRgb(ramp[lo + 1]);
+  return rgbToHex(c0.r + (c1.r - c0.r) * frac, c0.g + (c1.g - c0.g) * frac, c0.b + (c1.b - c0.b) * frac);
+}
+
+// Fixed layout for the 7 chakras down the meditating silhouette's centerline,
+// order 7 (crown, top of head) down to order 1 (root, near the pelvis) --
+// same visual convention as the traditional 7-chakra illustration this
+// reworks (GDX_HUMAN/4.kundalini.chakras), just with computed color instead
+// of the fixed rainbow.
+const CHAKRA_PORTRAIT_CX = 170;
+const CHAKRA_PORTRAIT_Y = { 7: 70, 6: 126, 5: 176, 4: 226, 3: 272, 2: 314, 1: 354 };
+const CHAKRA_PORTRAIT_SILHOUETTE = `
+  <circle cx="170" cy="72" r="38"/>
+  <path d="M148,104 L192,104 L198,118 L142,118 Z"/>
+  <path d="M170,116 C122,116 96,148 90,196 C86,228 92,258 104,282 C88,300 78,326 74,356
+           C124,372 216,372 266,356 C262,326 252,300 236,282 C248,258 254,228 250,196 C244,148 218,116 170,116 Z"/>
+  <path d="M74,356 C40,392 26,432 34,470 C70,462 96,440 110,412 Z"/>
+  <path d="M266,356 C300,392 314,432 306,470 C270,462 244,440 230,412 Z"/>
+  <path d="M34,470 C60,486 90,492 116,486 C104,504 78,514 50,512 C38,500 33,486 34,470 Z"/>
+  <path d="M306,470 C280,486 250,492 224,486 C236,504 262,514 290,512 C302,500 307,486 306,470 Z"/>
+  <path d="M96,486 C112,522 140,542 170,544 C200,542 228,522 244,486 C216,502 188,510 170,510 C152,510 124,502 96,486 Z"/>`;
+
+/** Chakra gradient portrait. rows: [{ORDER_NUM, SANSKRIT_NAME, COMMON_NAME,
+ * LEVEL_NAME, AVG_SCORE, N}], one row per chakra that has at least one mapped
+ * variable (1-7, missing ORDER_NUM values render as "no data" -- same
+ * convention renderHeatmap uses for an empty cell, not zero). */
+function renderChakraPortrait({ title, description, rows, favicon, mode = 'light' }) {
+  const ramp = PALETTE.sequential[mode];
+  const byOrder = new Map(rows.map((r) => [r.ORDER_NUM, r]));
+  const present = rows.filter((r) => r.AVG_SCORE !== null && r.AVG_SCORE !== undefined);
+  const vMin = present.length ? Math.min(...present.map((r) => r.AVG_SCORE)) : null;
+  const vMax = present.length ? Math.max(...present.map((r) => r.AVG_SCORE)) : null;
+  const colorFor = (v) => (vMin === null || vMax === vMin ? ramp[Math.floor(ramp.length / 2)]
+    : rampColorContinuous((v - vMin) / (vMax - vMin), ramp));
+
+  let circlesSvg = '', labelsSvg = '';
+  for (let n = 7; n >= 1; n--) {
+    const r = byOrder.get(n);
+    const cy = CHAKRA_PORTRAIT_Y[n];
+    const hasScore = r && r.AVG_SCORE !== null && r.AVG_SCORE !== undefined;
+    const scoreLabel = hasScore ? String(r.AVG_SCORE) : 'no data';
+    const name = r ? r.SANSKRIT_NAME : '';
+    const tip = r ? `<strong>${esc(r.SANSKRIT_NAME)}</strong> (${esc(r.COMMON_NAME)})<br>${hasScore ? 'avg ' + r.AVG_SCORE + ' (n=' + r.N + ')' : 'no linked variable'}` : '';
+    if (hasScore) {
+      const color = colorFor(r.AVG_SCORE);
+      const rOut = n === 7 ? 30 : 27, rIn = n === 7 ? 17 : 15;
+      circlesSvg += `<circle cx="${CHAKRA_PORTRAIT_CX}" cy="${cy}" r="${rOut}" fill="${color}" opacity="0.30"/>
+        <circle class="chakra-mark" cx="${CHAKRA_PORTRAIT_CX}" cy="${cy}" r="${rIn}" fill="${color}"
+          stroke="var(--surface)" stroke-width="1.5" data-tip="${esc(tip)}"></circle>`;
+    } else {
+      circlesSvg += `<circle cx="${CHAKRA_PORTRAIT_CX}" cy="${cy}" r="24" fill="none" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <circle class="chakra-mark" cx="${CHAKRA_PORTRAIT_CX}" cy="${cy}" r="13" fill="var(--grid)"
+          stroke="var(--axis)" stroke-width="1.5" data-tip="${esc(tip)}"></circle>`;
+    }
+    labelsSvg += `<text x="60" y="${cy + 4}" text-anchor="end" font-size="12" font-weight="600" fill="var(--muted)">No. ${n}</text>
+      <text x="200" y="${cy - 3}" font-size="13" font-weight="700" fill="var(--ink)">${esc(name)}</text>
+      <text x="200" y="${cy + 10}" font-size="11" fill="var(--muted)">${esc(scoreLabel)}</text>`;
+  }
+
+  const legendSteps = ramp.map((c) => `<span class="legend-swatch" style="background:${c}"></span>`).join('');
+  const bodyHtml = `
+    <svg class="chart-svg" viewBox="0 0 340 560" role="img" aria-label="${esc(title)}" style="max-width:340px;margin:0 auto;">
+      <g fill="var(--grid)">${CHAKRA_PORTRAIT_SILHOUETTE}</g>
+      ${circlesSvg}
+      ${labelsSvg}
+    </svg>
+    <div class="legend">
+      <span>${vMin !== null ? vMin.toFixed(2) : '--'} (lowest)</span>
+      <div style="display:flex;gap:2px">${legendSteps}</div>
+      <span>${vMax !== null ? vMax.toFixed(2) : '--'} (highest)</span>
+      <span style="margin-left:8px;color:var(--muted)">gray dashed = no linked variable</span>
+    </div>
+    <table class="data-table"><thead><tr><th>No.</th><th>Chakra</th><th>Septenary level</th><th>Average score</th><th>N (person x variable)</th></tr></thead>
+      <tbody>${[7, 6, 5, 4, 3, 2, 1].map((n) => {
+        const r = byOrder.get(n);
+        return `<tr><td>${n}</td><td>${r ? esc(r.SANSKRIT_NAME) + ' (' + esc(r.COMMON_NAME) + ')' : ''}</td>` +
+          `<td>${r ? esc(r.LEVEL_NAME || '') : ''}</td>` +
+          `<td>${r && r.AVG_SCORE !== null && r.AVG_SCORE !== undefined ? r.AVG_SCORE : '—'}</td>` +
+          `<td>${r && r.N !== null && r.N !== undefined ? r.N : '—'}</td></tr>`;
+      }).join('')}</tbody>
+    </table>`;
+
+  const script = `
+    document.querySelectorAll('.chakra-mark').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });`;
+
+  return pageShell({ title, description, favicon, bodyHtml, script });
+}
+
+// Fixed layout for the Septenary Constitution diagram (3.septenary.constitution/
+// septenaria.webp): a 3-band triangle (Individuality: Atma/Buddhi/Manas, order
+// 7-6-5, apex at top) sitting on a 4-band rectangle (Personality: Kama-manas/
+// Kama Rupa/Vital-Etheric/Physical, order 4-3-2-1, top to bottom) -- same
+// computed-gradient rework as the chakra portrait, applied to this figure.
+const SEPT_CX = 220, SEPT_Y_APEX = 30, SEPT_Y_TRI_BASE = 240, SEPT_BASE_HALF_W = 190, SEPT_RECT_BAND_H = 65;
+function septHalfWidthAt(y) {
+  return (y - SEPT_Y_APEX) / (SEPT_Y_TRI_BASE - SEPT_Y_APEX) * SEPT_BASE_HALF_W;
+}
+// Band geometry per ORDER_NUM, top to bottom: 7, 6, 5 are triangle bands
+// (trapezoids, the topmost a true triangle at the apex); 4, 3, 2, 1 are equal
+// rectangle bands.
+const SEPT_TRI_Y = [SEPT_Y_APEX, SEPT_Y_APEX + (SEPT_Y_TRI_BASE - SEPT_Y_APEX) / 3, SEPT_Y_APEX + 2 * (SEPT_Y_TRI_BASE - SEPT_Y_APEX) / 3, SEPT_Y_TRI_BASE];
+const SEPT_RECT_Y = [0, 1, 2, 3, 4].map((i) => SEPT_Y_TRI_BASE + i * SEPT_RECT_BAND_H);
+function septBandGeometry(orderNum) {
+  if (orderNum >= 5) {
+    const i = 7 - orderNum; // 7->0 (apex band), 6->1, 5->2
+    const yTop = SEPT_TRI_Y[i], yBot = SEPT_TRI_Y[i + 1];
+    const hwTop = septHalfWidthAt(yTop), hwBot = septHalfWidthAt(yBot);
+    const points = i === 0
+      ? `${SEPT_CX},${yTop} ${SEPT_CX + hwBot},${yBot} ${SEPT_CX - hwBot},${yBot}`
+      : `${SEPT_CX - hwTop},${yTop} ${SEPT_CX + hwTop},${yTop} ${SEPT_CX + hwBot},${yBot} ${SEPT_CX - hwBot},${yBot}`;
+    return { points, cy: (yTop + yBot) / 2, group: 'Individuality' };
+  }
+  const i = 4 - orderNum; // 4->0 (top rect band) .. 1->3 (bottom)
+  const yTop = SEPT_RECT_Y[i], yBot = SEPT_RECT_Y[i + 1];
+  const hw = SEPT_BASE_HALF_W;
+  const points = `${SEPT_CX - hw},${yTop} ${SEPT_CX + hw},${yTop} ${SEPT_CX + hw},${yBot} ${SEPT_CX - hw},${yBot}`;
+  return { points, cy: (yTop + yBot) / 2, group: 'Personality' };
+}
+/** Relative luminance (0-255 scale) to pick readable text color over a fill. */
+function luminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Septenary Constitution gradient portrait. rows: [{ORDER_NUM, LEVEL_NAME,
+ * TECHNICAL_NAME, AVG_SCORE, N}] -- same shape loadScoreByLevel() already
+ * returns for chart 2 (plus TECHNICAL_NAME), just replotted as this figure. A
+ * missing ORDER_NUM renders as "no data", same convention chart 7/the
+ * heatmaps use for an empty cell. */
+function renderSeptenaryConstitutionPortrait({ title, description, rows, favicon, mode = 'light' }) {
+  const ramp = PALETTE.sequential[mode];
+  const byOrder = new Map(rows.map((r) => [r.ORDER_NUM, r]));
+  const present = rows.filter((r) => r.AVG_SCORE !== null && r.AVG_SCORE !== undefined);
+  const vMin = present.length ? Math.min(...present.map((r) => r.AVG_SCORE)) : null;
+  const vMax = present.length ? Math.max(...present.map((r) => r.AVG_SCORE)) : null;
+  const colorFor = (v) => (vMin === null || vMax === vMin ? ramp[Math.floor(ramp.length / 2)]
+    : rampColorContinuous((v - vMin) / (vMax - vMin), ramp));
+
+  let bandsSvg = '', groupLabelsSvg = '';
+  for (let n = 7; n >= 1; n--) {
+    const r = byOrder.get(n);
+    const geo = septBandGeometry(n);
+    const hasScore = r && r.AVG_SCORE !== null && r.AVG_SCORE !== undefined;
+    const name = r ? r.LEVEL_NAME : '';
+    const technical = r && r.TECHNICAL_NAME ? `(${r.TECHNICAL_NAME})` : '';
+    const scoreLabel = hasScore ? `avg ${r.AVG_SCORE}` : 'no data';
+    const tip = r ? `<strong>${esc(r.LEVEL_NAME)}</strong> ${esc(technical)}<br>${hasScore ? scoreLabel + ' (n=' + r.N + ')' : 'no linked variable'}` : '';
+    if (hasScore) {
+      const color = colorFor(r.AVG_SCORE);
+      const textColor = luminance(color) < 140 ? '#ffffff' : 'var(--ink)';
+      bandsSvg += `<polygon class="chakra-mark" points="${geo.points}" fill="${color}" stroke="var(--surface)" stroke-width="1.5" data-tip="${esc(tip)}"></polygon>
+        <text x="${SEPT_CX}" y="${geo.cy - 5}" text-anchor="middle" font-size="13" font-weight="700" fill="${textColor}">${esc(name)}</text>
+        <text x="${SEPT_CX}" y="${geo.cy + 11}" text-anchor="middle" font-size="10.5" fill="${textColor}">${esc(technical)} &middot; ${esc(scoreLabel)}</text>`;
+    } else {
+      bandsSvg += `<polygon points="${geo.points}" fill="var(--grid)" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="4,3"></polygon>
+        <polygon class="chakra-mark" points="${geo.points}" fill="transparent" data-tip="${esc(tip)}"></polygon>
+        <text x="${SEPT_CX}" y="${geo.cy - 5}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--muted)">${esc(name)}</text>
+        <text x="${SEPT_CX}" y="${geo.cy + 11}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${esc(technical)} &middot; no data</text>`;
+    }
+  }
+  // Small connector notch where the triangle meets the rectangle, matching
+  // the source illustration's own seam.
+  const connector = `<rect x="${SEPT_CX - 11}" y="${SEPT_Y_TRI_BASE - 11}" width="22" height="22" fill="var(--surface)" stroke="var(--axis)" stroke-width="1.5"/>`;
+
+  const groupLabelY1 = (SEPT_Y_APEX + SEPT_Y_TRI_BASE) / 2;
+  const groupLabelY2 = SEPT_Y_TRI_BASE + 2 * SEPT_RECT_BAND_H;
+  groupLabelsSvg = `
+    <text x="18" y="${groupLabelY1}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1"
+      fill="var(--muted)" transform="rotate(-90 18 ${groupLabelY1})">INDIVIDUALITY</text>
+    <text x="18" y="${groupLabelY2}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1"
+      fill="var(--muted)" transform="rotate(-90 18 ${groupLabelY2})">PERSONALITY</text>`;
+
+  const legendSteps = ramp.map((c) => `<span class="legend-swatch" style="background:${c}"></span>`).join('');
+  const H = SEPT_RECT_Y[SEPT_RECT_Y.length - 1] + 20;
+  const bodyHtml = `
+    <svg class="chart-svg" viewBox="0 0 440 ${H}" role="img" aria-label="${esc(title)}" style="max-width:400px;margin:0 auto;">
+      ${bandsSvg}
+      ${connector}
+      ${groupLabelsSvg}
+    </svg>
+    <div class="legend">
+      <span>${vMin !== null ? vMin.toFixed(2) : '--'} (lowest)</span>
+      <div style="display:flex;gap:2px">${legendSteps}</div>
+      <span>${vMax !== null ? vMax.toFixed(2) : '--'} (highest)</span>
+      <span style="margin-left:8px;color:var(--muted)">gray dashed = no linked variable</span>
+    </div>
+    <table class="data-table"><thead><tr><th>No.</th><th>Level</th><th>Technical name</th><th>Average score</th><th>N (person x variable)</th></tr></thead>
+      <tbody>${[7, 6, 5, 4, 3, 2, 1].map((n) => {
+        const r = byOrder.get(n);
+        return `<tr><td>${n}</td><td>${r ? esc(r.LEVEL_NAME) : ''}</td>` +
+          `<td>${r && r.TECHNICAL_NAME ? esc(r.TECHNICAL_NAME) : ''}</td>` +
+          `<td>${r && r.AVG_SCORE !== null && r.AVG_SCORE !== undefined ? r.AVG_SCORE : '—'}</td>` +
+          `<td>${r && r.N !== null && r.N !== undefined ? r.N : '—'}</td></tr>`;
+      }).join('')}</tbody>
+    </table>`;
+
+  const script = `
+    document.querySelectorAll('.chakra-mark').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });`;
+
+  return pageShell({ title, description, favicon, bodyHtml, script });
+}
+
+module.exports = {
+  renderLineChart, renderBarChart, renderHeatmap, renderChakraPortrait,
+  renderSeptenaryConstitutionPortrait, PALETTE,
+};

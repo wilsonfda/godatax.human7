@@ -7,8 +7,16 @@
 > (`9.knowledge.graph/`) — a Neo4j property graph mirroring the full
 > `GDX_HUMAN` relational schema (folders 2–7: psychometrics, septenary
 > constitution, kundalini/chakras, Aquinas's Five Ways, cardiac coherence,
-> and the DW). Neither model has been implemented yet; this is the design
-> document to work from when one is.
+> and the DW).
+>
+> **2026-09-19 update: both models are now implemented.** `GDX_SKILL_GODATAX_HUMAN7_LINK_PRED`
+> (Model 1) and `GDX_SKILL_GODATAX_HUMAN7_COMMUNITY_DETECT` (Model 2) — both in this folder's
+> `.claude/skills/` — run these designs for real against the live Neo4j graph, reading only
+> Neo4j (never Firebird). See each skill's own `SKILL.md` for exactly how, and §"Implementation
+> notes" at the end of this document for what changed from this design during a real build
+> (mainly: a real Aura Graph Analytics platform bug in the link-prediction pipeline's predict
+> step, worked around with an in-process classifier — Model 1's design below is otherwise
+> unchanged) and the real numbers a first run produced.
 
 ## Why the graph, and not the relational tables, is the right substrate
 
@@ -218,3 +226,81 @@ Link prediction (Model 1) is more valuable long-term — it is the piece that
 would actually reduce manual work in `GDX_SKILL_LOAD_SEPT_MAPS_DB` — but it
 is only trustworthy once the labeled set grows past today's 19 examples, so
 it is the better second step, revisited as more mappings accumulate.
+
+---
+
+## Implementation notes (2026-09-19)
+
+Both models were built as `GDX_HUMAN` skills — `GDX_SKILL_GODATAX_HUMAN7_LINK_PRED` and
+`GDX_SKILL_GODATAX_HUMAN7_COMMUNITY_DETECT`, both `.claude/skills/` under this folder — reading
+only the Neo4j graph (never Firebird), against `GDX_PSY_STUDY_ID=1` ("Predictors of Adaptability
+to Military Higher Education"). The design above held up almost exactly as written, with one
+real platform surprise on Model 1.
+
+### The graph projection actually used
+
+Both models project the same 9-label, 10-relationship-type catalog subgraph — `GDX_PSY_VARIABLE`,
+`GDX_PSY_CONSTRUCT`, `GDX_PSY_INSTRUMENT`, `GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_CHAKRA`,
+`GDX_TA_WAY`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_TA_WAY_SEPT_MAP`, `GDX_PSY_INSTRUMENT_CONSTRUCT`
+(the last one a junction table needed for Instrument↔Construct connectivity, not called out by
+name in the original design above) — **98 nodes, 133 directed / 266 undirected relationships**.
+Neither model's core task needs the fact tables (item responses, variable results, sessions,
+HRV windows) `GDX_SKILL_GODATAX_HUMAN7_BY_SPU` can also export — those matter for Model 2's
+"extend to people" idea (§ above), not yet built.
+
+### Model 1 real run: a platform bug, and how it was worked around
+
+Neo4j's Aura Graph Analytics (the GDS variant this Aura instance runs — an ephemeral-session
+compute model, not classic in-process GDS) has a real, reproducible bug: its link-prediction
+pipeline's `predict.stream` and `predict.mutate` + `gds.graph.relationship.write` path
+mis-resolves relationship endpoints on a graph projection with more than one node label.
+`predict.mutate` reports the exactly correct candidate count (136 — the true number of
+non-existing variable↔level pairs) but writes them onto arbitrary same-label node pairs
+instead of the real ones. `gds.graph.nodeProperty.stream` (a plain per-node property read, no
+relationship-endpoint mapping) does not have this problem, so the actual implementation pulls
+FastRP embeddings that way and trains a small logistic regression **in the skill script itself**
+(plain JS, Hadamard-product features, ~30 lines, no dependency) rather than trusting the
+pipeline's own `predict.*`. The real GDS pipeline is still run, purely to report its
+cross-validated AUCPR as an independent quality metric — see
+`GDX_SKILL_GODATAX_HUMAN7_LINK_PRED/SKILL.md`'s "Why a custom classifier" section for the full
+account, including the exact symptoms, in case a future Aura release fixes this.
+
+**Real numbers, first run:** 22 `GDX_PSY_VARIABLE` nodes, 18 with an existing `MAPS_TO_LEVEL`
+mapping (one more than this document's original "19" — not a discrepancy in the graph, just
+that this run's positive count is graph-derived and current, not the frozen count this document
+was written against), 4 unmapped: *Organizational Anomie*, *Professional/Financial Success*,
+*Social Standing*, and *Red Tape* — all four are the excluded-by-design variables from the
+Undocumented Organizational Block and Red Tape instruments (`GoDataX_Human_7_DW.md` §7), so a
+sensible model should show no strong single winner for them, and it doesn't: probabilities for
+their top candidates cluster close together rather than any one level dominating. Track A's
+independent GDS-pipeline AUCPR: **0.75 (test), ~0.78 (validation avg)** — consistent with, not
+better or worse than, the small-N risk this document already flagged for 18-19 examples across
+7 classes.
+
+### Model 2 real run: worked as designed, no platform issues
+
+Louvain found **9 non-trivial communities** on this graph. Most read as clean matches: the three
+satisfaction-family instruments (Job/Personal/Life Satisfaction) plus `Negative Emotions` cluster
+together and land on Astral Body/Manipura; Positivity Ratio's Vigor and Positive Emotions cluster
+on Vital-Etheric/Svadhisthana; Hardiness's Control, Career Adaptability's Control, and Perceived
+Control of Life cluster on Lower Mental/Anahata — each of these is a **structural confirmation**
+of an existing mapping, found with zero labels given to the algorithm. One community is the
+"spans levels" case this document predicted as interesting: Student Engagement Scale's two
+variables (`Dedication`, `Absorption`) cluster together with each other but with **no single
+septenary level** in their community — exactly because `Dedication` maps to Higher Mental and
+`Absorption` maps to Buddhic (both correctly, per the existing mapping), so the algorithm
+correctly detects that this one instrument's two variables belong together *and* that a single
+level doesn't capture that. Label Propagation cross-check agreement was high (mostly 100%) across
+communities, meaning both unsupervised methods found the same structure independently — not an
+artifact of Louvain alone.
+
+### What to revisit later
+
+- Re-run both skills whenever `GDX_SKILL_LOAD_SEPT_MAPS_DB` adds a new mapping (grows Model 1's
+  labeled set) or a new study/instrument is onboarded (changes the catalog subgraph).
+- If Neo4j ever fixes the Aura Graph Analytics `predict.*` endpoint-resolution bug, Model 1's
+  Track B (the in-process classifier) could be retired in favor of the pipeline's own
+  `predict.stream` directly — check before assuming the workaround is still needed.
+- Model 2's "extend to people" idea (§ above) still needs more cardiac-coherence-linked
+  participants before it produces anything statistically meaningful (today only one person,
+  `SPSS-784`, has both data sources) — unchanged from the original design.

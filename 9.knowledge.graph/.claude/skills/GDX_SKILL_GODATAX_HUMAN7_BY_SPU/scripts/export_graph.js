@@ -18,8 +18,16 @@
  * tables match the prefixes above.
  *
  * Usage:
- *   node export_graph.js [--dry-run] [--tables T1,T2,...] [--limit N]
+ *   node export_graph.js --study <slug> [--dry-run] [--tables T1,T2,...] [--limit N] [--intake-dir <path>]
  *
+ *   --study <slug>   REQUIRED. Same slug GDX_SKILL_NEW_STUDY/GDX_SKILL_MAKE_DASHBOARS_DW/
+ *                    GDX_SKILL_LOAD_NEW_STUDY_DW use -- resolves to GDX_PSY_STUDY.ID_STUDY
+ *                    via new_study_intake/<slug>/intake.json's study.title. Every
+ *                    study-scoped table (see STUDY_SCOPE below) is filtered to only
+ *                    this one study's rows; shared reference/catalog tables (levels,
+ *                    chakras, instrument definitions, etc.) are still exported in
+ *                    full -- see "What counts as study-scoped" below.
+ *   --intake-dir     override the default new_study_intake/<slug>/ location.
  *   --dry-run        introspect and count rows only, write nothing to Neo4j
  *   --tables T1,T2   only export these tables (still respects their FKs to
  *                    each other; a FK to a table outside this list is
@@ -29,10 +37,12 @@
  *
  * Connection: entirely from environment variables (see ../.env.example) --
  * both the Firebird source (GDX_HUMAN_FB_*) and the Neo4j target (NEO4J_*,
- * same variable names as Neo4j-7d0a3815-Created-2026-09-10.txt). Never
+ * same variable names as Neo4j-a6a03aab-Created-2026-09-18.txt). Never
  * hardcode credentials here.
  */
 
+const fs = require('fs');
+const path = require('path');
 const Firebird = require('node-firebird');
 const neo4j = require('neo4j-driver');
 const { introspectSchema } = require('./introspect');
@@ -40,14 +50,102 @@ const { introspectSchema } = require('./introspect');
 const BATCH_SIZE = 1000;
 
 function parseArgs(argv) {
-  const args = { dryRun: false, tables: null, limit: null };
+  const args = { dryRun: false, tables: null, limit: null, study: null, intakeDir: null };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--dry-run') args.dryRun = true;
     else if (argv[i] === '--tables') args.tables = new Set(argv[++i].split(',').map((s) => s.trim().toUpperCase()));
     else if (argv[i] === '--limit') args.limit = parseInt(argv[++i], 10);
+    else if (argv[i] === '--study') args.study = argv[++i];
+    else if (argv[i] === '--intake-dir') args.intakeDir = argv[++i];
     else throw new Error(`Unknown argument: ${argv[i]}`);
   }
+  if (!args.study) {
+    throw new Error(
+      '--study <slug> is required. Pass the same slug GDX_SKILL_NEW_STUDY used for ' +
+      'new_study_intake/<slug>/intake.json -- every study-scoped table is filtered to that one study.'
+    );
+  }
   return args;
+}
+
+/** GDX_HUMAN/0.new.instrument/new_study_intake/<slug>/intake.json, resolved
+ * relative to this script (9.knowledge.graph/.claude/skills/GDX_SKILL_GODATAX_HUMAN7_BY_SPU/scripts)
+ * -- same depth/pattern as the other two --study-scoped skills' resolveIntakePath(). */
+function resolveIntakePath(args) {
+  if (args.intakeDir) return path.join(args.intakeDir, 'intake.json');
+  return path.join(__dirname, '..', '..', '..', '..', '..',
+    '0.new.instrument', 'new_study_intake', args.study, 'intake.json');
+}
+
+function loadIntake(args) {
+  const intakePath = resolveIntakePath(args);
+  if (!fs.existsSync(intakePath)) {
+    throw new Error(
+      `intake.json not found at ${intakePath}. Run GDX_SKILL_NEW_STUDY for study slug ` +
+      `"${args.study}" first, or pass --intake-dir if it lives somewhere else.`
+    );
+  }
+  return JSON.parse(fs.readFileSync(intakePath, 'utf8'));
+}
+
+/** Every table this exporter treats as STUDY-SCOPED, and the SQL WHERE
+ * fragment (no leading "WHERE") that filters it to one study's rows given a
+ * resolved numeric studyId. A table with no entry here is exported in FULL,
+ * regardless of --study -- it is shared reference/catalog data (septenary
+ * levels, chakras, instrument/construct/variable/item definitions, devices,
+ * the DW's calendar dimension, ...), the same "bootstrapped once, not
+ * scoped by study" philosophy GDX_SKILL_LOAD_NEW_STUDY_DW already documents
+ * for its own global dimensions. Filtering catalogs too would risk starving
+ * a relationship of its parent node for no real benefit -- they are small
+ * (tens to low hundreds of rows) next to the fact tables this actually
+ * matters for (tens of thousands).
+ *
+ * GDX_PSY_PERSON and GDX_CC_PERSON are both filtered by ID_PERSON directly:
+ * cardiac-coherence and psychometric person ids share the same numbering by
+ * convention in this dataset (see GoDataX_Human_7_DW.md section 2), so a
+ * person enrolled via GDX_PSY_STUDY_PARTICIPANT is assumed to be the same
+ * person as any GDX_CC_PERSON/GDX_CC_SESSION row with that same ID_PERSON --
+ * exactly the assumption GDX_SKILL_LOAD_NEW_STUDY_DW's own
+ * loadDevicesAndSessions() already makes. */
+function studyScopeRules(studyId) {
+  const PEOPLE = `(SELECT ID_PERSON FROM GDX_PSY_STUDY_PARTICIPANT WHERE ID_STUDY = ${studyId})`;
+  const APPLICATIONS = `(SELECT ID_APPLICATION FROM GDX_PSY_APPLICATION WHERE ID_STUDY = ${studyId})`;
+  const CC_SESSIONS = `(SELECT SESSION_ID FROM GDX_CC_SESSION WHERE ID_PERSON IN ${PEOPLE})`;
+
+  return {
+    // The study itself and its enrollment roster.
+    GDX_PSY_STUDY: `ID_STUDY = ${studyId}`,
+    GDX_PSY_STUDY_PARTICIPANT: `ID_STUDY = ${studyId}`,
+
+    // People enrolled in this study (both identity spaces).
+    GDX_PSY_PERSON: `ID_PERSON IN ${PEOPLE}`,
+    GDX_CC_PERSON: `ID_PERSON IN ${PEOPLE}`,
+    DW_DIM_PERSON: `ID_STUDY = ${studyId}`,
+
+    // Psychometric applications/responses/results/evaluations for this study.
+    GDX_PSY_APPLICATION: `ID_STUDY = ${studyId}`,
+    GDX_PSY_ITEM_RESPONSE: `ID_APPLICATION IN ${APPLICATIONS}`,
+    GDX_PSY_VARIABLE_RESULT: `ID_APPLICATION IN ${APPLICATIONS}`,
+    GDX_PSY_CONSTRUCT_RESULT: `ID_APPLICATION IN ${APPLICATIONS}`,
+    GDX_PSY_INDICATOR_RESULT: `ID_APPLICATION IN ${APPLICATIONS}`,
+    GDX_PSY_OBSERVATION: `ID_STUDY = ${studyId}`,
+    GDX_PSY_EVALUATION: `ID_STUDY = ${studyId}`,
+    GDX_PSY_EVALUATION_ACTION: `ID_EVALUATION IN (SELECT ID_EVALUATION FROM GDX_PSY_EVALUATION WHERE ID_STUDY = ${studyId})`,
+
+    // Cardiac-coherence sessions/signals for this study's people.
+    GDX_CC_SESSION: `ID_PERSON IN ${PEOPLE}`,
+    GDX_CC_RR_INTERVAL: `SESSION_ID IN ${CC_SESSIONS}`,
+    GDX_CC_ECG_SAMPLE: `SESSION_ID IN ${CC_SESSIONS}`,
+    GDX_CC_MOTION: `SESSION_ID IN ${CC_SESSIONS}`,
+    GDX_CC_HRV_WINDOW: `SESSION_ID IN ${CC_SESSIONS}`,
+    GDX_CC_DEVICE_EVENT: `SESSION_ID IN ${CC_SESSIONS}`,
+
+    // DW facts/dimensions for this study's people.
+    DW_DIM_SESSION: `ID_PERSON IN ${PEOPLE}`,
+    DW_FACT_PSY_ITEM_RESPONSE: `ID_PERSON IN ${PEOPLE}`,
+    DW_FACT_PSY_VARIABLE_RESULT: `ID_PERSON IN ${PEOPLE}`,
+    DW_FACT_CC_HRV_WINDOW: `ID_PERSON IN ${PEOPLE}`,
+  };
 }
 
 function requireEnv(name) {
@@ -93,9 +191,16 @@ async function runBatched(session, cypher, items, label) {
   return done;
 }
 
-async function exportNodesForTable(fbDb, neoSession, table, args) {
+/** SELECT for one table: --limit's FIRST N clause plus this table's study
+ * WHERE fragment, if `scope` has one for it (undefined = global/unfiltered). */
+function buildSelectSql(table, args, whereSql) {
   const limitClause = args.limit ? `FIRST ${args.limit} ` : '';
-  const rows = await fbQuery(fbDb, `SELECT ${limitClause}* FROM ${table.name}`);
+  const whereClause = whereSql ? ` WHERE ${whereSql}` : '';
+  return `SELECT ${limitClause}* FROM ${table.name}${whereClause}`;
+}
+
+async function exportNodesForTable(fbDb, neoSession, table, args, whereSql) {
+  const rows = await fbQuery(fbDb, buildSelectSql(table, args, whereSql));
 
   const items = rows.map((row) => {
     const props = { gdx_source_table: table.name };
@@ -108,6 +213,21 @@ async function exportNodesForTable(fbDb, neoSession, table, args) {
     await runBatched(neoSession, cypher, items, table.name);
   }
   return { table: table.name, rows };
+}
+
+/** Resolves --study's slug to GDX_PSY_STUDY.ID_STUDY via the intake's
+ * study.title -- same lookup the other two --study-scoped skills use. */
+async function resolveStudyId(fbDb, studyTitle, studySlug) {
+  const rows = await new Promise((resolve, reject) =>
+    fbDb.query('SELECT FIRST 1 ID_STUDY FROM GDX_PSY_STUDY WHERE TITLE = ?', [studyTitle],
+      (err, result) => (err ? reject(err) : resolve(result))));
+  if (rows.length === 0) {
+    throw new Error(
+      `Study "${studyTitle}" (slug "${studySlug}") not found in GDX_PSY_STUDY. Run ` +
+      `GDX_SKILL_RECORD_NEW_STUDY and GDX_SKILL_LOAD_NEW_STUDY_DW for this study first.`
+    );
+  }
+  return rows[0].ID_STUDY;
 }
 
 async function exportRelationshipsForFk(neoSession, childTable, fk, childRows) {
@@ -143,8 +263,17 @@ async function main() {
     blobAsText: true, // required so BLOB SUB_TYPE TEXT columns read as plain strings
   };
 
+  const intake = loadIntake(args);
+  const studyTitle = intake.study && intake.study.title;
+  if (!studyTitle) {
+    throw new Error(`intake.json for study slug "${args.study}" has no study.title -- is this a valid intake file?`);
+  }
+
   console.log(`Connecting to Firebird ${fbOptions.host}:${fbOptions.port}${fbOptions.database} ...`);
   const fbDb = await fbConnect(fbOptions);
+  const studyId = await resolveStudyId(fbDb, studyTitle, args.study);
+  console.log(`Resolved study "${studyTitle}" (slug "${args.study}") -> ID_STUDY=${studyId}.`);
+  const scope = studyScopeRules(studyId);
 
   let neoDriver = null;
   let neoSession = null;
@@ -168,7 +297,10 @@ async function main() {
       schema = Object.fromEntries(Object.entries(schema).filter(([name]) => args.tables.has(name)));
     }
     const tableNames = Object.keys(schema);
+    const scopedCount = tableNames.filter((n) => scope[n]).length;
     console.log(`${tableNames.length} table(s) in scope: ${tableNames.join(', ')}`);
+    console.log(`  ${scopedCount} scoped to study "${studyTitle}" (ID_STUDY=${studyId}); ` +
+      `${tableNames.length - scopedCount} exported in full (shared reference/catalog data).`);
 
     // Phase 1: nodes (also keeps each table's raw rows in memory for phase 2 --
     // fine at this dataset's scale; revisit with streaming if a table grows
@@ -176,16 +308,17 @@ async function main() {
     const rowsByTable = {};
     let totalNodes = 0;
     for (const table of Object.values(schema)) {
+      const whereSql = scope[table.name];
+      const scopeTag = whereSql ? ` [study-scoped]` : ` [global]`;
       if (args.dryRun) {
-        const limitClause = args.limit ? `FIRST ${args.limit} ` : '';
-        const rows = await fbQuery(fbDb, `SELECT ${limitClause}* FROM ${table.name}`);
+        const rows = await fbQuery(fbDb, buildSelectSql(table, args, whereSql));
         rowsByTable[table.name] = rows;
-        console.log(`  ${table.name}: ${rows.length} row(s) (PK: ${table.primaryKey.join(',') || '(none)'}, ${table.foreignKeys.length} FK(s))`);
+        console.log(`  ${table.name}${scopeTag}: ${rows.length} row(s) (PK: ${table.primaryKey.join(',') || '(none)'}, ${table.foreignKeys.length} FK(s))`);
         totalNodes += rows.length;
         continue;
       }
-      console.log(`  Nodes :${table.name} ...`);
-      const { rows } = await exportNodesForTable(fbDb, neoSession, table, args);
+      console.log(`  Nodes :${table.name}${scopeTag} ...`);
+      const { rows } = await exportNodesForTable(fbDb, neoSession, table, args, whereSql);
       rowsByTable[table.name] = rows;
       totalNodes += rows.length;
     }

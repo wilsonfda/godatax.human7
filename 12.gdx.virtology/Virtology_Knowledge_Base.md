@@ -195,3 +195,73 @@ septenary/chakra/Five Ways mappings already in this project:
    SNO versus SNE versus both, information that would be the natural analogue of
    `GDX_PSY_SEPT_LEVEL_PSY_MAP`'s correspondence-with-justification pattern if this framework is
    ever related to the septenary constitution or the psychometric data.
+
+## 9. `GDX_SKILL_TREATMENT_SUGGESTIONS` — this knowledge base, applied to real psychometric data
+
+Despite §1's intro line ("no DDL, mapping, or schema work has been done yet") and the open gap
+in §8 item 4 (no *official* virtue → SNO/SNE mapping exists from the source itself), a
+project-internal, narrower mapping **does** now exist and is live: a skill in this folder
+(`.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/`) that reads GDX_HUMAN's real psychometric
+data and suggests, for each of a study's lowest-scoring indicators, which of these 33 virtues
+addresses it — not virtue↔SNO/SNE (still an open gap, §8 stands), but **variable↔virtue**, a
+project-authored judgment call independent of anything the source site states.
+
+### What it does and doesn't claim
+
+- **Reads real scores, suggests a real virtue, never invents either.** The lowest-scoring
+  indicators come from a live query against `7.multidimensional.database`
+  (`DW_FACT_PSY_VARIABLE_RESULT` × `DW_DIM_VARIABLE` × `DW_DIM_SEPTENARY_LEVEL`); the suggested
+  virtue for each one comes from a fixed, hand-written map
+  (`scripts/virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP`, keyed by the variable's `.sav` column)
+  — never a model guess, never an LLM call at report-generation time. A variable with no entry
+  in that map is reported as **"sem sugestão (revisar)"**, exactly the same "not zero, not
+  guessed, structurally absent" discipline `8.gdx.dashboards`'s heatmaps use for an empty cell.
+- **Same methodological honesty as the septenary mapping.** Every generated report repeats,
+  near the top, the same caveat `SPSS_Septenary_Constitution_Mapping.md` uses: "which virtue
+  addresses this deficit" is a qualitative/interpretive correspondence, not a statistical or
+  clinical finding — and, per §1's own caveat above, is layered on a knowledge base that was
+  itself captured by an automated fetch, not a certified transcription.
+
+### 2026-09-18: scoped to one study — `--study <slug>`
+
+Before this date, the skill ranked the lowest-scoring indicators across **every** study in the
+DW at once — fine while `ID_STUDY=1` was the only study, but the same problem
+`GDX_SKILL_MAKE_DASHBOARS_DW` and `GDX_SKILL_LOAD_NEW_STUDY_DW` already solved for their own
+folders: an unscoped query silently blends every study's participants into one ranking the
+moment a second study is loaded. `generate_suggestions.js` now requires `--study <slug>` (same
+`new_study_intake/<slug>/intake.json` → `GDX_PSY_STUDY.ID_STUDY` resolution the other two
+`--study`-scoped skills use), and the ranking query joins `DW_DIM_PERSON` on `ID_STUDY = ?` so
+every score in a report is one study's own average. Output filenames now carry the study slug
+too: `Treatment_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`.
+
+**Real validated run, `ID_STUDY=1`** ("Predictors of Adaptability to Military Higher Education,"
+423 participants), top 10 lowest indicators:
+
+| Indicator (level) | Score | Suggested virtue |
+|---|---|---|
+| Vigor — Engagement (Vital/Etheric) | 2.71 | Perseverança (Perseverance) |
+| Absorption — Engagement (Buddhic) | 2.75 | Tudo Somos Um (We Are All One) |
+| Challenge — Hardiness (Buddhic) | 2.81 | Busca do Melhoramento (Pursuit of Improvement) |
+| Positive Emotions (Vital/Etheric) | 3.00 | Gratidão (Gratitude) |
+| Dedication — Engagement (Higher Mental) | 3.23 | Fé (Faith) |
+| Satisfaction With Life (Astral) | 3.61 | Aceitação (Acceptance) |
+| **Emotional Exhaustion (Physical)** | 3.74 | **sem sugestão (revisar)** |
+| Perceived Control of Life (Lower Mental) | 3.77 | Responsabilidade (Responsibility) |
+| Control — Hardiness (Lower Mental) | 3.77 | Responsabilidade (Responsibility) |
+| Job Satisfaction (Astral) | 3.79 | Utilidade (Utility) |
+
+The one unresolved row is a real, working example of the "never guesses" rule, not a bug:
+`Emotional Exhaustion` is the variable `Dashboards_DW_Explanation.md` (in `8.gdx.dashboards`)
+§11 documents being computed the same day from real raw item responses (`ef1`-`ef5`) that had
+never been aggregated before — it has no `.sav` column (it was never in the original `.sav` at
+all), so `virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP` — keyed by `.sav` column — has nothing to
+match it against yet. Adding an entry for it (keyed by its variable name instead, once
+`virtue_knowledge.js` supports that lookup path, or by extending the map's key convention) is
+future work, not something this scoping change was asked to fix.
+
+### Files
+
+- `.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/` — the skill itself (`SKILL.md` for flags and
+  the full scoping/output-filename convention).
+- `Treatment_Suggestions_<slug>_<timestamp>.md` — one report per run, accumulating in this
+  folder (never overwritten — see `SKILL.md`).

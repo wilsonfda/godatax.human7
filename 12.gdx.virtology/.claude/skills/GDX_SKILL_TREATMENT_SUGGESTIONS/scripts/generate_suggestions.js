@@ -14,11 +14,17 @@
  * output is a timestamped Markdown report in 12.gdx.virtology/.
  *
  * Usage:
- *   node generate_suggestions.js [--top N] [--sample] [--dry-run]
+ *   node generate_suggestions.js --study <slug> [--top N] [--sample] [--dry-run] [--intake-dir <path>]
  *
- *   --top N     how many of the lowest-scoring indicators to report (default 8)
- *   --sample    use embedded synthetic data, no DB connection (offline test)
- *   --dry-run   print the report to the console only, do not write the file
+ *   --study <slug>  REQUIRED. Same slug GDX_SKILL_NEW_STUDY/GDX_SKILL_MAKE_DASHBOARS_DW/
+ *                   GDX_SKILL_LOAD_NEW_STUDY_DW use for new_study_intake/<slug>/intake.json --
+ *                   resolves to GDX_PSY_STUDY.ID_STUDY, and every ranked indicator is this one
+ *                   study's own average, never blended with another study's participants.
+ *   --top N         how many of the lowest-scoring indicators to report (default 8)
+ *   --sample        use embedded synthetic data, no DB connection (offline test) -- a missing
+ *                   intake.json is not an error in this mode, same as the other --study skills
+ *   --dry-run       print the report to the console only, do not write the file
+ *   --intake-dir    override the default new_study_intake/<slug>/ location
  */
 
 const fs = require('fs');
@@ -29,14 +35,50 @@ const { virtueByPt, VARIABLE_VIRTUE_MAP } = require('./virtue_knowledge');
 const OUT_DIR = path.join(__dirname, '..', '..', '..', '..'); // .claude/skills/<name>/scripts -> 12.gdx.virtology
 
 function parseArgs(argv) {
-  const args = { top: 8, sample: false, dryRun: false };
+  const args = { top: 8, sample: false, dryRun: false, study: null, intakeDir: null };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--top') args.top = parseInt(argv[++i], 10);
     else if (argv[i] === '--sample') args.sample = true;
     else if (argv[i] === '--dry-run') args.dryRun = true;
+    else if (argv[i] === '--study') args.study = argv[++i];
+    else if (argv[i] === '--intake-dir') args.intakeDir = argv[++i];
     else throw new Error(`Unknown argument: ${argv[i]}`);
   }
+  if (!args.study) {
+    throw new Error(
+      '--study <slug> is required. Pass the same slug GDX_SKILL_NEW_STUDY used for ' +
+      'new_study_intake/<slug>/intake.json -- every ranked indicator is scoped to that one study.'
+    );
+  }
   return args;
+}
+
+/** GDX_HUMAN/0.new.instrument/new_study_intake/<slug>/intake.json, resolved
+ * relative to this script (12.gdx.virtology/.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/scripts)
+ * -- same depth/pattern as the other --study-scoped skills' resolveIntakePath(). */
+function resolveIntakePath(args) {
+  if (args.intakeDir) return path.join(args.intakeDir, 'intake.json');
+  return path.join(__dirname, '..', '..', '..', '..', '..',
+    '0.new.instrument', 'new_study_intake', args.study, 'intake.json');
+}
+
+function loadIntake(args) {
+  const intakePath = resolveIntakePath(args);
+  if (!fs.existsSync(intakePath)) return null;
+  return JSON.parse(fs.readFileSync(intakePath, 'utf8'));
+}
+
+/** Resolves --study's slug to GDX_PSY_STUDY.ID_STUDY via the intake's
+ * study.title -- same lookup the other --study-scoped skills use. */
+async function resolveStudyId(fbDb, studyTitle, studySlug) {
+  const rows = await fbQuery(fbDb, 'SELECT FIRST 1 ID_STUDY FROM GDX_PSY_STUDY WHERE TITLE = ?', [studyTitle]);
+  if (rows.length === 0) {
+    throw new Error(
+      `Study "${studyTitle}" (slug "${studySlug}") not found in GDX_PSY_STUDY. Run ` +
+      `GDX_SKILL_RECORD_NEW_STUDY and GDX_SKILL_LOAD_NEW_STUDY_DW for this study first.`
+    );
+  }
+  return rows[0].ID_STUDY;
 }
 
 function requireEnv(name) {
@@ -50,8 +92,8 @@ function requireEnv(name) {
 function fbConnect(options) {
   return new Promise((resolve, reject) => Firebird.attach(options, (err, db) => (err ? reject(err) : resolve(db))));
 }
-function fbQuery(db, sql) {
-  return new Promise((resolve, reject) => db.query(sql, (err, result) => (err ? reject(err) : resolve(result))));
+function fbQuery(db, sql, params = []) {
+  return new Promise((resolve, reject) => db.query(sql, params, (err, result) => (err ? reject(err) : resolve(result))));
 }
 
 // Synthetic data for --sample, shaped like a real low-score slice of
@@ -69,16 +111,17 @@ const SAMPLE_ROWS = [
   { SAV_COLUMN: 'HARDcontrole', VARIABLE_NAME: 'Control', LEVEL_NAME: 'Lower Mental Body', AVG_SCORE: 3.77, N: 423 },
 ];
 
-async function fetchLowestIndicators(fbDb, top) {
+async function fetchLowestIndicators(fbDb, top, studyId) {
   const rows = await fbQuery(fbDb, `
     SELECT V.SAV_COLUMN AS SAV_COLUMN, V.NAME AS VARIABLE_NAME, L.NAME AS LEVEL_NAME,
            AVG(FR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
     FROM DW_FACT_PSY_VARIABLE_RESULT FR
     JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = FR.ID_VARIABLE
     JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
-    WHERE FR.RAW_SCORE IS NOT NULL
+    JOIN DW_DIM_PERSON P ON P.ID_PERSON = FR.ID_PERSON
+    WHERE FR.RAW_SCORE IS NOT NULL AND P.ID_STUDY = ?
     GROUP BY V.SAV_COLUMN, V.NAME, L.NAME
-    ORDER BY AVG_SCORE ASC`);
+    ORDER BY AVG_SCORE ASC`, [studyId]);
   return rows.slice(0, top);
 }
 
@@ -89,7 +132,8 @@ function buildReport(rows, meta) {
   lines.push('# GDX_HUMAN Virtology — Treatment Suggestions');
   lines.push('');
   lines.push(`> Generated ${meta.timestamp} by \`GDX_SKILL_TREATMENT_SUGGESTIONS\`.`);
-  lines.push(`> Source: \`7.multidimensional.database\` (\`DW_FACT_PSY_VARIABLE_RESULT\` × \`DW_DIM_VARIABLE\` × \`DW_DIM_SEPTENARY_LEVEL\`)${meta.sample ? ' — **SAMPLE DATA, not a live read**' : ` — live read from ${meta.host}`}.`);
+  lines.push(`> Study: **${meta.studyTitle}** (slug \`${meta.studySlug}\`, \`ID_STUDY=${meta.studyId ?? '(sample)'}\`) — every score below is this one study's own average, never blended with another study's participants.`);
+  lines.push(`> Source: \`7.multidimensional.database\` (\`DW_FACT_PSY_VARIABLE_RESULT\` × \`DW_DIM_VARIABLE\` × \`DW_DIM_SEPTENARY_LEVEL\` × \`DW_DIM_PERSON\`)${meta.sample ? ' — **SAMPLE DATA, not a live read**' : ` — live read from ${meta.host}`}.`);
   lines.push('> Virtue catalog: `12.gdx.virtology/Virtology_Knowledge_Base.md` (33 virtudes, institutovirtudes.com.br).');
   lines.push('>');
   lines.push('> **Natureza deste documento:** leitura qualitativa/interpretativa, no mesmo espírito de');
@@ -131,7 +175,7 @@ function buildReport(rows, meta) {
   lines.push('## Ressalvas');
   lines.push('');
   lines.push('1. Score baixo aqui é um dado real do DW, mas a virtude sugerida como "tratamento" é uma correspondência conceitual, não uma prescrição clínica — mesmo padrão de honestidade metodológica de `SPSS_Septenary_Constitution_Mapping.md`.');
-  lines.push('2. Amostra pequena (423 participantes, todos do mesmo estudo/instituição) — não generalizar os scores como normativos.');
+  lines.push(`2. Amostra restrita a um único estudo (**${meta.studyTitle}**, N=${meta.maxN ?? '?'} participantes) — não generalizar os scores como normativos além dessa população.`);
   lines.push('3. Este relatório é uma fotografia do momento em que rodou; re-execute a skill depois de qualquer atualização de `godatax_human_dw_etl_firebird25.sql` para refletir dados novos.');
 
   return lines.join('\n') + '\n';
@@ -146,9 +190,25 @@ async function main() {
   const args = parseArgs(process.argv);
   const now = new Date();
 
+  const intake = loadIntake(args);
+  let studyTitle = intake && intake.study && intake.study.title;
+  if (!studyTitle) {
+    if (args.sample) {
+      studyTitle = 'Sample Study';
+      console.log(`No intake.json found for study slug "${args.study}" -- using a generic title in --sample mode.`);
+    } else {
+      throw new Error(
+        `intake.json not found for study slug "${args.study}". Run GDX_SKILL_NEW_STUDY (and ` +
+        `GDX_SKILL_RECORD_NEW_STUDY / GDX_SKILL_LOAD_NEW_STUDY_DW) for this study first, or pass ` +
+        `--intake-dir if it lives somewhere else, or --sample to try the report without a study.`
+      );
+    }
+  }
+
   let rows;
   let host = null;
   let fbDb = null;
+  let studyId = null;
 
   if (args.sample) {
     console.log('[SAMPLE] using embedded synthetic data -- no Firebird connection.');
@@ -167,14 +227,16 @@ async function main() {
     console.log(`Connecting to Firebird ${fbOptions.host}:${fbOptions.port}${fbOptions.database} ...`);
     fbDb = await fbConnect(fbOptions);
     try {
-      rows = await fetchLowestIndicators(fbDb, args.top);
+      studyId = await resolveStudyId(fbDb, studyTitle, args.study);
+      console.log(`Resolved study "${studyTitle}" (slug "${args.study}") -> ID_STUDY=${studyId}.`);
+      rows = await fetchLowestIndicators(fbDb, args.top, studyId);
     } finally {
       fbDb.detach();
     }
   }
 
   if (rows.length === 0) {
-    console.log('No rows with both a RAW_SCORE and a septenary level were found -- has the DW ETL (godatax_human_dw_etl_firebird25.sql) been run?');
+    console.log('No rows with both a RAW_SCORE and a septenary level were found for this study -- has the DW ETL/GDX_SKILL_LOAD_NEW_STUDY_DW been run for it?');
     return;
   }
 
@@ -182,6 +244,10 @@ async function main() {
     timestamp: now.toISOString(),
     sample: args.sample,
     host,
+    studyTitle,
+    studySlug: args.study,
+    studyId,
+    maxN: Math.max(...rows.map((r) => Number(r.N))),
   });
 
   console.log('\n' + report);
@@ -191,7 +257,7 @@ async function main() {
     return;
   }
 
-  const fileName = `Treatment_Suggestions_${timestampForFilename(now)}.md`;
+  const fileName = `Treatment_Suggestions_${args.study}_${timestampForFilename(now)}.md`;
   const filePath = path.join(OUT_DIR, fileName);
   fs.writeFileSync(filePath, report, 'utf8');
   console.log(`Written: ${filePath}`);
