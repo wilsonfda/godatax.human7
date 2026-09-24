@@ -13,7 +13,7 @@ Complement the CFA already run on the **Career Adapt-Abilities Scale (CAAS)** (s
 | Data source | `GDX_HUMAN/1.output.ibm.spss.statistics/PLANILHAPOSDOC11SET SO CADETES.sav` (read via `pyreadstat`), the same file used by the CFA script |
 | Instrument | Career Adapt-Abilities Scale (`GDX_PSY_INSTRUMENT.ID_INSTRUMENT = 3`) |
 | Construct | Career Adaptability (`GDX_PSY_CONSTRUCT.ID_CONSTRUCT = 3`) |
-| Sample | n = 423 respondents (Military Academy cadets, Portugal), 0 missing values across the 28 items |
+| Sample | n = 423 respondents (Military Academy cadets), 0 missing values across the 28 items |
 | Observed items (indicators) | `AC1`…`AC28`, 1–5 Likert scale |
 | Dimensions | **Concern** (AC1–AC7) · **Control** (AC8–AC14) · **Curiosity** (AC15–AC21) · **Confidence** (AC22–AC28) — 7 items each |
 | Grouping validation | Same check as the CFA: the mean of each block's 7 items reproduces the SPSS-precomputed column (`ACpreocup`, `ACcontrole`, `ACcuriosid`, `ACconfianc`) exactly (max abs diff < 1e-9) |

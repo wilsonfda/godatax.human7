@@ -48,12 +48,18 @@ const Firebird = require('node-firebird');
 const ExcelJS = require('exceljs');
 
 function parseArgs(argv) {
-  const args = { study: null, intakeDir: null, outDir: null };
+  const args = { study: null, intakeDir: null, outDir: null, excludeItemOrders: new Set() };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--study') args.study = argv[++i];
     else if (a === '--intake-dir') args.intakeDir = argv[++i];
     else if (a === '--out-dir') args.outDir = argv[++i];
+    else if (a === '--exclude-item-orders') {
+      for (const tok of argv[++i].split(',')) {
+        const n = parseInt(tok.trim(), 10);
+        if (!Number.isNaN(n)) args.excludeItemOrders.add(n);
+      }
+    }
     else throw new Error(`Unknown argument: ${a}`);
   }
   if (!args.study) {
@@ -75,6 +81,17 @@ function requireEnv(name) {
     );
   }
   return v;
+}
+
+/** GDX_HUMAN/0.new.instrument/ itself, resolved relative to this script
+ * (0.new.instrument/.claude/skills/GDX_SKILL_EXPORT_NEW_STUDY/scripts) -- the
+ * default place the .xlsx is written, so every study's questionnaire lands in
+ * one flat, easy-to-find folder instead of buried under its own
+ * new_study_intake/<slug>/ subfolder. The output filename already carries the
+ * study's title and slug (see outputFileName()), so this stays unambiguous
+ * even with many studies' files sitting side by side. --out-dir overrides. */
+function resolveDefaultOutDir() {
+  return path.join(__dirname, '..', '..', '..', '..');
 }
 
 /** GDX_HUMAN/0.new.instrument/new_study_intake/<slug>/intake.json, resolved
@@ -130,15 +147,21 @@ function outputFileName(studyTitle, slug) {
   return `GDX_SKILL_EXPORT_NEW_STUDY_${safeNameFragment(studyTitle, 80)}__${slug}.xlsx`;
 }
 
-/** Excel sheet names: <=31 chars, no \ / ? * [ ] : , must be unique. */
+/** Excel sheet names: <=31 chars, no \ / ? * [ ] : , must be unique. Trailing
+ * whitespace is trimmed off the truncated result (not just the raw input) --
+ * the 31-char cutoff can easily land right after a space, and a sheet name
+ * that differs from its own trimmed self broke GDX_SKILL_LOAD_NEW_STUDY_ANSWERS's
+ * META-driven lookup (workbook.getWorksheet(name) after cellText()'s trim()
+ * no longer matched the untrimmed tab name) -- always keep the actual
+ * worksheet name and the one recorded in META byte-for-byte identical. */
 function excelSheetName(rawName, index, used) {
   let base = String(rawName).replace(/[\\/?*[\]:]/g, ' ').trim();
   const prefix = `${String(index).padStart(2, '0')} - `;
-  let name = (prefix + base).slice(0, 31);
+  let name = (prefix + base).slice(0, 31).trimEnd();
   let suffix = 1;
   while (used.has(name)) {
     const tag = ` (${++suffix})`;
-    name = (prefix + base).slice(0, 31 - tag.length) + tag;
+    name = (prefix + base).slice(0, 31 - tag.length).trimEnd() + tag;
   }
   used.add(name);
   return name;
@@ -250,6 +273,10 @@ function buildMetaSheet(workbook, meta) {
   ws.addRow(['STUDY_SLUG', meta.slug]);
   ws.addRow(['ID_STUDY', meta.studyId]);
   ws.addRow(['EXPORTED_AT', new Date().toISOString()]);
+  if (meta.excludedItemOrders && meta.excludedItemOrders.size > 0) {
+    ws.addRow(['EXCLUDED_ITEM_ORDERS', [...meta.excludedItemOrders].sort((a, b) => a - b).join(', ')]);
+    ws.addRow(['EXCLUDED_REASON', '--exclude-item-orders was passed at export time (e.g. unresolved/unknown item wording) -- deliberately omitted, not missing data.']);
+  }
   ws.addRow([]);
 
   ws.addRow(['ITEMS']).font = { bold: true };
@@ -284,6 +311,10 @@ async function main() {
     lowercase_keys: false,
     role: null,
     pageSize: 4096,
+    blobAsText: true, // STATEMENT_TEXT/DESCRIPTION/INSTRUCTIONS are BLOB SUB_TYPE TEXT -- without
+    // this, node-firebird returns a blob-fetcher callback instead of a string, and exceljs's own
+    // cell-value assignment (and the buildInstrumentSheet note concatenation) throws deep inside
+    // its own code ("Cannot read properties of undefined (reading 'richText')") when handed that.
   };
 
   console.log(`Connecting to ${options.host}:${options.port}${options.database} as ${options.user} ...`);
@@ -317,7 +348,15 @@ async function main() {
           `not found in GDX_PSY_INSTRUMENT. Run GDX_SKILL_RECORD_NEW_STUDY for this intake before this skill.`
         );
       }
-      const items = await loadInstrumentItems(db, instRow.ID_INSTRUMENT);
+      let items = await loadInstrumentItems(db, instRow.ID_INSTRUMENT);
+      if (args.excludeItemOrders.size > 0) {
+        const excluded = items.filter((it) => args.excludeItemOrders.has(it.ITEM_ORDER));
+        if (excluded.length > 0) {
+          console.log(`Excluding ${excluded.length} item(s) from "${instRow.NAME}" by --exclude-item-orders: ` +
+            excluded.map((it) => `order ${it.ITEM_ORDER} (ID_ITEM=${it.ID_ITEM})`).join(', '));
+        }
+        items = items.filter((it) => !args.excludeItemOrders.has(it.ITEM_ORDER));
+      }
       if (items.length === 0) {
         console.log(`WARNING: instrument "${instRow.NAME}" (ID_INSTRUMENT=${instRow.ID_INSTRUMENT}) has no items yet -- skipped.`);
         continue;
@@ -340,9 +379,9 @@ async function main() {
       throw new Error('No instrument had any items -- nothing to export. Run GDX_SKILL_RECORD_NEW_STUDY first.');
     }
 
-    buildMetaSheet(workbook, { studyTitle, slug: args.study, studyId, itemRows, alternativeRows });
+    buildMetaSheet(workbook, { studyTitle, slug: args.study, studyId, itemRows, alternativeRows, excludedItemOrders: args.excludeItemOrders });
 
-    const outDir = args.outDir || intakeDir;
+    const outDir = args.outDir || resolveDefaultOutDir();
     fs.mkdirSync(outDir, { recursive: true });
     const outPath = path.join(outDir, outputFileName(studyTitle, args.study));
     await workbook.xlsx.writeFile(outPath);

@@ -19,12 +19,16 @@
  *   GDX_PSY_STUDY_PARTICIPANT  -- found by (ID_STUDY, ID_PERSON), inserted if new
  *   GDX_PSY_APPLICATION        -- one per instrument sheet that has any answer
  *   GDX_PSY_ITEM_RESPONSE      -- one per answered item
+ *   GDX_PSY_VARIABLE_RESULT    -- ONLY for a variable in SCORE_FORMULAS below (an unweighted-mean
+ *                                  formula independently confirmed against every existing score for
+ *                                  that variable -- see compute_variable_result.js in
+ *                                  GDX_SKILL_LOAD_RLT_MODEL_DB/scripts, the standalone tool this
+ *                                  inline step mirrors). Every other variable is left alone: this
+ *                                  skill still never invents a formula it hasn't confirmed.
  *
  * This is the full FK chain GDX_PSY_ITEM_RESPONSE needs to be valid -- see
- * psychometrics_model_firebird25.sql. Computing GDX_PSY_VARIABLE_RESULT /
- * GDX_PSY_CONSTRUCT_RESULT / GDX_PSY_INDICATOR_RESULT (derived scores) is
- * deliberately OUT OF SCOPE: this skill loads what the participant actually
- * answered, it does not compute or invent a score.
+ * psychometrics_model_firebird25.sql. GDX_PSY_CONSTRUCT_RESULT / GDX_PSY_INDICATOR_RESULT remain
+ * OUT OF SCOPE (no confirmed formula exists for any indicator/construct-level aggregate today).
  *
  * Source of truth for database ids: the workbook's own hidden "META" sheet
  * (written by GDX_SKILL_EXPORT_NEW_STUDY), NOT the filename and NOT re-resolving
@@ -49,6 +53,21 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const ExcelJS = require('exceljs');
+
+/** Confirmed scoring formulas: ID_INSTRUMENT -> [{ variable, name, items }], `items` being the
+ * ITEM_ORDER values (not ID_ITEM) whose UNWEIGHTED MEAN equals GDX_PSY_VARIABLE_RESULT.RAW_SCORE
+ * for that variable. Add an entry here ONLY after independently confirming it the same way this
+ * one was: mean(items) reproduces every EXISTING RAW_SCORE for that variable within tolerance (see
+ * GDX_SKILL_LOAD_RLT_MODEL_DB/scripts/compute_variable_result.js's --dry-run self-check). This
+ * script re-runs that same self-check at load time (see computeConfirmedScores below) before ever
+ * writing a new row, so a stale/wrong entry here is caught, not silently trusted. */
+const SCORE_FORMULAS = {
+  9: [ // Maslach Burnout Inventory - Student Survey
+    { variable: 22, name: 'Emotional Exhaustion', items: [1, 2, 3, 4, 5] }, // verified byte-for-byte against all 423 existing rows, max discrepancy 0
+  ],
+};
+
+function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
 
 function parseArgs(argv) {
   const args = { file: null, dryRun: false };
@@ -91,6 +110,77 @@ function query(db, sql, params) {
   return new Promise((resolve, reject) => {
     db.query(sql, params, (err, result) => (err ? reject(err) : resolve(result)));
   });
+}
+
+/** node-firebird returns a SELECT's rows as an array, but a single-row
+ * `INSERT ... RETURNING col` as a plain object ({COL: value}), not a
+ * one-element array -- normalizes either shape to the row object, so callers
+ * never have to special-case which kind of statement they just ran. */
+function returningRow(result) {
+  return Array.isArray(result) ? result[0] : result;
+}
+
+/** For one just-loaded application, computes any SCORE_FORMULAS entries for its instrument whose
+ * required items were all answered, self-checking each formula against every EXISTING
+ * GDX_PSY_VARIABLE_RESULT row for that variable before trusting it (same safety net as
+ * compute_variable_result.js's --dry-run self-check) -- refuses that one formula (not the whole
+ * run) if it doesn't reproduce existing scores within tolerance. Returns
+ * { inserted: [{variable,name,value}], skippedIncomplete: [name], skippedMismatch: [name] };
+ * writes nothing and reports what WOULD happen when dryRun is true. */
+async function computeConfirmedScores(db, instrumentId, applicationId, numericValueByOrder, dryRun) {
+  const formulas = SCORE_FORMULAS[instrumentId] || [];
+  const result = { inserted: [], skippedIncomplete: [], skippedMismatch: [], skippedAlreadyScored: [] };
+  for (const formula of formulas) {
+    if (!formula.items.every((o) => numericValueByOrder.has(o))) {
+      result.skippedIncomplete.push(formula.name);
+      continue;
+    }
+
+    if (applicationId !== null) {
+      const already = await query(db, 'SELECT 1 FROM GDX_PSY_VARIABLE_RESULT WHERE ID_APPLICATION = ? AND ID_VARIABLE = ?', [applicationId, formula.variable]);
+      if (already.length > 0) {
+        result.skippedAlreadyScored.push(formula.name);
+        continue;
+      }
+    }
+
+    const value = mean(formula.items.map((o) => numericValueByOrder.get(o)));
+
+    // Self-check: does mean(formula.items) reproduce every EXISTING score for this variable?
+    const existingScores = await query(db, 'SELECT ID_APPLICATION, RAW_SCORE FROM GDX_PSY_VARIABLE_RESULT WHERE ID_VARIABLE = ?', [formula.variable]);
+    const existingItemRows = await query(db,
+      `SELECT ir.ID_APPLICATION, ii.ITEM_ORDER, ir.NUMERIC_VALUE
+       FROM GDX_PSY_ITEM_RESPONSE ir
+       JOIN GDX_PSY_INSTRUMENT_ITEM ii ON ii.ID_ITEM = ir.ID_ITEM
+       WHERE ii.ID_INSTRUMENT = ? AND ii.ITEM_ORDER IN (${formula.items.join(',')})`,
+      [instrumentId]);
+    const itemsByApp = new Map();
+    for (const r of existingItemRows) {
+      if (!itemsByApp.has(r.ID_APPLICATION)) itemsByApp.set(r.ID_APPLICATION, {});
+      itemsByApp.get(r.ID_APPLICATION)[r.ITEM_ORDER] = r.NUMERIC_VALUE;
+    }
+    let checked = 0, maxDiscrepancy = 0;
+    for (const { ID_APPLICATION: appId, RAW_SCORE: raw } of existingScores) {
+      const vals = itemsByApp.get(appId);
+      if (!vals || !formula.items.every((o) => vals[o] !== undefined && vals[o] !== null)) continue;
+      checked++;
+      maxDiscrepancy = Math.max(maxDiscrepancy, Math.abs(mean(formula.items.map((o) => vals[o])) - raw));
+    }
+    if (checked > 0 && maxDiscrepancy > 1e-3) {
+      console.log(`  WARNING: formula for "${formula.name}" (variable ${formula.variable}) does not reproduce ` +
+        `${checked} existing score(s) (max discrepancy ${maxDiscrepancy}) -- SCORE_FORMULAS entry may be stale. ` +
+        `Skipping this variable, nothing written for it.`);
+      result.skippedMismatch.push(formula.name);
+      continue;
+    }
+
+    if (!dryRun) {
+      await query(db, 'INSERT INTO GDX_PSY_VARIABLE_RESULT (ID_APPLICATION, ID_VARIABLE, RAW_SCORE) VALUES (?, ?, ?)',
+        [applicationId, formula.variable, value]);
+    }
+    result.inserted.push({ variable: formula.variable, name: formula.name, value });
+  }
+  return result;
 }
 
 /** Best-effort cross-check only. GDX_SKILL_EXPORT_NEW_STUDY separates
@@ -271,6 +361,7 @@ async function main() {
       personCreated: false, personId: null, participantCreated: false,
       applications: [], skippedApplications: [], responsesInserted: 0,
       unmatchedAlternatives: [], missingRequired: [],
+      scoresComputed: [], scoresSkippedIncomplete: [], scoresSkippedMismatch: [],
     };
 
     // --- GDX_PSY_PERSON ---
@@ -289,7 +380,7 @@ async function main() {
           `INSERT INTO GDX_PSY_PERSON (NAME, EXTERNAL_IDENTIFIER, BIRTH_DATE, GENDER, EDUCATION_LEVEL)
            VALUES (?, ?, ?, ?, ?) RETURNING ID_PERSON`,
           [participant.fullName, participant.externalId, participant.birthDate, participant.gender, participant.educationLevel]);
-        personId = inserted[0].ID_PERSON;
+        personId = returningRow(inserted).ID_PERSON;
       }
     }
     summary.personId = personId;
@@ -337,31 +428,43 @@ async function main() {
       }
 
       let alreadyLoaded = false;
+      let applicationId = null;
       if (personId) {
         const existing = await query(db,
           'SELECT FIRST 1 ID_APPLICATION FROM GDX_PSY_APPLICATION WHERE ID_STUDY = ? AND ID_PERSON = ? AND ID_INSTRUMENT = ? AND CONTEXT = ?',
           [studyId, personId, instrumentId, contextTag]);
         alreadyLoaded = existing.length > 0;
+        if (alreadyLoaded) applicationId = existing[0].ID_APPLICATION;
       }
+
+      // Even in --dry-run, walk every item below to compute unmatched-alternative
+      // and missing-required warnings and the would-be response count -- these are
+      // exactly the checks the skill's own docs promise a dry run surfaces ("read
+      // the summary before trusting a run is complete"). Only the actual database
+      // writes (the application/item-response INSERTs below) are skipped in dry-run
+      // -- and skipped entirely (not just dry-run) when alreadyLoaded, since those rows
+      // already exist. GDX_PSY_VARIABLE_RESULT is checked either way, further below: an
+      // already-loaded application from before this skill computed scores may still be
+      // missing one, and this backfills it (once, per formula's own idempotency check).
       if (alreadyLoaded) {
         summary.skippedApplications.push(`${instrumentName}: already loaded from this exact file`);
-        continue;
+      } else {
+        summary.applications.push(instrumentName);
+        if (!args.dryRun) {
+          const appDate = participant.applicationDate ? new Date(participant.applicationDate) : new Date();
+          const appResult = await query(db,
+            `INSERT INTO GDX_PSY_APPLICATION (ID_STUDY, ID_PERSON, ID_INSTRUMENT, START_TIMESTAMP, STATUS, CONTEXT)
+             VALUES (?, ?, ?, ?, 'COMPLETED', ?) RETURNING ID_APPLICATION`,
+            [studyId, personId, instrumentId, appDate, contextTag]);
+          applicationId = returningRow(appResult).ID_APPLICATION;
+        }
       }
 
-      summary.applications.push(instrumentName);
-      if (args.dryRun) continue;
-
-      const appDate = participant.applicationDate ? new Date(participant.applicationDate) : new Date();
-      const appResult = await query(db,
-        `INSERT INTO GDX_PSY_APPLICATION (ID_STUDY, ID_PERSON, ID_INSTRUMENT, START_TIMESTAMP, STATUS, CONTEXT)
-         VALUES (?, ?, ?, ?, 'COMPLETED', ?) RETURNING ID_APPLICATION`,
-        [studyId, personId, instrumentId, appDate, contextTag]);
-      const applicationId = appResult[0].ID_APPLICATION;
-
+      const numericValueByOrder = new Map(); // ITEM_ORDER -> NUMERIC_VALUE, for computeConfirmedScores below
       for (const item of items) {
         const answerText = answerByItem.get(item.ID_ITEM);
         if (!answerText) {
-          if (String(item.REQUIRED) === '1') summary.missingRequired.push(`${instrumentName} / ID_ITEM=${item.ID_ITEM}`);
+          if (!alreadyLoaded && String(item.REQUIRED) === '1') summary.missingRequired.push(`${instrumentName} / ID_ITEM=${item.ID_ITEM}`);
           continue;
         }
 
@@ -373,7 +476,7 @@ async function main() {
         if (alts.length > 0) {
           const match = alts.find((a) => a.LABEL.trim().toLowerCase() === answerText.trim().toLowerCase());
           if (!match) {
-            summary.unmatchedAlternatives.push(
+            if (!alreadyLoaded) summary.unmatchedAlternatives.push(
               `${instrumentName} / ID_ITEM=${item.ID_ITEM}: answer "${answerText}" matches none of its ` +
               `alternatives -- skipped, nothing written for this item.`);
             continue;
@@ -386,12 +489,27 @@ async function main() {
           if (answerText.trim() !== '' && Number.isFinite(asNumber)) numericValue = asNumber;
         }
 
-        await query(db,
-          `INSERT INTO GDX_PSY_ITEM_RESPONSE (ID_APPLICATION, ID_ITEM, ID_ALTERNATIVE, NUMERIC_VALUE, TEXT_VALUE)
-           VALUES (?, ?, ?, ?, ?)`,
-          [applicationId, item.ID_ITEM, idAlternative, numericValue, textValue]);
-        summary.responsesInserted += 1;
+        if (!alreadyLoaded) {
+          if (!args.dryRun) {
+            await query(db,
+              `INSERT INTO GDX_PSY_ITEM_RESPONSE (ID_APPLICATION, ID_ITEM, ID_ALTERNATIVE, NUMERIC_VALUE, TEXT_VALUE)
+               VALUES (?, ?, ?, ?, ?)`,
+              [applicationId, item.ID_ITEM, idAlternative, numericValue, textValue]);
+          }
+          summary.responsesInserted += 1;
+        }
+        if (numericValue !== null) numericValueByOrder.set(item.ITEM_ORDER, numericValue);
       }
+
+      // --- GDX_PSY_VARIABLE_RESULT, only for a confirmed formula (see SCORE_FORMULAS) ---
+      // Runs for a brand-new application AND for an already-loaded one (backfill: an application
+      // loaded before this feature existed may still be missing its score). applicationId is null
+      // only for a --dry-run of a brand-new application; computeConfirmedScores handles that (no
+      // "already scored" check possible yet, nothing is written either way in dry-run).
+      const scoreResult = await computeConfirmedScores(db, instrumentId, applicationId, numericValueByOrder, args.dryRun);
+      for (const s of scoreResult.inserted) summary.scoresComputed.push(`${instrumentName} / ${s.name}: ${s.value.toFixed(4)}`);
+      for (const name of scoreResult.skippedIncomplete) summary.scoresSkippedIncomplete.push(`${instrumentName} / ${name}`);
+      for (const name of scoreResult.skippedMismatch) summary.scoresSkippedMismatch.push(`${instrumentName} / ${name}`);
     }
 
     console.log(`\n${args.dryRun ? '[DRY RUN] ' : ''}Summary for "${participant.fullName}" (${participant.externalId}), study "${meta.studyTitle}":`);
@@ -401,7 +519,7 @@ async function main() {
     console.log(`  GDX_PSY_APPLICATION:       ${summary.applications.length} new, ${summary.skippedApplications.length} already loaded`);
     summary.applications.forEach((s) => console.log(`    + ${s}`));
     summary.skippedApplications.forEach((s) => console.log(`    = ${s}`));
-    console.log(`  GDX_PSY_ITEM_RESPONSE:     ${summary.responsesInserted} inserted`);
+    console.log(`  GDX_PSY_ITEM_RESPONSE:     ${summary.responsesInserted} ${args.dryRun ? 'would be inserted' : 'inserted'}`);
     if (summary.unmatchedAlternatives.length > 0) {
       console.log(`  UNMATCHED answers (needs a human): ${summary.unmatchedAlternatives.length}`);
       summary.unmatchedAlternatives.forEach((s) => console.log(`    ? ${s}`));
@@ -409,6 +527,12 @@ async function main() {
     if (summary.missingRequired.length > 0) {
       console.log(`  MISSING required answers: ${summary.missingRequired.length}`);
       summary.missingRequired.forEach((s) => console.log(`    ! ${s}`));
+    }
+    console.log(`  GDX_PSY_VARIABLE_RESULT:   ${summary.scoresComputed.length} ${args.dryRun ? 'would be computed' : 'computed'} (confirmed formulas only)`);
+    summary.scoresComputed.forEach((s) => console.log(`    + ${s}`));
+    if (summary.scoresSkippedMismatch.length > 0) {
+      console.log(`  SCORE FORMULA MISMATCH (needs a human -- SCORE_FORMULAS entry may be stale): ${summary.scoresSkippedMismatch.length}`);
+      summary.scoresSkippedMismatch.forEach((s) => console.log(`    ! ${s}`));
     }
   } finally {
     db.detach();

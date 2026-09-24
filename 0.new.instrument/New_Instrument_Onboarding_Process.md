@@ -78,10 +78,15 @@ actually collect and load real participant answers against that new instrument, 
  |    + GDX_PSY_STUDY_PARTICIPANT   |
  |  - inserts GDX_PSY_APPLICATION + |
  |    GDX_PSY_ITEM_RESPONSE rows    |
+ |  - THEN computes/inserts         |
+ |    GDX_PSY_VARIABLE_RESULT, but  |
+ |    ONLY for a variable with a    |
+ |    confirmed formula (§6.3)      |
  +----------------------------------+
                     |
                     v
-   GDX_PSY_ITEM_RESPONSE rows, one participant's real answers, ready for scoring/analysis
+   GDX_PSY_ITEM_RESPONSE rows (always), plus GDX_PSY_VARIABLE_RESULT rows (only where a
+   confirmed formula exists) -- one participant's real answers, ready for further scoring/analysis
 ```
 
 Splitting the work into four skills mirrors the existing `GDX_SKILL_LOAD_RLT_MODEL_DB` shape
@@ -257,11 +262,12 @@ Given `--file <path-to-filled.xlsx>`, it inserts the full FK chain `GDX_PSY_ITEM
 | `GDX_PSY_STUDY_PARTICIPANT` | found by `(ID_STUDY, ID_PERSON)`; inserted only if not found; `CONSENT` comes from the sheet's own field, defaulting to `0` (not confirmed) if left blank — never invented |
 | `GDX_PSY_APPLICATION` | one per instrument sheet that has any answer filled in |
 | `GDX_PSY_ITEM_RESPONSE` | one per answered item, matched to its `GDX_PSY_ITEM_ALTERNATIVE` when the item has alternatives |
+| `GDX_PSY_VARIABLE_RESULT` | only for a variable listed in the script's own `SCORE_FORMULAS` registry (§6.3) — everything else is still left alone |
 
-**Deliberately out of scope:** computing `GDX_PSY_VARIABLE_RESULT` / `GDX_PSY_CONSTRUCT_RESULT` /
-`GDX_PSY_INDICATOR_RESULT` (derived scores). This skill loads what the participant actually
-answered — turning raw responses into a scored construct/variable value (indicator formulas,
-reverse-scoring, norms) is a separate concern for a future skill.
+**Still mostly out of scope, on purpose:** `GDX_PSY_CONSTRUCT_RESULT` / `GDX_PSY_INDICATOR_RESULT`
+(higher-level derived scores), and any `GDX_PSY_VARIABLE_RESULT` whose exact formula has not been
+independently confirmed. This skill still never *invents* a scoring formula — see §6.3 for the one
+narrow exception (a formula confirmed elsewhere, applied here) and why it stops there.
 
 **Never guesses an answer.** An item with alternatives whose typed/selected answer matches no
 `LABEL` (case-insensitively) is skipped and reported under "UNMATCHED answers", not coerced to the
@@ -275,6 +281,50 @@ skips the instrument instead of duplicating its responses.
 **Trusts META, not the filename**, for every database id (see §6.1) — the filename is only
 sanity-checked against META's `STUDY_SLUG` and a mismatch is logged as a harmless `NOTE`, never an
 error, since a participant is free to rename their copy.
+
+### 6.3 Computing `GDX_PSY_VARIABLE_RESULT` — confirmed formulas only
+
+A study registered through this pipeline is loaded outside the original `.sav` (which had 21
+pre-computed score columns baked in — see `generate_load_scripts.py` and
+`SPSS_to_Firebird_Mapping.md`), so nothing computes its participants' derived scores automatically.
+`GDX_SKILL_LOAD_NEW_STUDY_ANSWERS` closes that one specific gap, but only where it is safe to: it
+carries a small, hand-maintained registry, `SCORE_FORMULAS` (top of `load_new_study_answers.js`),
+mapping `ID_INSTRUMENT -> [{ variable, name, items }]` — `items` being the `ITEM_ORDER` values whose
+**unweighted mean** equals that variable's `RAW_SCORE`. Today it has exactly one entry: MBI-SS
+(`ID_INSTRUMENT=9`) `ID_VARIABLE=22` "Emotional Exhaustion" = mean of items 1–5, discovered by
+comparing candidate item subsets against Study 1's own 423 already-loaded scores (byte-for-byte,
+max discrepancy 0) — the same reproduction check
+`2.relational.model.psychometrics/.claude/skills/GDX_SKILL_MAKE_ANALYSES_CFA_EFA`'s Track A uses for
+CAAS, applied here to one Track B variable that happened to also reproduce exactly.
+
+**Never invents a formula.** A new `SCORE_FORMULAS` entry is only ever added after independently
+confirming it the same way (a candidate `items` subset's unweighted mean reproduces every *existing*
+`RAW_SCORE` for that variable) — see the standalone tool this mirrors,
+`2.relational.model.psychometrics/.claude/skills/GDX_SKILL_LOAD_RLT_MODEL_DB/scripts/compute_variable_result.js
+--instrument <ID> --variable <ID> --items <o1,o2,...> --dry-run`, useful for checking a candidate
+formula (or backfilling many applications at once, across studies) outside the per-participant flow
+below. Most instruments have no confirmed formula at all today — Track B of
+`GDX_SKILL_MAKE_ANALYSES_CFA_EFA`'s own discovery found that none of the *other* 7 multi-item
+instruments' variables reproduce their `RAW_SCORE` exactly from any linear combination of their raw
+items (best match r=0.09–0.86, never exact) — so `SCORE_FORMULAS` correctly stays empty for those:
+writing a "best guess" score into `GDX_PSY_VARIABLE_RESULT` would misrepresent an approximation as a
+confirmed result, which this pipeline's own discipline (§3, `SPSS_to_Firebird_Mapping.md` §3/§6)
+refuses to do.
+
+**Self-checks at load time, every run — not just when the entry was first added.** Before computing
+anything new for a participant, the loader re-verifies the relevant `SCORE_FORMULAS` entry against
+every *other* application that already has both the required items and an existing
+`GDX_PSY_VARIABLE_RESULT` row for that variable (same 1e-3 tolerance as
+`GDX_SKILL_MAKE_ANALYSES_CFA_EFA`'s own `.sav`-vs-DB cross-checks). A mismatch skips writing that one
+variable and is reported under "SCORE FORMULA MISMATCH" — the registry entry is treated as a claim to
+keep verifying, not a fact to trust blindly forever.
+
+**Backfills, not just fresh loads.** An application loaded *before* this feature existed (or before a
+formula was confirmed) is still missing its score — re-running `load_new_study_answers.js` on the
+same already-loaded file computes and inserts it then, without re-inserting or duplicating any
+`GDX_PSY_ITEM_RESPONSE` row (the per-application idempotency check in §6.2's table still applies
+first; scoring is checked independently afterward, per `(ID_APPLICATION, ID_VARIABLE)`, so it never
+duplicates a score either).
 
 ## 7. Running it end to end
 
@@ -319,9 +369,11 @@ node load_new_study_answers.js --file <path-to-participant-copy.xlsx>
 At the end of step 4, the new study/instrument/scale exists in `2.relational.model.psychometrics`
 exactly like the one loaded by `GDX_SKILL_LOAD_RLT_MODEL_DB`. At the end of step 7, real participant
 answers exist in `GDX_PSY_ITEM_RESPONSE`, linked through `GDX_PSY_APPLICATION` →
-`GDX_PSY_STUDY_PARTICIPANT` → `GDX_PSY_PERSON`, ready for scoring/analysis — computing
-`GDX_PSY_VARIABLE_RESULT`/`GDX_PSY_CONSTRUCT_RESULT`/`GDX_PSY_INDICATOR_RESULT` from those raw
-responses remains future work outside the scope of these four skills.
+`GDX_PSY_STUDY_PARTICIPANT` → `GDX_PSY_PERSON`, and `GDX_PSY_VARIABLE_RESULT` is populated wherever a
+confirmed formula exists for that instrument's variable(s) (§6.3) — everything else (most
+instruments, today) still has no derived score, and computing
+`GDX_PSY_CONSTRUCT_RESULT`/`GDX_PSY_INDICATOR_RESULT` from those raw responses remains future work
+outside the scope of these four skills.
 
 ## 8. What is committed vs. gitignored
 

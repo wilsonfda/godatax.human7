@@ -95,7 +95,7 @@ def generate(df, out_dir):
 INSERT INTO GDX_PSY_STUDY (ID_STUDY, TITLE, OBJECTIVE, METHOD, STATUS)
 VALUES (1, 'Predictors of Adaptability to Military Higher Education',
         'Identify psychological predictors (hardiness, engagement, positivity, satisfaction) of career adaptability in officer cadets.',
-        'Self-report questionnaire battery administered to cadets at the Military Academy (Portugal); data processed in SPSS.',
+        'Self-report questionnaire battery administered to cadets at the Military Academy; data processed in SPSS.',
         'COMPLETED');
 """)
 

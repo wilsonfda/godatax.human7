@@ -121,10 +121,15 @@ function pageShell({ title, description, favicon, bodyHtml, extraStyle = '', scr
   }
   function hideTip() { tooltip.style.opacity = '0'; }
   document.getElementById('toggle-view').addEventListener('click', function () {
-    const svgEl = document.querySelector('.chart-svg');
-    const tableEl = document.querySelector('.data-table');
-    const showingTable = tableEl.classList.toggle('visible');
-    svgEl.classList.toggle('hidden-by-table', showingTable);
+    // querySelectorAll (not querySelector): a multi-panel chart (e.g. dashboard_00)
+    // has more than one .chart-svg sharing one .data-table -- toggling must hide/show
+    // every panel together. A single-panel chart (every other chart here) still has
+    // exactly one of each, so this is backward compatible.
+    const svgEls = document.querySelectorAll('.chart-svg');
+    const tableEls = document.querySelectorAll('.data-table');
+    const showingTable = tableEls.length ? !tableEls[0].classList.contains('visible') : false;
+    svgEls.forEach(function (el) { el.classList.toggle('hidden-by-table', showingTable); });
+    tableEls.forEach(function (el) { el.classList.toggle('visible', showingTable); });
     this.textContent = showingTable ? 'Show chart' : 'Show table';
   });
   ${script}
@@ -201,6 +206,117 @@ function renderLineChart({ title, description, series, xLabels, yAxisLabel, favi
     });`;
 
   return pageShell({ title, description, favicon, bodyHtml, script });
+}
+
+/** Splits a values array (numbers, with null/undefined for "no data") into
+ * contiguous runs of "x,y" point strings for <polyline>, so a gap in the data
+ * breaks the line instead of interpolating across it. A run of length 1
+ * (an isolated present value) draws no line, only its point marker. */
+function brokenPolylineSegments(values, xAt, yAt) {
+  const segments = [];
+  let current = [];
+  values.forEach((v, i) => {
+    if (v === null || v === undefined) {
+      if (current.length) segments.push(current);
+      current = [];
+    } else {
+      current.push(`${xAt(i)},${yAt(v)}`);
+    }
+  });
+  if (current.length) segments.push(current);
+  return segments;
+}
+
+/** Small-multiples line chart: N vertically stacked panels sharing the same
+ * categorical x-axis, each with its OWN y-scale -- the dataviz-skill-endorsed
+ * fix (anti-patterns.md, "Bad: Dual-axis charts") for metrics on genuinely
+ * different scales that have no natural common baseline to index to (unlike
+ * chart 1's time-phase series, these x categories are not ordinal, so
+ * indexing to "=100 at category 0" would be arbitrary, not meaningful).
+ * Every panel still shares one legend+table+toggle via the page shell.
+ *
+ * panels: [{ heading, yAxisLabel, series: [{name, values: (number|null)[]}], colorOffset }]
+ * xLabels: string[] (shared category labels, one per index, same order in every panel's series)
+ * tableColumns: [{ label, get: (rowIndex) => string }] -- builds the combined data-table;
+ *   rowIndex runs over xLabels.
+ */
+function renderMultiPanelLineChart({ title, description, xLabels, panels, tableColumns, favicon, mode = 'light' }) {
+  const W = 940, marginL = 64, marginR = 24, marginT = 20, marginB = 92;
+  const plotW = W - marginL - marginR, plotH = 220;
+  const panelGap = 30;
+  const colors = PALETTE.categorical[mode];
+  const xStep = xLabels.length > 1 ? plotW / (xLabels.length - 1) : plotW;
+  const xAt = (i) => marginL + i * xStep;
+
+  let colorCursor = 0;
+  let panelsSvg = '';
+  let legendsHtml = '';
+  const panelH = marginT + plotH + marginB;
+
+  panels.forEach((panel, pi) => {
+    const yOffset = pi * (panelH + panelGap);
+    const allValues = panel.series.flatMap((s) => s.values).filter((v) => v !== null && v !== undefined);
+    const ticks = allValues.length ? niceTicks(Math.min(...allValues), Math.max(...allValues), 4) : [0, 1];
+    const yMin = ticks[0], yMax = ticks[ticks.length - 1];
+    const yAt = (v) => yOffset + marginT + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
+
+    const gridSvg = ticks.map((t) => `<line class="grid-line" x1="${marginL}" x2="${W - marginR}" y1="${yAt(t)}" y2="${yAt(t)}"/>
+      <text class="axis-label" x="${marginL - 8}" y="${yAt(t) + 4}" text-anchor="end">${t}</text>`).join('\n');
+
+    const xLabelsSvg = xLabels.map((l, i) => `<text class="axis-label" x="${xAt(i)}" y="${yOffset + marginT + plotH + 20}"
+        text-anchor="end" transform="rotate(-32 ${xAt(i)} ${yOffset + marginT + plotH + 20})">${esc(l)}</text>`).join('\n');
+
+    const panelColorStart = colorCursor;
+    const seriesSvg = panel.series.map((s, si) => {
+      const color = colors[(panelColorStart + si) % colors.length];
+      const segments = brokenPolylineSegments(s.values, xAt, yAt);
+      const lines = segments.filter((seg) => seg.length >= 2)
+        .map((seg) => `<polyline points="${seg.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`)
+        .join('\n');
+      const dots = s.values.map((v, i) => (v === null || v === undefined) ? '' : `<circle class="pt" cx="${xAt(i)}" cy="${yAt(v)}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>${esc(s.name)}</strong><br>${esc(xLabels[i])}: ${v}"></circle>`).join('\n');
+      return `${lines}\n${dots}`;
+    }).join('\n');
+    colorCursor += panel.series.length;
+
+    panelsSvg += `
+      <text class="panel-heading" x="${marginL}" y="${yOffset + 4}">${esc(panel.heading)}</text>
+      ${gridSvg}
+      <line class="baseline" x1="${marginL}" x2="${W - marginR}" y1="${yOffset + marginT + plotH}" y2="${yOffset + marginT + plotH}"/>
+      ${seriesSvg}
+      ${xLabelsSvg}
+      <text class="axis-label" x="18" y="${yOffset + marginT + 10}" transform="rotate(-90 18 ${yOffset + marginT + 10})" text-anchor="end">${esc(panel.yAxisLabel)}</text>`;
+
+    if (panel.series.length >= 2) {
+      const items = panel.series.map((s, si) =>
+        `<div class="legend-item"><span class="legend-swatch" style="background:${colors[(panelColorStart + si) % colors.length]}"></span>${esc(s.name)}</div>`).join('');
+      legendsHtml += `<div class="legend">${items}</div>`;
+    }
+  });
+
+  const totalH = marginT + panels.length * panelH + (panels.length - 1) * panelGap;
+
+  const tableRows = xLabels.map((label, i) =>
+    `<tr><td>${esc(label)}</td>${tableColumns.map((c) => `<td>${esc(c.get(i))}</td>`).join('')}</tr>`).join('');
+
+  const bodyHtml = `
+    <svg class="chart-svg" viewBox="0 0 ${W} ${totalH}" role="img" aria-label="${esc(title)}">
+      ${panelsSvg}
+    </svg>
+    ${legendsHtml}
+    <table class="data-table"><thead><tr><th>Instrument</th>${tableColumns.map((c) => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>
+      <tbody>${tableRows}</tbody></table>`;
+
+  const script = `
+    document.querySelectorAll('.pt').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });`;
+
+  const extraStyle = `.panel-heading { fill: var(--ink-secondary); font-size: 12px; font-weight: 600; }`;
+
+  return pageShell({ title, description, favicon, bodyHtml, script, extraStyle });
 }
 
 /** Single-series bar chart. bars: [{ label, value, n }] */
@@ -539,6 +655,6 @@ function renderSeptenaryConstitutionPortrait({ title, description, rows, favicon
 }
 
 module.exports = {
-  renderLineChart, renderBarChart, renderHeatmap, renderChakraPortrait,
+  renderLineChart, renderMultiPanelLineChart, renderBarChart, renderHeatmap, renderChakraPortrait,
   renderSeptenaryConstitutionPortrait, PALETTE,
 };

@@ -9,7 +9,7 @@
     "dry-run": "node load_new_study_answers.js --dry-run"
   },
   "dependencies": {
-    "node-firebird": "^1.1.9",
+    "node-firebird": "^2.16.0",
     "exceljs": "^4.4.0"
   }
 }

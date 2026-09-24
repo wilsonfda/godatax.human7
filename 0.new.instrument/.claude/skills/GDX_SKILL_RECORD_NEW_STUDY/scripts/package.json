@@ -8,6 +8,6 @@
     "record": "node execute_new_study.js"
   },
   "dependencies": {
-    "node-firebird": "^1.1.9"
+    "node-firebird": "^2.16.0"
   }
 }

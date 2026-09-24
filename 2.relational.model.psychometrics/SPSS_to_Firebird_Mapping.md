@@ -1,16 +1,17 @@
 # GDX_HUMAN — SPSS (.sav) to Psychometrics Relational Model (Firebird) Mapping
 
 > Generated on 2026-09-10, based on reading:
-> - `GDX_HUMAN/output.ibm.spss.statistics/PLANILHAPOSDOC11SET SO CADETES.sav` (data, via `pyreadstat`)
-> - `GDX_HUMAN/output.ibm.spss.statistics/SCALES/utf-8_Quadro Sintese das Escalas.docx` and `(1).docx` (identical — scale summary table)
-> - `GDX_HUMAN/output.ibm.spss.statistics/SCALES/ESCALA PESQUISA PORTUGAL AMAN 2012.pptx` (item wording, response anchors, authorship)
-> - `GDX_HUMAN/relational.model.psychometrics/psychometrics_model_firebird25.sql` (target DDL)
+> - `1.output.ibm.spss.statistics/PLANILHAPOSDOC11SET SO CADETES.sav` (data, via `pyreadstat`)
+> - `utf-8_Quadro Sintese das Escalas.docx` and `(1).docx` (identical — scale summary table) and `ESCALA PESQUISA PORTUGAL AMAN 2012.pptx` (item wording, response anchors, authorship) — supporting Word/PowerPoint files that were read at the time this mapping was written but are **no longer present in this repository** (they lived in a `SCALES` subfolder alongside the `.sav` that has since been removed). Their extracted content survives only in this document — see §6 point 1 for the resulting gap.
+> - `2.relational.model.psychometrics/psychometrics_model_firebird25.sql` (target DDL)
 >
 > **Translated from the original Portuguese mapping (2026-09-10); table/column names updated to the English schema (`psychometrics_model_firebird25.sql`). Data was later loaded via `01_load_study.sql`–`08_adjust_sequences.sql` — see the headers of those files for the exact load decisions.**
+>
+> **See also:** `1.output.ibm.spss.statistics/PLANILHAPOSDOC11SET_SO_CADETES_Documentacao.md` for a data-focused (Portuguese) write-up of this same `.sav` — per-variable descriptive statistics, missing-data summary, and file-level metadata — complementing this document's focus on the relational-model mapping.
 
 ## 1. What the dataset is
 
-Study **"Predictors of Adaptability to Military Higher Education"** (Military Academy, Portugal), administered to **cadets/officer cadets ("SO CADETES")**.
+Study **"Predictors of Adaptability to Military Higher Education"** (Military Academy), administered to **cadets/officer cadets ("SO CADETES")**.
 
 - **423 respondents** (rows), numeric `ID` column (784–1645), no duplicates → 423 unique IDs, one per person/application.
 - **159 variables** (columns): 1 identifier + 137 raw questionnaire items + 1 nominal context variable (`ano`, curricular year) + 20 computed scores (dimension means).
@@ -54,7 +55,7 @@ Study **"Predictors of Adaptability to Military Higher Education"** (Military Ac
 | Each row of the `.sav` (1 person = 1 battery application) | `GDX_PSY_STUDY_PARTICIPANT` (1 row) + `GDX_PSY_APPLICATION` (1 row per answered instrument, or 1 "umbrella" application covering the whole battery, to be decided) | `ano` (curricular year) is the natural candidate for `GDX_PSY_STUDY_PARTICIPANT.EXPERIMENTAL_GROUP` — **schema gap**: there is no column dedicated to "curricular year"/cohort; `EXPERIMENTAL_GROUP` is the closest available field. |
 | Each scale (Hardiness, Engagement, AC, ...) | `GDX_PSY_INSTRUMENT` (1 row per scale) + `GDX_PSY_INSTRUMENT_CONSTRUCT` | `NAME`/`VERSION` from the "Scale" column of the summary table; `INSTRUCTIONS` from the instruction text of each pptx slide. |
 | Each dimension/subscale (Commitment, Control, Challenge, Vigor, ...) | `GDX_PSY_CONSTRUCT` (the overall phenomenon, e.g. "Hardiness") + `GDX_PSY_VARIABLE` (the dimension, e.g. "Commitment") | See table in §2 — each "Dimension → computed column" row is 1 `GDX_PSY_VARIABLE`. |
-| Raw item (`AC1`, `Ha7`, ...) | `GDX_PSY_INSTRUMENT_ITEM` (1 row per item; `ITEM_ORDER` = item number in the original scale) | `STATEMENT_TEXT` **is not in the `.sav`** — it had to be typed in from the pptx slide text (already extracted in this process, see `SCALES/ESCALA PESQUISA PORTUGAL AMAN 2012.pptx`) and translated to English. `RESPONSE_TYPE` = 5-point Likert (or 0–4 for RP). |
+| Raw item (`AC1`, `Ha7`, ...) | `GDX_PSY_INSTRUMENT_ITEM` (1 row per item; `ITEM_ORDER` = item number in the original scale) | `STATEMENT_TEXT` **is not in the `.sav`** — it had to be typed in from the pptx slide text (already extracted in this process; the source `ESCALA PESQUISA PORTUGAL AMAN 2012.pptx` file is no longer present in this repository, see the header note above) and translated to English. `RESPONSE_TYPE` = 5-point Likert (or 0–4 for RP). |
 | Response anchors (1=Not True at All...5=Completely True, etc.) | `GDX_PSY_ITEM_ALTERNATIVE` (5 rows per item, `NUMERIC_VALUE` 1–5 or 0–4) | 7 distinct anchor sets were identified in the pptx (Hardiness / Never-Always / Very little-A lot / PSS / 0-4 Not at all-Very much / personal satisfaction / control). The `ef`, `an`, `red` items have unknown anchors (block in §3). |
 | Item→dimension, with weight/reversal (e.g. Hardiness has reverse-scored items) | `GDX_PSY_INDICATOR` (1 per dimension, operationalizing the calculation) + `GDX_PSY_INDICATOR_ITEM` (`WEIGHT`, `REVERSED`) | The `REVERSED` field in the schema is exactly for Hardiness's reverse-scored items (not individually identified in this read — needs the original author's scoring key). |
 | Each raw response to an item (`AC1=3`, `Ha7=4`...) | `GDX_PSY_ITEM_RESPONSE.NUMERIC_VALUE` | 1 row per (application, item). With 423 people × ~137 raw items → ~58,000 potential rows. |

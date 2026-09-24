@@ -20,7 +20,15 @@
  *   GDX_HUMAN_FB_USER, GDX_HUMAN_FB_PASSWORD
  *
  * Usage:
- *   node fetch_career_adaptability_items.js [--out-dir <path>]
+ *   node fetch_career_adaptability_items.js [--study <slug>] [--intake-dir <path>] [--out-dir <path>]
+ *
+ *   --study <slug>   optional. Same slug GDX_SKILL_NEW_STUDY/GDX_SKILL_GODATAX_HUMAN7_BY_SPU use --
+ *                     resolves to GDX_PSY_STUDY.ID_STUDY via new_study_intake/<slug>/intake.json's
+ *                     study.title, and filters applications to that one study. Omit to fetch every
+ *                     application in the database that has CAAS responses (the original, unscoped
+ *                     behavior -- what the "Comparing against the .sav-sourced results" section of
+ *                     SKILL.md assumes, n=423).
+ *   --intake-dir     override the default new_study_intake/<slug>/ location.
  */
 
 const fs = require('fs');
@@ -37,13 +45,44 @@ const DIMENSION_VARIABLE = {
 };
 
 function parseArgs(argv) {
-  const args = { outDir: path.join(__dirname, '..', 'data') };
+  const args = { outDir: path.join(__dirname, '..', 'data'), study: null, intakeDir: null };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--out-dir') args.outDir = argv[++i];
+    else if (a === '--study') args.study = argv[++i];
+    else if (a === '--intake-dir') args.intakeDir = argv[++i];
     else throw new Error(`Unknown argument: ${a}`);
   }
   return args;
+}
+
+/** GDX_HUMAN/0.new.instrument/new_study_intake/<slug>/intake.json, resolved relative to this
+ * script -- same depth/pattern as GDX_SKILL_GODATAX_HUMAN7_BY_SPU/scripts/export_graph.js. */
+function resolveIntakePath(args) {
+  if (args.intakeDir) return path.join(args.intakeDir, 'intake.json');
+  return path.join(__dirname, '..', '..', '..', '..', '..',
+    '0.new.instrument', 'new_study_intake', args.study, 'intake.json');
+}
+
+function loadIntake(args) {
+  const intakePath = resolveIntakePath(args);
+  if (!fs.existsSync(intakePath)) {
+    throw new Error(
+      `intake.json not found at ${intakePath}. Run GDX_SKILL_NEW_STUDY for study slug ` +
+      `"${args.study}" first, or pass --intake-dir if it lives somewhere else.`
+    );
+  }
+  return JSON.parse(fs.readFileSync(intakePath, 'utf8'));
+}
+
+/** Resolves --study's slug to GDX_PSY_STUDY.ID_STUDY via the intake's study.title -- same
+ * lookup the other --study-scoped skills use. */
+async function resolveStudyId(db, studyTitle, studySlug) {
+  const rows = await query(db, 'SELECT FIRST 1 ID_STUDY FROM GDX_PSY_STUDY WHERE TITLE = ?', [studyTitle]);
+  if (rows.length === 0) {
+    throw new Error(`Study "${studyTitle}" (slug "${studySlug}") not found in GDX_PSY_STUDY.`);
+  }
+  return rows[0].ID_STUDY;
 }
 
 function requireEnv(name) {
@@ -124,13 +163,25 @@ async function main() {
       }
     }
 
+    let studyId = null;
+    if (args.study) {
+      const intake = loadIntake(args);
+      const studyTitle = intake.study && intake.study.title;
+      if (!studyTitle) throw new Error(`intake.json for study slug "${args.study}" has no study.title.`);
+      studyId = await resolveStudyId(db, studyTitle, args.study);
+      console.log(`Resolved study "${studyTitle}" (slug "${args.study}") -> ID_STUDY=${studyId}.`);
+    }
+    const studyFilter = studyId !== null
+      ? ` AND ir.ID_APPLICATION IN (SELECT ID_APPLICATION FROM GDX_PSY_APPLICATION WHERE ID_STUDY = ${studyId})`
+      : '';
+
     // --- Raw item responses, AC1..AC28, one row per application ---
     const itemRows = await query(
       db,
       `SELECT ir.ID_APPLICATION, ii.ITEM_ORDER, ir.NUMERIC_VALUE
        FROM GDX_PSY_ITEM_RESPONSE ir
        JOIN GDX_PSY_INSTRUMENT_ITEM ii ON ii.ID_ITEM = ir.ID_ITEM
-       WHERE ii.ID_INSTRUMENT = ?
+       WHERE ii.ID_INSTRUMENT = ?${studyFilter}
        ORDER BY ir.ID_APPLICATION, ii.ITEM_ORDER`,
       [ID_INSTRUMENT]
     );
@@ -202,7 +253,9 @@ async function main() {
     writeCsv(dimCsvPath, dimHeader, dimCsvRows);
     console.log(`Wrote ${dimCsvPath} (${appIds.length} applications x ${dimNames.length} dimensions).`);
 
-    console.log(`\nDone. n=${appIds.length} (expected 423 if this is the same population the .sav-sourced analyses used).`);
+    console.log(studyId !== null
+      ? `\nDone. n=${appIds.length} application(s) for study "${args.study}" (ID_STUDY=${studyId}).`
+      : `\nDone. n=${appIds.length} (expected 423 if this is the same population the .sav-sourced analyses used).`);
   } finally {
     db.detach();
   }

@@ -57,8 +57,9 @@ underscore, then the study's slug/code — e.g.
 `GDX_SKILL_EXPORT_NEW_STUDY_Pilot_Study_of_Workplace_Resilience_in_Remote_Teams__workplace-resilience-pilot.xlsx`.
 The double-underscore separator is deliberate: slugs are always lowercase and hyphen-separated (see
 `GDX_SKILL_NEW_STUDY`'s slug rule), so they can never contain `__`, which keeps the boundary
-unambiguous for anyone reading the filename. It is written next to `intake.json`
-(`new_study_intake/<slug>/`) unless `--out-dir` is given.
+unambiguous for anyone reading the filename. It is written straight into `0.new.instrument/` (one
+flat folder for every study's questionnaire, easy to find -- not buried under that study's own
+`new_study_intake/<slug>/` subfolder) unless `--out-dir` is given.
 
 ## Running it
 
@@ -69,8 +70,18 @@ npm install                 # once, installs node-firebird + exceljs
 node export_new_study.js --study <slug>
 ```
 
-`--intake-dir <path>` overrides the default `new_study_intake/<slug>/` location; `--out-dir <dir>`
-writes the `.xlsx` somewhere other than the intake folder.
+`--intake-dir <path>` overrides the default `new_study_intake/<slug>/` location it reads `intake.json`
+from; `--out-dir <dir>` writes the `.xlsx` somewhere other than the default `0.new.instrument/`;
+`--exclude-item-orders <n,n,...>` drops
+specific items (by `ITEM_ORDER`, comma-separated) from every instrument sheet they'd otherwise
+appear on -- for items whose `STATEMENT_TEXT` is a placeholder like
+`[STATEMENT NOT IDENTIFIED - ...]` (see `SPSS_to_Firebird_Mapping.md` §3/6) rather than real wording.
+**Never invent wording to fill a gap like that instead** -- a copyrighted, validated instrument's
+missing item text is not something to guess at, especially once real answers will be collected
+against it. Dropping the item and noting the omission (this flag records it on the hidden META
+sheet, `EXCLUDED_ITEM_ORDERS`/`EXCLUDED_REASON`) is the honest option; the other is tracking down
+the real source (original pptx/manual, or the instrument's copyright holder) and fixing
+`GDX_PSY_INSTRUMENT_ITEM.STATEMENT_TEXT` at the source once confirmed.
 
 ## Sending it to participants
 

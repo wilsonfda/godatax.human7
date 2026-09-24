@@ -13,7 +13,7 @@ Run a Confirmatory Factor Analysis (CFA) on the **Career Adapt-Abilities Scale (
 | Data source | `GDX_HUMAN/1.output.ibm.spss.statistics/PLANILHAPOSDOC11SET SO CADETES.sav` (read via `pyreadstat`), the same file that already fed `GDX_PSY_ITEM_RESPONSE`/`GDX_PSY_VARIABLE_RESULT` in Firebird |
 | Instrument | Career Adapt-Abilities Scale (`GDX_PSY_INSTRUMENT.ID_INSTRUMENT = 3`) |
 | Construct | Career Adaptability (`GDX_PSY_CONSTRUCT.ID_CONSTRUCT = 3`) |
-| Sample | n = 423 respondents (Military Academy cadets, Portugal), **0 missing values** across the 28 items |
+| Sample | n = 423 respondents (Military Academy cadets), **0 missing values** across the 28 items |
 | Observed items (indicators) | `AC1`…`AC28`, 1–5 Likert scale |
 | Hypothesized latent factors | **Concern** (AC1–AC7) · **Control** (AC8–AC14) · **Curiosity** (AC15–AC21) · **Confidence** (AC22–AC28) — 7 items per factor |
 | Grouping validation | The grouping above was checked item by item against the scores the SPSS file itself had already precomputed (`ACpreocup`, `ACcontrole`, `ACcuriosid`, `ACconfianc`): the mean of each block's 7 items has Pearson correlation = 1.0 and max absolute difference = 0.0 against the matching precomputed column. In other words, the grouping used in the CFA is exactly the same one the original researcher used to compute the scores. |

@@ -3,7 +3,30 @@
  * GDX_SKILL_MAKE_DASHBOARS_DW
  *
  * Reads GDX_HUMAN's DW (7.multidimensional.database, see GoDataX_Human_7_DW.md)
- * and generates 8 self-contained HTML charts:
+ * and generates 9 self-contained HTML charts:
+ *
+ *   0. Line (small multiples, 2 panels) - dashboard_00_means_psychometric_responses.html
+ *      Pure-psychometric perspective (cardiac coherence excluded on purpose --
+ *      see the user request this chart was built for). One instrument per
+ *      x-axis position; top panel is the mean response score actually given
+ *      by participants (DW_FACT_PSY_VARIABLE_RESULT.RAW_SCORE, via the DW,
+ *      scoped to this study); bottom panel is the mean |factor loading| from
+ *      GDX_PSY_PSYCHOMETRIC_PROPERTY, one line for EFA_FACTOR_LOADING
+ *      (exploratory) and one for STD_FACTOR_LOADING (confirmatory/CFA) --
+ *      that table has no ID_STUDY column (a loading shown here reflects
+ *      whatever population last had CFA/EFA run for that instrument, not
+ *      necessarily THIS study's own -- see GDX_SKILL_MAKE_ANALYSES_CFA_EFA's
+ *      --study flag). The x-axis instrument list itself IS study-scoped
+ *      (via GDX_PSY_APPLICATION), so an instrument this study never
+ *      administered never appears here even if some other study's
+ *      population has loadings for it. Two panels instead of one shared
+ *      axis: response scores and factor loadings are fundamentally
+ *      different quantities (a 1-5-ish Likert mean vs a -1..1 loading), so one
+ *      shared y-axis would be the dual-axis anti-pattern, and there is no
+ *      natural "instrument zero" to index to the way chart 1 has a BASELINE
+ *      phase. Which of this study's own instruments actually has an EFA/CFA
+ *      row varies -- absent means no dot, not zero, and the chart's own
+ *      caption says exactly which ones (computed from the data, not hardcoded).
  *
  *   1. Line (multi-dimension)  - dashboard_01_physiological_response.html
  *      Cardiac-coherence metrics (coherence index, heart rate, RMSSD, SDNN)
@@ -59,15 +82,23 @@
  *      variable maps to it.
  *
  * Usage:
- *   node make_dashboards.js --study <slug> [--out-dir <path>] [--sample] [--intake-dir <path>]
+ *   node make_dashboards.js --study <slug> [--chart <code>] [--out-dir <path>] [--sample] [--intake-dir <path>]
  *
  *   --study <slug>    REQUIRED. Same slug GDX_SKILL_NEW_STUDY used for
- *                      new_study_intake/<slug>/intake.json. All 6 charts are
- *                      scoped to this one study's people only (joined through
- *                      DW_DIM_PERSON.ID_STUDY, resolved from the intake's
- *                      study.title via GDX_PSY_STUDY), and every output
- *                      filename carries this slug, the study's title, and the
- *                      generation timestamp -- see buildFilename().
+ *                      new_study_intake/<slug>/intake.json. Every chart that
+ *                      touches study-scoped data is scoped to this one
+ *                      study's people only (joined through DW_DIM_PERSON.
+ *                      ID_STUDY, resolved from the intake's study.title via
+ *                      GDX_PSY_STUDY), and every output filename carries this
+ *                      slug, the study's title, and the generation timestamp
+ *                      -- see buildFilename().
+ *
+ *   --chart <code>    optional. One of '00'-'08' (see the chart list above).
+ *                      Generates ONLY that one chart -- e.g. --chart 00 writes
+ *                      just dashboard_00_means_psychometric_responses.html,
+ *                      loading only the data that chart needs. Omit to
+ *                      generate all 9 charts, same as before this flag
+ *                      existed.
  *
  *   --sample   use embedded sample data instead of connecting to the
  *              database -- lets the chart-generation logic be verified
@@ -84,16 +115,19 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const {
-  renderLineChart, renderBarChart, renderHeatmap, renderChakraPortrait, renderSeptenaryConstitutionPortrait,
+  renderLineChart, renderMultiPanelLineChart, renderBarChart, renderHeatmap, renderChakraPortrait, renderSeptenaryConstitutionPortrait,
 } = require('./chart_lib');
 
+const CHART_CODES = ['00', '01', '02', '03', '04', '05', '06', '07', '08'];
+
 function parseArgs(argv) {
-  const args = { outDir: null, sample: false, study: null, intakeDir: null };
+  const args = { outDir: null, sample: false, study: null, intakeDir: null, chart: null };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--out-dir') args.outDir = argv[++i];
     else if (argv[i] === '--sample') args.sample = true;
     else if (argv[i] === '--study') args.study = argv[++i];
     else if (argv[i] === '--intake-dir') args.intakeDir = argv[++i];
+    else if (argv[i] === '--chart') args.chart = argv[++i];
     else throw new Error(`Unknown argument: ${argv[i]}`);
   }
   if (!args.study) {
@@ -101,6 +135,9 @@ function parseArgs(argv) {
       '--study <slug> is required. Pass the same slug GDX_SKILL_NEW_STUDY used for ' +
       'new_study_intake/<slug>/intake.json -- every chart is scoped to that one study.'
     );
+  }
+  if (args.chart && !CHART_CODES.includes(args.chart)) {
+    throw new Error(`Unknown --chart "${args.chart}". Valid codes: ${CHART_CODES.join(', ')}.`);
   }
   return args;
 }
@@ -186,6 +223,153 @@ async function resolveStudyId(db, studyTitle, studySlug) {
     );
   }
   return rows[0].ID_STUDY;
+}
+
+// --- Chart 0: line, small multiples (response score vs. EFA/CFA loadings) ---
+// One row of data per instrument THIS STUDY ACTUALLY ADMINISTERS (via
+// GDX_PSY_APPLICATION -- an instrument this study never gave its participants
+// never appears, even if some OTHER study's population has loadings for it).
+// RESPONSE_SCORE comes from the DW (study-scoped, like every other chart
+// here); EFA_LOADING/CFA_LOADING come straight from GDX_PSY_PSYCHOMETRIC_PROPERTY
+// (OLTP, no ID_STUDY column -- whatever population last had CFA/EFA run for
+// that instrument, which may not be THIS study's own population if the same
+// instrument is shared across studies; see GDX_SKILL_MAKE_ANALYSES_CFA_EFA's
+// own --study flag for computing a study-specific value instead of reusing
+// whatever's already loaded). Restricting the instrument list to this study's
+// own administered instruments is the only study-scoping possible on this
+// table's data, but it is real and matters: without it, a study using only
+// one instrument (e.g. burnout-test-2's MBI-SS) would show every OTHER
+// instrument in the whole database (Hardiness, CAAS, ...) it never gave,
+// misleadingly, on its own dashboard.
+async function loadMeansPsychometricData(db, studyId) {
+  // Deliberately NOT "JOIN GDX_PSY_APPLICATION ON A.ID_INSTRUMENT = I.ID_INSTRUMENT": a study loaded
+  // the legacy way (GDX_SKILL_LOAD_RLT_MODEL_DB's .sav import, e.g. ID_STUDY=1) gives every person ONE
+  // "umbrella" GDX_PSY_APPLICATION row covering the whole battery, with ID_INSTRUMENT hardcoded to 1
+  // (Hardiness) as a placeholder -- see samples.SQL/05_load_applications.sql -- so trusting that column
+  // would make every such study look like it only ever administered instrument 1. GDX_PSY_ITEM_RESPONSE
+  // is the reliable source of "which instrument(s) this study's applications actually have answers
+  // for", true for both the legacy umbrella shape and the one-application-per-instrument shape
+  // GDX_SKILL_LOAD_NEW_STUDY_ANSWERS uses.
+  const instruments = await query(db, `
+    SELECT DISTINCT I.ID_INSTRUMENT, I.NAME
+    FROM GDX_PSY_INSTRUMENT I
+    JOIN GDX_PSY_INSTRUMENT_ITEM II ON II.ID_INSTRUMENT = I.ID_INSTRUMENT
+    JOIN GDX_PSY_ITEM_RESPONSE IR ON IR.ID_ITEM = II.ID_ITEM
+    JOIN GDX_PSY_APPLICATION A ON A.ID_APPLICATION = IR.ID_APPLICATION
+    WHERE A.ID_STUDY = ?
+    ORDER BY I.ID_INSTRUMENT`, [studyId]);
+  const responseRows = await query(db, `
+    SELECT I.ID_INSTRUMENT, AVG(VR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
+    FROM DW_FACT_PSY_VARIABLE_RESULT VR
+    JOIN DW_DIM_VARIABLE V ON V.ID_VARIABLE = VR.ID_VARIABLE
+    JOIN DW_DIM_INSTRUMENT I ON I.ID_INSTRUMENT = V.ID_INSTRUMENT
+    JOIN DW_DIM_PERSON P ON P.ID_PERSON = VR.ID_PERSON
+    WHERE P.ID_STUDY = ?
+    GROUP BY I.ID_INSTRUMENT`, [studyId]);
+  const efaRows = await query(db, `
+    SELECT ID_INSTRUMENT, AVG(ABS("VALUE")) AS AVG_LOADING, COUNT(*) AS N
+    FROM GDX_PSY_PSYCHOMETRIC_PROPERTY
+    WHERE TYPE = 'EFA_FACTOR_LOADING'
+    GROUP BY ID_INSTRUMENT`, []);
+  const cfaRows = await query(db, `
+    SELECT ID_INSTRUMENT, AVG(ABS("VALUE")) AS AVG_LOADING, COUNT(*) AS N
+    FROM GDX_PSY_PSYCHOMETRIC_PROPERTY
+    WHERE TYPE = 'STD_FACTOR_LOADING'
+    GROUP BY ID_INSTRUMENT`, []);
+
+  const byInstrument = (rows) => new Map(rows.map((r) => [r.ID_INSTRUMENT, r]));
+  const respMap = byInstrument(responseRows), efaMap = byInstrument(efaRows), cfaMap = byInstrument(cfaRows);
+
+  return instruments.map((inst) => {
+    const r = respMap.get(inst.ID_INSTRUMENT), e = efaMap.get(inst.ID_INSTRUMENT), c = cfaMap.get(inst.ID_INSTRUMENT);
+    return {
+      ID_INSTRUMENT: inst.ID_INSTRUMENT,
+      INSTRUMENT_NAME: inst.NAME,
+      RESPONSE_SCORE: r ? r.AVG_SCORE : null,
+      RESPONSE_N: r ? r.N : 0,
+      EFA_LOADING: e ? e.AVG_LOADING : null,
+      EFA_N: e ? e.N : 0,
+      CFA_LOADING: c ? c.AVG_LOADING : null,
+      CFA_N: c ? c.N : 0,
+    };
+  });
+}
+
+function sampleMeansPsychometricRows() {
+  const data = [
+    [1, 'Hardiness', 3.95, 12690, null, 0, null, 0],
+    [2, 'Student Engagement Scale', 3.87, 5922, null, 0, null, 0],
+    [3, 'Career Adapt-Abilities Scale', 4.08, 11844, 0.36, 28, 0.62, 28],
+    [4, 'Satisfaction With Life Scale', 3.55, 2115, null, 0, null, 0],
+    [5, 'Job Satisfaction Scale', 3.62, 2115, null, 0, null, 0],
+    [6, 'Positivity Ratio Scale', 2.71, 8460, null, 0, null, 0],
+    [7, 'Personal Satisfaction', 3.90, 423, null, 0, null, 0],
+    [8, 'Perceived Control of Life', 3.70, 423, null, 0, null, 0],
+    [9, 'Maslach Burnout Inventory - Student Survey (hypothesis)', 2.40, 7614, null, 0, null, 0],
+    [10, 'Undocumented Organizational Block (hypothesis - an1-an11)', 3.10, 4653, null, 0, null, 0],
+    [11, 'Red Tape / Perceived Bureaucracy (hypothesis - rt1-rt5)', 2.90, 2115, null, 0, null, 0],
+  ];
+  return data.map(([ID_INSTRUMENT, INSTRUMENT_NAME, RESPONSE_SCORE, RESPONSE_N, EFA_LOADING, EFA_N, CFA_LOADING, CFA_N]) =>
+    ({ ID_INSTRUMENT, INSTRUMENT_NAME, RESPONSE_SCORE, RESPONSE_N, EFA_LOADING, EFA_N, CFA_LOADING, CFA_N }));
+}
+
+function buildMeansPsychometricChartHtml(rows) {
+  if (rows.length === 0) return null;
+  const xLabels = rows.map((r) => r.INSTRUMENT_NAME);
+  const round2OrNull = (v) => (v === null || v === undefined ? null : round2(v));
+  const responseValues = rows.map((r) => round2OrNull(r.RESPONSE_SCORE));
+  const efaValues = rows.map((r) => round2OrNull(r.EFA_LOADING));
+  const cfaValues = rows.map((r) => round2OrNull(r.CFA_LOADING));
+
+  // Which of THIS chart's own instruments (this study's, not the whole database's) actually have
+  // an EFA/CFA point -- computed from `rows`, not hardcoded, so this stays true as more instruments
+  // earn loadings over time (GDX_PSY_PSYCHOMETRIC_PROPERTY has no ID_STUDY column, so a loading
+  // shown here reflects whatever population last had CFA/EFA run for that instrument, not
+  // necessarily this study's own -- see GDX_SKILL_MAKE_ANALYSES_CFA_EFA's --study flag).
+  const withLoadings = rows.filter((r) => r.EFA_LOADING !== null || r.CFA_LOADING !== null);
+  const loadingCoverageNote = withLoadings.length === rows.length
+    ? 'Every instrument in this study has at least one EFA/CFA row.'
+    : withLoadings.length === 0
+      ? 'None of this study\'s instrument(s) has any EFA/CFA row yet -- every bottom-panel point is absent, not zero.'
+      : `Only ${withLoadings.map((r) => r.INSTRUMENT_NAME).join(', ')} has EFA/CFA rows among this study's instruments -- ` +
+        `every other bottom-panel point here is absent, not zero.`;
+
+  const panels = [
+    {
+      heading: 'Response score -- mean RAW_SCORE from actual participant answers (each instrument\'s own scale)',
+      yAxisLabel: 'Average raw score',
+      series: [{ name: 'Response score', values: responseValues }],
+    },
+    {
+      heading: 'Factor-analysis loadings -- mean |loading| across items (-1 to 1 scale, a different quantity from the panel above)',
+      yAxisLabel: 'Average |factor loading|',
+      series: [
+        { name: 'EFA (exploratory)', values: efaValues },
+        { name: 'CFA (confirmatory)', values: cfaValues },
+      ],
+    },
+  ];
+
+  const tableColumns = [
+    { label: 'Response score', get: (i) => (rows[i].RESPONSE_SCORE === null ? '—' : String(round2(rows[i].RESPONSE_SCORE))) },
+    { label: 'Response N', get: (i) => String(rows[i].RESPONSE_N) },
+    { label: 'EFA loading (avg |value|)', get: (i) => (rows[i].EFA_LOADING === null ? '—' : String(round2(rows[i].EFA_LOADING))) },
+    { label: 'CFA loading (avg |value|)', get: (i) => (rows[i].CFA_LOADING === null ? '—' : String(round2(rows[i].CFA_LOADING))) },
+  ];
+
+  return renderMultiPanelLineChart({
+    title: 'Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings',
+    description: 'Pure-psychometric perspective (cardiac coherence deliberately excluded): one instrument per x-axis position, ' +
+      'two panels on separate y-scales. The top panel\'s <code>RAW_SCORE</code> (mostly 1-5 Likert, but not a uniform scale across ' +
+      'instruments -- e.g. Positivity Ratio Scale runs 0-4) is a fundamentally different quantity from the bottom panel\'s factor ' +
+      'loadings (-1 to 1, from <code>GDX_PSY_PSYCHOMETRIC_PROPERTY</code>), so each gets its own panel rather than one shared axis ' +
+      '(the dual-axis anti-pattern) or an arbitrary indexed baseline (there is no natural "instrument zero" the way chart 1 has a ' +
+      'BASELINE phase). ' + loadingCoverageNote,
+    xLabels,
+    panels,
+    tableColumns,
+    favicon: '📐',
+  });
 }
 
 // --- Chart 1: line, multi-dimension -----------------------------------------
@@ -576,10 +760,29 @@ function buildSeptenaryConstitutionPortraitHtml(rows) {
   });
 }
 
+// Registry: one entry per chart code, in output order. `load` returns the
+// real-mode rows (db, studyId); `sample` returns the --sample-mode rows;
+// `build` turns rows into HTML (or null if there's nothing to draw). Only the
+// codes in `selectedCodes` (main()) are ever loaded/built -- so --chart 00
+// issues none of the other 8 charts' queries.
+const CHART_REGISTRY = {
+  '00': { baseName: 'dashboard_00_means_psychometric_responses', load: loadMeansPsychometricData, sample: sampleMeansPsychometricRows, build: buildMeansPsychometricChartHtml },
+  '01': { baseName: 'dashboard_01_physiological_response', load: loadPhysiologicalSeries, sample: samplePhysiologicalRows, build: buildLineChartHtml },
+  '02': { baseName: 'dashboard_02_score_by_septenary_level', load: loadScoreByLevel, sample: sampleScoreByLevelRows, build: buildBarChartHtml },
+  '03': { baseName: 'dashboard_03_instrument_by_level_heatmap', load: loadInstrumentByLevel, sample: sampleInstrumentByLevelRows, build: buildLevelHeatmapHtml },
+  '04': { baseName: 'dashboard_04_instrument_by_cardiac_coherence_heatmap', load: loadInstrumentByCoherence, sample: sampleInstrumentByCoherenceRows, build: buildCoherenceHeatmapHtml },
+  '05': { baseName: 'dashboard_05_instrument_by_kundalini_chakra_heatmap', load: loadInstrumentByChakra, sample: sampleInstrumentByChakraRows, build: buildChakraHeatmapHtml },
+  '06': { baseName: 'dashboard_06_instrument_by_five_ways_heatmap', load: loadInstrumentByFiveWay, sample: sampleInstrumentByFiveWayRows, build: buildFiveWayHeatmapHtml },
+  '07': { baseName: 'dashboard_07_chakra_gradient_portrait', load: loadChakraPortrait, sample: sampleChakraPortraitRows, build: buildChakraPortraitHtml },
+  '08': { baseName: 'dashboard_08_septenary_constitution_gradient_portrait', load: loadSeptenaryConstitutionPortrait, sample: sampleSeptenaryConstitutionPortraitRows, build: buildSeptenaryConstitutionPortraitHtml },
+};
+
 async function main() {
   const args = parseArgs(process.argv);
   const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
   fs.mkdirSync(outDir, { recursive: true });
+
+  const selectedCodes = args.chart ? [args.chart] : CHART_CODES;
 
   const intake = loadIntake(args);
   let studyTitle;
@@ -596,24 +799,12 @@ async function main() {
     );
   }
   const timestamp = timestampForFilename(new Date());
-  console.log(`Study: "${studyTitle}" (slug "${args.study}"). Generation timestamp: ${timestamp}.`);
+  console.log(`Study: "${studyTitle}" (slug "${args.study}"). Generation timestamp: ${timestamp}. ` +
+    `Chart(s): ${selectedCodes.join(', ')}.`);
 
   let db = null;
-  let physiologicalRows, scoreByLevelRows, instrumentByLevelRows,
-    instrumentByCoherenceRows, instrumentByChakraRows, instrumentByFiveWayRows, chakraPortraitRows,
-    septenaryPortraitRows;
-
-  if (args.sample) {
-    console.log('Using embedded --sample data (no database connection).');
-    physiologicalRows = samplePhysiologicalRows();
-    scoreByLevelRows = sampleScoreByLevelRows();
-    instrumentByLevelRows = sampleInstrumentByLevelRows();
-    instrumentByCoherenceRows = sampleInstrumentByCoherenceRows();
-    instrumentByChakraRows = sampleInstrumentByChakraRows();
-    instrumentByFiveWayRows = sampleInstrumentByFiveWayRows();
-    chakraPortraitRows = sampleChakraPortraitRows();
-    septenaryPortraitRows = sampleSeptenaryConstitutionPortraitRows();
-  } else {
+  let studyId = null;
+  if (!args.sample) {
     const options = {
       host: requireEnv('GDX_HUMAN_FB_HOST'),
       port: parseInt(requireEnv('GDX_HUMAN_FB_PORT'), 10),
@@ -626,30 +817,20 @@ async function main() {
     };
     console.log(`Connecting to ${options.host}:${options.port}${options.database} as ${options.user} ...`);
     db = await connect(options);
-    const studyId = await resolveStudyId(db, studyTitle, args.study);
-    console.log(`Resolved ID_STUDY=${studyId}. Every chart below is scoped to this study's people only.`);
-    physiologicalRows = await loadPhysiologicalSeries(db, studyId);
-    scoreByLevelRows = await loadScoreByLevel(db, studyId);
-    instrumentByLevelRows = await loadInstrumentByLevel(db, studyId);
-    instrumentByCoherenceRows = await loadInstrumentByCoherence(db, studyId);
-    instrumentByChakraRows = await loadInstrumentByChakra(db, studyId);
-    instrumentByFiveWayRows = await loadInstrumentByFiveWay(db, studyId);
-    chakraPortraitRows = await loadChakraPortrait(db, studyId);
-    septenaryPortraitRows = await loadSeptenaryConstitutionPortrait(db, studyId);
+    studyId = await resolveStudyId(db, studyTitle, args.study);
+    console.log(`Resolved ID_STUDY=${studyId}. Every study-scoped chart below is scoped to this study's people only.`);
+  } else {
+    console.log('Using embedded --sample data (no database connection).');
+  }
+
+  const outputs = [];
+  for (const code of selectedCodes) {
+    const chart = CHART_REGISTRY[code];
+    const rows = args.sample ? chart.sample() : await chart.load(db, studyId);
+    outputs.push([buildFilename(chart.baseName, args.study, studyTitle, timestamp), chart.build(rows)]);
   }
 
   if (db) db.detach();
-
-  const outputs = [
-    [buildFilename('dashboard_01_physiological_response', args.study, studyTitle, timestamp), buildLineChartHtml(physiologicalRows)],
-    [buildFilename('dashboard_02_score_by_septenary_level', args.study, studyTitle, timestamp), buildBarChartHtml(scoreByLevelRows)],
-    [buildFilename('dashboard_03_instrument_by_level_heatmap', args.study, studyTitle, timestamp), buildLevelHeatmapHtml(instrumentByLevelRows)],
-    [buildFilename('dashboard_04_instrument_by_cardiac_coherence_heatmap', args.study, studyTitle, timestamp), buildCoherenceHeatmapHtml(instrumentByCoherenceRows)],
-    [buildFilename('dashboard_05_instrument_by_kundalini_chakra_heatmap', args.study, studyTitle, timestamp), buildChakraHeatmapHtml(instrumentByChakraRows)],
-    [buildFilename('dashboard_06_instrument_by_five_ways_heatmap', args.study, studyTitle, timestamp), buildFiveWayHeatmapHtml(instrumentByFiveWayRows)],
-    [buildFilename('dashboard_07_chakra_gradient_portrait', args.study, studyTitle, timestamp), buildChakraPortraitHtml(chakraPortraitRows)],
-    [buildFilename('dashboard_08_septenary_constitution_gradient_portrait', args.study, studyTitle, timestamp), buildSeptenaryConstitutionPortraitHtml(septenaryPortraitRows)],
-  ];
 
   for (const [filename, html] of outputs) {
     if (html === null) {

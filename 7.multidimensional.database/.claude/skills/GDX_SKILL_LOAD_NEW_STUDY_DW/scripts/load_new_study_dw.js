@@ -238,6 +238,34 @@ async function resolveScope(db, intake, studyId) {
     }
     instruments.push(instRow);
 
+    if (!instrumentIntake.constructs || instrumentIntake.constructs.length === 0) {
+      // Minimal intake entry: this instrument was reused verbatim, not onboarded through the full
+      // interview (no new GDX_PSY_CONSTRUCT/GDX_PSY_VARIABLE rows were ever created for it -- see
+      // e.g. new_study_intake/burnout-test-2/intake.json's own comment). There is nothing to read
+      // constructs/variables FROM here, so derive them from what this study's applications actually
+      // have real GDX_PSY_VARIABLE_RESULT rows for -- same "nothing hypothetical, nothing borrowed
+      // from another study" discipline as resolveScopeFromDatabase() above, just scoped to this one
+      // instrument instead of the whole study (a study can mix a fully-onboarded instrument with a
+      // reused one, so this can't just fall back to the whole-study function).
+      const varRows = await query(db, `
+        SELECT DISTINCT V.ID_VARIABLE, V.NAME, V.OPERATIONAL_DEFINITION, V.ID_CONSTRUCT
+        FROM GDX_PSY_VARIABLE V
+        JOIN GDX_PSY_INSTRUMENT_CONSTRUCT IC ON IC.ID_CONSTRUCT = V.ID_CONSTRUCT
+        JOIN GDX_PSY_VARIABLE_RESULT VR ON VR.ID_VARIABLE = V.ID_VARIABLE
+        JOIN GDX_PSY_APPLICATION A ON A.ID_APPLICATION = VR.ID_APPLICATION
+        WHERE IC.ID_INSTRUMENT = ? AND A.ID_STUDY = ?`, [instRow.ID_INSTRUMENT, studyId]);
+      for (const v of varRows) {
+        const cRows = await query(db, 'SELECT ID_CONSTRUCT, NAME, DOMAIN FROM GDX_PSY_CONSTRUCT WHERE ID_CONSTRUCT = ?', [v.ID_CONSTRUCT]);
+        const constructRow = cRows[0];
+        if (constructRow && !constructs.has(constructRow.NAME)) constructs.set(constructRow.NAME, constructRow);
+        variables.push({
+          ID_VARIABLE: v.ID_VARIABLE, NAME: v.NAME, OPERATIONAL_DEFINITION: v.OPERATIONAL_DEFINITION,
+          ID_CONSTRUCT: v.ID_CONSTRUCT, ID_INSTRUMENT: instRow.ID_INSTRUMENT,
+        });
+      }
+      continue;
+    }
+
     for (const c of instrumentIntake.constructs) {
       if (constructs.has(c.name)) continue;
       const constructRow = await findConstruct(db, c.name);
