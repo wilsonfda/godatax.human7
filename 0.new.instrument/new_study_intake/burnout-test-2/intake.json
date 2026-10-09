@@ -1,0 +1,14 @@
+{
+  "_comment": "Minimal intake for ID_STUDY=2 ('Análise de Estudo 2 — Teste de Burnout'). This study was created WITHOUT running GDX_SKILL_NEW_STUDY's interview or GDX_SKILL_RECORD_NEW_STUDY, because it introduces no new instrument -- it reuses the existing Maslach Burnout Inventory - Student Survey catalog entry (ID_INSTRUMENT=9) verbatim (see 2.relational.model.psychometrics/samples.SQL/manual_load_study2_burnout_test.sql). This file exists ONLY so --study burnout-test-2's slug/title resolution works for GDX_SKILL_EXPORT_NEW_STUDY (and any other --study-scoped skill later) -- it deliberately omits the constructs/variables/items GDX_SKILL_RECORD_NEW_STUDY would need, since none of that needs creating: the instrument, its items and its alternatives already exist in GDX_PSY_INSTRUMENT/GDX_PSY_INSTRUMENT_ITEM/GDX_PSY_ITEM_ALTERNATIVE. name/version below are copied verbatim from that existing catalog row.",
+  "study": {
+    "title": "Análise de Estudo 2 — Teste de Burnout",
+    "objective": "Identificar quando/se uma pessoa está em estado de estresse (burnout).",
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed)",
+      "version": "2009 (hypothesis)"
+    }
+  ]
+}

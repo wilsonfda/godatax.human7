@@ -140,4 +140,51 @@ module.exports = {
 
   // --- Red Tape / Perceived Bureaucracy (instrument 11, hypothesis) ---
   RedTap: { excluded: true, reason: 'Judgment about the institutional environment (bureaucracy), not about oneself - see SPSS_Septenary_Constitution_Mapping.md section 3.' },
+
+  // --- Orientação à Finalidade / OT-7 (instrument 12, hypothesis, metaphysical, no .sav file) ---
+  // All seven dimensions are kept at the SAME septenary level (6, Buddhic Body) and the
+  // SAME confidence (SPECULATIVE): the source documents (Orientacao_a_Finalidade_Trivium_
+  // Quadrivium_OT7.pdf and the GDX H7ph book/article) anchor the WHOLE OT-7 construct in
+  // Aquinas's Fifth Way (governance, order and finality) -- which five_ways_septenary_map_
+  // firebird25.sql already maps to Level 6 with CONFIDENCE_LEVEL 'SPECULATIVE' -- and never
+  // claim a distinct septenary level per Trivium/Quadrivium lens. Splitting them across
+  // different levels would be an invention not supported by either source document.
+  // NOTE: these keys are GDX_PSY_VARIABLE.NAME as actually stored in Firebird (English, since
+  // 2026-10-09's catalog translation pass) -- lookups in load_sept_maps.js match against the
+  // live DB value, so keep these in sync with the catalog if it is ever renamed again.
+  'Clarity of Purpose (Grammar)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'Naming and clearly describing the personal goal the person says they are trying to achieve (OT-7 Grammar item).',
+    justification: 'The whole OT-7 construct is anchored in Aquinas\'s Fifth Way (governance, order and finality), already associated with Level 6 (Buddhic Body) in five_ways_septenary_map_firebird25.sql. Clear verbal articulation of a purpose is read here as an expression of that same intuition of meaning/finality, not as an independent correspondence path.',
+  },
+  'Coherence Between Means and Ends (Logic)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'Assessing whether the person\'s recent actions are coherent with the stated goal (OT-7 Logic item).',
+    justification: 'Same anchor as the whole OT-7 construct in the Fifth Way (order and finality) -> Level 6. Coherence between means and ends is read as the logical facet of that same teleological orientation, not a separate correspondence.',
+  },
+  'Expression of Purpose (Rhetoric)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'How the person communicates and justifies why the goal matters to them (OT-7 Rhetoric item).',
+    justification: 'Same anchor as the whole OT-7 construct in the Fifth Way (order and finality) -> Level 6. The ability to articulate the personal meaning of the purpose is read as the rhetorical facet of that same teleological orientation.',
+  },
+  'Proportion Between Resources and Goal (Arithmetic)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'How the person distributes time and effort in a way compatible with the goal (OT-7 Arithmetic item).',
+    justification: 'Same anchor as the whole OT-7 construct in the Fifth Way (order and finality) -> Level 6. The proportion between invested resources and the goal is read as the quantitative facet of that same teleological orientation.',
+  },
+  'Structure Among Goals, Values, and Actions (Geometry)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'Alignment between the goal, the person\'s personal values, and their other responsibilities (OT-7 Geometry item).',
+    justification: 'Same anchor as the whole OT-7 construct in the Fifth Way (order and finality) -> Level 6. The structure/alignment among goals, values and actions is read as the relational facet of that same teleological orientation.',
+  },
+  'Rhythm and Continuity (Music)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'Maintaining a sustainable pace of action, adjusting effort when perceived vitality changes (OT-7 Music item).',
+    justification: 'Same anchor as the whole OT-7 construct in the Fifth Way (order and finality) -> Level 6. The rhythm and continuity of actions are read as the temporal/cadenced facet of that same teleological orientation.',
+  },
+  'Cycles and Broader Context (Astronomy)': {
+    level: 6, confidence: 'SPECULATIVE',
+    behavior: 'Reassessing the goal when context, priorities, or conditions change (OT-7 Astronomy item).',
+    justification: 'Same anchor as the whole OT-7 construct in the Fifth Way (order and finality) -> Level 6. Reassessing the goal across cycles and contexts is read as the cyclical/contextual facet of that same teleological orientation.',
+  },
 };

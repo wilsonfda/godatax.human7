@@ -119,7 +119,7 @@ Table: **`GDX_PSY_PSYCHOMETRIC_PROPERTY`** (schema `psychometrics_model_firebird
 
 Load script: [`../samples.sql/09_load_psychometric_properties_afc_career_adaptability.sql`](../samples.sql/09_load_psychometric_properties_afc_career_adaptability.sql) — 54 `INSERT` statements (15 fit indices + 5 alphas + 6 factor correlations + 28 factor loadings).
 
-**Load status: DONE.** The script was executed against the live Firebird database (`firebird.godatax.com`, `godatax.gdb`) on 2026-09-11 via `execute_afc_property_load.js` and verified with a direct read-back query. All **54 rows** are present under `ID_INSTRUMENT = 3`; spot-checked values (`CFI=0.885943`, `GFI=0.828007`, `AGFI=0.811007`, `RMSEA=0.061509`, `RMR=0.02733`, `CHI_SQUARE=893.229329`, `CHI_SQUARE_DF_RATIO=2.596597`) match this document exactly.
+**Load status: DONE.** The script was executed against the live Firebird database (`127.0.0.1`, `godatax.gdb`) on 2026-09-11 via `execute_afc_property_load.js` and verified with a direct read-back query. All **54 rows** are present under `ID_INSTRUMENT = 3`; spot-checked values (`CFI=0.885943`, `GFI=0.828007`, `AGFI=0.811007`, `RMSEA=0.061509`, `RMR=0.02733`, `CHI_SQUARE=893.229329`, `CHI_SQUARE_DF_RATIO=2.596597`) match this document exactly.
 
 Command used:
 ```

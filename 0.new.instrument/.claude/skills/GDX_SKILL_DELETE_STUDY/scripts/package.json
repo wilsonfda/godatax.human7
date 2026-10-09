@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-delete-study",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Permanently deletes one study's exclusive data from the relational OLTP schema, the DW, and Neo4j -- GDX_SKILL_DELETE_STUDY.",
+  "main": "delete_study.js",
+  "scripts": {
+    "dry-run": "node delete_study.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^2.16.0",
+    "neo4j-driver": "^6.2.0"
+  }
+}

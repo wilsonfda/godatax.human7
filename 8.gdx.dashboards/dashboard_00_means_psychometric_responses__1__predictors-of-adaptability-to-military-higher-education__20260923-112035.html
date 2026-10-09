@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 20px 20px 12px;
+    border: 1px solid var(--grid); overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 2px 8px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 4px 2px 10px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 8px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  .panel-heading { fill: var(--ink-secondary); font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings</h1>
+  <p class="subtitle">Pure-psychometric perspective (cardiac coherence deliberately excluded): one instrument per x-axis position, two panels on separate y-scales. The top panel's <code>RAW_SCORE</code> (mostly 1-5 Likert, but not a uniform scale across instruments -- e.g. Positivity Ratio Scale runs 0-4) is a fundamentally different quantity from the bottom panel's factor loadings (-1 to 1, from <code>GDX_PSY_PSYCHOMETRIC_PROPERTY</code>), so each gets its own panel rather than one shared axis (the dual-axis anti-pattern) or an arbitrary indexed baseline (there is no natural "instrument zero" the way chart 1 has a BASELINE phase). Today only the Career Adapt-Abilities Scale has any EFA/CFA rows -- every other instrument's bottom-panel points are absent, not zero.</p>
+  <div class="chart-card">
+    <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show table</button></div>
+    
+    <svg class="chart-svg" viewBox="0 0 940 714" role="img" aria-label="Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings">
+      
+      <text class="panel-heading" x="64" y="4">Response score -- mean RAW_SCORE from actual participant answers (each instrument's own scale)</text>
+      <line class="grid-line" x1="64" x2="916" y1="240" y2="240"/>
+      <text class="axis-label" x="56" y="244" text-anchor="end">2</text>
+<line class="grid-line" x1="64" x2="916" y1="196" y2="196"/>
+      <text class="axis-label" x="56" y="200" text-anchor="end">2.5</text>
+<line class="grid-line" x1="64" x2="916" y1="152" y2="152"/>
+      <text class="axis-label" x="56" y="156" text-anchor="end">3</text>
+<line class="grid-line" x1="64" x2="916" y1="108" y2="108"/>
+      <text class="axis-label" x="56" y="112" text-anchor="end">3.5</text>
+<line class="grid-line" x1="64" x2="916" y1="64" y2="64"/>
+      <text class="axis-label" x="56" y="68" text-anchor="end">4</text>
+<line class="grid-line" x1="64" x2="916" y1="20" y2="20"/>
+      <text class="axis-label" x="56" y="24" text-anchor="end">4.5</text>
+      <line class="baseline" x1="64" x2="916" y1="240" y2="240"/>
+      <polyline points="64,104.47999999999999 149.2,161.68 234.4,56.95999999999998 319.6,98.32000000000002 404.8,82.48000000000002 490,225.92 575.2,71.91999999999999 660.4,84.24000000000001 745.6,86.88 830.8000000000001,116.80000000000001 916,122.08000000000001" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle class="pt" cx="64" cy="104.47999999999999" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Hardiness: 3.54"></circle>
+<circle class="pt" cx="149.2" cy="161.68" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Student Engagement Scale: 2.89"></circle>
+<circle class="pt" cx="234.4" cy="56.95999999999998" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Career Adapt-Abilities Scale: 4.08"></circle>
+<circle class="pt" cx="319.6" cy="98.32000000000002" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Satisfaction With Life Scale: 3.61"></circle>
+<circle class="pt" cx="404.8" cy="82.48000000000002" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Job Satisfaction Scale: 3.79"></circle>
+<circle class="pt" cx="490" cy="225.92" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Positivity Ratio Scale: 2.16"></circle>
+<circle class="pt" cx="575.2" cy="71.91999999999999" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Personal Satisfaction: 3.91"></circle>
+<circle class="pt" cx="660.4" cy="84.24000000000001" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Perceived Control of Life: 3.77"></circle>
+<circle class="pt" cx="745.6" cy="86.88" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed): 3.74"></circle>
+<circle class="pt" cx="830.8000000000001" cy="116.80000000000001" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Undocumented Organizational Block (hypothesis - an1-an11): 3.4"></circle>
+<circle class="pt" cx="916" cy="122.08000000000001" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Red Tape / Perceived Bureaucracy (hypothesis - red1-red5): 3.34"></circle>
+      <text class="axis-label" x="64" y="260"
+        text-anchor="end" transform="rotate(-32 64 260)">Hardiness</text>
+<text class="axis-label" x="149.2" y="260"
+        text-anchor="end" transform="rotate(-32 149.2 260)">Student Engagement Scale</text>
+<text class="axis-label" x="234.4" y="260"
+        text-anchor="end" transform="rotate(-32 234.4 260)">Career Adapt-Abilities Scale</text>
+<text class="axis-label" x="319.6" y="260"
+        text-anchor="end" transform="rotate(-32 319.6 260)">Satisfaction With Life Scale</text>
+<text class="axis-label" x="404.8" y="260"
+        text-anchor="end" transform="rotate(-32 404.8 260)">Job Satisfaction Scale</text>
+<text class="axis-label" x="490" y="260"
+        text-anchor="end" transform="rotate(-32 490 260)">Positivity Ratio Scale</text>
+<text class="axis-label" x="575.2" y="260"
+        text-anchor="end" transform="rotate(-32 575.2 260)">Personal Satisfaction</text>
+<text class="axis-label" x="660.4" y="260"
+        text-anchor="end" transform="rotate(-32 660.4 260)">Perceived Control of Life</text>
+<text class="axis-label" x="745.6" y="260"
+        text-anchor="end" transform="rotate(-32 745.6 260)">Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed)</text>
+<text class="axis-label" x="830.8000000000001" y="260"
+        text-anchor="end" transform="rotate(-32 830.8000000000001 260)">Undocumented Organizational Block (hypothesis - an1-an11)</text>
+<text class="axis-label" x="916" y="260"
+        text-anchor="end" transform="rotate(-32 916 260)">Red Tape / Perceived Bureaucracy (hypothesis - red1-red5)</text>
+      <text class="axis-label" x="18" y="30" transform="rotate(-90 18 30)" text-anchor="end">Average raw score</text>
+      <text class="panel-heading" x="64" y="366">Factor-analysis loadings -- mean |loading| across items (-1 to 1 scale, a different quantity from the panel above)</text>
+      <line class="grid-line" x1="64" x2="916" y1="602" y2="602"/>
+      <text class="axis-label" x="56" y="606" text-anchor="end">0.3</text>
+<line class="grid-line" x1="64" x2="916" y1="558" y2="558"/>
+      <text class="axis-label" x="56" y="562" text-anchor="end">0.4</text>
+<line class="grid-line" x1="64" x2="916" y1="514" y2="514"/>
+      <text class="axis-label" x="56" y="518" text-anchor="end">0.5</text>
+<line class="grid-line" x1="64" x2="916" y1="470" y2="470"/>
+      <text class="axis-label" x="56" y="474" text-anchor="end">0.6</text>
+<line class="grid-line" x1="64" x2="916" y1="426" y2="426"/>
+      <text class="axis-label" x="56" y="430" text-anchor="end">0.7</text>
+<line class="grid-line" x1="64" x2="916" y1="382" y2="382"/>
+      <text class="axis-label" x="56" y="386" text-anchor="end">0.8</text>
+      <line class="baseline" x1="64" x2="916" y1="602" y2="602"/>
+      <polyline points="64,575.6 149.2,478.8 234.4,571.2 319.6,465.6 404.8,531.6 490,500.79999999999995" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="745.6,571.2 830.8000000000001,483.20000000000005 916,395.2" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle class="pt" cx="64" cy="575.6" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Hardiness: 0.36"></circle>
+<circle class="pt" cx="149.2" cy="478.8" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Student Engagement Scale: 0.58"></circle>
+<circle class="pt" cx="234.4" cy="571.2" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Career Adapt-Abilities Scale: 0.37"></circle>
+<circle class="pt" cx="319.6" cy="465.6" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Satisfaction With Life Scale: 0.61"></circle>
+<circle class="pt" cx="404.8" cy="531.6" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Job Satisfaction Scale: 0.46"></circle>
+<circle class="pt" cx="490" cy="500.79999999999995" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Positivity Ratio Scale: 0.53"></circle>
+
+
+<circle class="pt" cx="745.6" cy="571.2" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed): 0.37"></circle>
+<circle class="pt" cx="830.8000000000001" cy="483.20000000000005" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Undocumented Organizational Block (hypothesis - an1-an11): 0.57"></circle>
+<circle class="pt" cx="916" cy="395.2" r="4" fill="#eb6834" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>EFA (exploratory)</strong><br>Red Tape / Perceived Bureaucracy (hypothesis - red1-red5): 0.77"></circle>
+<polyline points="64,558 149.2,434.79999999999995 234.4,448 319.6,404 404.8,487.59999999999997 490,500.79999999999995" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="745.6,505.2 830.8000000000001,443.6 916,399.6" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle class="pt" cx="64" cy="558" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Hardiness: 0.4"></circle>
+<circle class="pt" cx="149.2" cy="434.79999999999995" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Student Engagement Scale: 0.68"></circle>
+<circle class="pt" cx="234.4" cy="448" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Career Adapt-Abilities Scale: 0.65"></circle>
+<circle class="pt" cx="319.6" cy="404" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Satisfaction With Life Scale: 0.75"></circle>
+<circle class="pt" cx="404.8" cy="487.59999999999997" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Job Satisfaction Scale: 0.56"></circle>
+<circle class="pt" cx="490" cy="500.79999999999995" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Positivity Ratio Scale: 0.53"></circle>
+
+
+<circle class="pt" cx="745.6" cy="505.2" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed): 0.52"></circle>
+<circle class="pt" cx="830.8000000000001" cy="443.6" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Undocumented Organizational Block (hypothesis - an1-an11): 0.66"></circle>
+<circle class="pt" cx="916" cy="399.6" r="4" fill="#1baf7a" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>CFA (confirmatory)</strong><br>Red Tape / Perceived Bureaucracy (hypothesis - red1-red5): 0.76"></circle>
+      <text class="axis-label" x="64" y="622"
+        text-anchor="end" transform="rotate(-32 64 622)">Hardiness</text>
+<text class="axis-label" x="149.2" y="622"
+        text-anchor="end" transform="rotate(-32 149.2 622)">Student Engagement Scale</text>
+<text class="axis-label" x="234.4" y="622"
+        text-anchor="end" transform="rotate(-32 234.4 622)">Career Adapt-Abilities Scale</text>
+<text class="axis-label" x="319.6" y="622"
+        text-anchor="end" transform="rotate(-32 319.6 622)">Satisfaction With Life Scale</text>
+<text class="axis-label" x="404.8" y="622"
+        text-anchor="end" transform="rotate(-32 404.8 622)">Job Satisfaction Scale</text>
+<text class="axis-label" x="490" y="622"
+        text-anchor="end" transform="rotate(-32 490 622)">Positivity Ratio Scale</text>
+<text class="axis-label" x="575.2" y="622"
+        text-anchor="end" transform="rotate(-32 575.2 622)">Personal Satisfaction</text>
+<text class="axis-label" x="660.4" y="622"
+        text-anchor="end" transform="rotate(-32 660.4 622)">Perceived Control of Life</text>
+<text class="axis-label" x="745.6" y="622"
+        text-anchor="end" transform="rotate(-32 745.6 622)">Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed)</text>
+<text class="axis-label" x="830.8000000000001" y="622"
+        text-anchor="end" transform="rotate(-32 830.8000000000001 622)">Undocumented Organizational Block (hypothesis - an1-an11)</text>
+<text class="axis-label" x="916" y="622"
+        text-anchor="end" transform="rotate(-32 916 622)">Red Tape / Perceived Bureaucracy (hypothesis - red1-red5)</text>
+      <text class="axis-label" x="18" y="392" transform="rotate(-90 18 392)" text-anchor="end">Average |factor loading|</text>
+    </svg>
+    <div class="legend"><div class="legend-item"><span class="legend-swatch" style="background:#eb6834"></span>EFA (exploratory)</div><div class="legend-item"><span class="legend-swatch" style="background:#1baf7a"></span>CFA (confirmatory)</div></div>
+    <table class="data-table"><thead><tr><th>Instrument</th><th>Response score</th><th>Response N</th><th>EFA loading (avg |value|)</th><th>CFA loading (avg |value|)</th></tr></thead>
+      <tbody><tr><td>Hardiness</td><td>3.54</td><td>1269</td><td>0.36</td><td>0.4</td></tr><tr><td>Student Engagement Scale</td><td>2.89</td><td>1269</td><td>0.58</td><td>0.68</td></tr><tr><td>Career Adapt-Abilities Scale</td><td>4.08</td><td>1692</td><td>0.37</td><td>0.65</td></tr><tr><td>Satisfaction With Life Scale</td><td>3.61</td><td>423</td><td>0.61</td><td>0.75</td></tr><tr><td>Job Satisfaction Scale</td><td>3.79</td><td>423</td><td>0.46</td><td>0.56</td></tr><tr><td>Positivity Ratio Scale</td><td>2.16</td><td>846</td><td>0.53</td><td>0.53</td></tr><tr><td>Personal Satisfaction</td><td>3.91</td><td>423</td><td>—</td><td>—</td></tr><tr><td>Perceived Control of Life</td><td>3.77</td><td>423</td><td>—</td><td>—</td></tr><tr><td>Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed)</td><td>3.74</td><td>423</td><td>0.37</td><td>0.52</td></tr><tr><td>Undocumented Organizational Block (hypothesis - an1-an11)</td><td>3.4</td><td>1692</td><td>0.57</td><td>0.66</td></tr><tr><td>Red Tape / Perceived Bureaucracy (hypothesis - red1-red5)</td><td>3.34</td><td>422</td><td>0.77</td><td>0.76</td></tr></tbody></table>
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    // querySelectorAll (not querySelector): a multi-panel chart (e.g. dashboard_00)
+    // has more than one .chart-svg sharing one .data-table -- toggling must hide/show
+    // every panel together. A single-panel chart (every other chart here) still has
+    // exactly one of each, so this is backward compatible.
+    const svgEls = document.querySelectorAll('.chart-svg');
+    const tableEls = document.querySelectorAll('.data-table');
+    const showingTable = tableEls.length ? !tableEls[0].classList.contains('visible') : false;
+    svgEls.forEach(function (el) { el.classList.toggle('hidden-by-table', showingTable); });
+    tableEls.forEach(function (el) { el.classList.toggle('visible', showingTable); });
+    this.textContent = showingTable ? 'Show chart' : 'Show table';
+  });
+  
+    document.querySelectorAll('.pt').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });
+</script>
+</body>
+</html>

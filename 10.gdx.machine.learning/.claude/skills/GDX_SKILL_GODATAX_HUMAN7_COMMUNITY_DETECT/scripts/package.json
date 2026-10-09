@@ -1,0 +1,10 @@
+{
+  "name": "gdx-skill-godatax-human7-community-detect",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GDX_SKILL_GODATAX_HUMAN7_COMMUNITY_DETECT -- Model 2 (Louvain community detection) over the GDX_HUMAN knowledge graph in Neo4j.",
+  "main": "community_detect.js",
+  "dependencies": {
+    "neo4j-driver": "^5.0.0"
+  }
+}

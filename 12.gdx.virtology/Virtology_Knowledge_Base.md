@@ -1,4 +1,4 @@
-# Virtology (Virtologia) — Knowledge Base
+claude# Virtology (Virtologia) — Knowledge Base
 
 > Compiled 2026-09-10. Location: `GDX_HUMAN/12.gdx.virtology/`
 >
@@ -196,12 +196,12 @@ septenary/chakra/Five Ways mappings already in this project:
    `GDX_PSY_SEPT_LEVEL_PSY_MAP`'s correspondence-with-justification pattern if this framework is
    ever related to the septenary constitution or the psychometric data.
 
-## 9. `GDX_SKILL_TREATMENT_SUGGESTIONS` — this knowledge base, applied to real psychometric data
+## 9. `GDX_SKILL_LINK_SUGGESTIONS` — this knowledge base, applied to real psychometric data
 
 Despite §1's intro line ("no DDL, mapping, or schema work has been done yet") and the open gap
 in §8 item 4 (no *official* virtue → SNO/SNE mapping exists from the source itself), a
 project-internal, narrower mapping **does** now exist and is live: a skill in this folder
-(`.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/`) that reads GDX_HUMAN's real psychometric
+(`.claude/skills/GDX_SKILL_LINK_SUGGESTIONS/`) that reads GDX_HUMAN's real psychometric
 data and suggests, for each of a study's lowest-scoring indicators, which of these 33 virtues
 addresses it — not virtue↔SNO/SNE (still an open gap, §8 stands), but **variable↔virtue**, a
 project-authored judgment call independent of anything the source site states.
@@ -214,7 +214,7 @@ project-authored judgment call independent of anything the source site states.
   virtue for each one comes from a fixed, hand-written map
   (`scripts/virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP`, keyed by the variable's `.sav` column)
   — never a model guess, never an LLM call at report-generation time. A variable with no entry
-  in that map is reported as **"sem sugestão (revisar)"**, exactly the same "not zero, not
+  in that map is reported as **"no suggestion (review)"**, exactly the same "not zero, not
   guessed, structurally absent" discipline `8.gdx.dashboards`'s heatmaps use for an empty cell.
 - **Same methodological honesty as the septenary mapping.** Every generated report repeats,
   near the top, the same caveat `SPSS_Septenary_Constitution_Mapping.md` uses: "which virtue
@@ -232,7 +232,7 @@ moment a second study is loaded. `generate_suggestions.js` now requires `--study
 `new_study_intake/<slug>/intake.json` → `GDX_PSY_STUDY.ID_STUDY` resolution the other two
 `--study`-scoped skills use), and the ranking query joins `DW_DIM_PERSON` on `ID_STUDY = ?` so
 every score in a report is one study's own average. Output filenames now carry the study slug
-too: `Treatment_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`.
+too: `Link_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`.
 
 **Real validated run, `ID_STUDY=1`** ("Predictors of Adaptability to Military Higher Education,"
 423 participants), top 10 lowest indicators:
@@ -245,7 +245,7 @@ too: `Treatment_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`.
 | Positive Emotions (Vital/Etheric) | 3.00 | Gratidão (Gratitude) |
 | Dedication — Engagement (Higher Mental) | 3.23 | Fé (Faith) |
 | Satisfaction With Life (Astral) | 3.61 | Aceitação (Acceptance) |
-| **Emotional Exhaustion (Physical)** | 3.74 | **sem sugestão (revisar)** |
+| **Emotional Exhaustion (Physical)** | 3.74 | **no suggestion (review)** |
 | Perceived Control of Life (Lower Mental) | 3.77 | Responsabilidade (Responsibility) |
 | Control — Hardiness (Lower Mental) | 3.77 | Responsabilidade (Responsibility) |
 | Job Satisfaction (Astral) | 3.79 | Utilidade (Utility) |
@@ -261,7 +261,7 @@ future work, not something this scoping change was asked to fix.
 
 ### Files
 
-- `.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/` — the skill itself (`SKILL.md` for flags and
+- `.claude/skills/GDX_SKILL_LINK_SUGGESTIONS/` — the skill itself (`SKILL.md` for flags and
   the full scoping/output-filename convention).
-- `Treatment_Suggestions_<slug>_<timestamp>.md` — one report per run, accumulating in this
+- `Link_Suggestions_<slug>_<timestamp>.md` — one report per run, accumulating in this
   folder (never overwritten — see `SKILL.md`).

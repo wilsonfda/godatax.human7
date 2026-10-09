@@ -1,0 +1,33 @@
+instale o IntelliJ Community
+instale o claude code client
+loge com o claude
+
+clone projecto
+open projeto
+
+
+1-crie uma conta no Neo4j (acesse https://neo4j.com/)
+1-a clique em Get started for Free
+1.b clique ao menu esquerdo Data Services - Instances
+1.c Create Instance, escolha por enquanto o plano Free, ele te permite 200k nodes and 400k relationships
+1.d salve o arquivo com as credenciais em ..\GDX_HUMAN7\9.knowledge.graph
+
+1.e Clique em Agents, informe o Nome , Description e no prompt instruction coloque as instrucoes encontradas em ..\GDX_HUMAN7\11.gdx.llm.agent.mcp\prompt.instruction.txt, escolha a opcao internal e pronto
+
+2-crie e levante a instancia do firebird local
+apenas execute a skill GDX_SKILL_UP_FIREBIRD_DB encontrada em 13.on.bording.env
+2-a verifique se o arquivo foi criado          done
+---------------------------------------------------------
+
+
+next steps
+-------------------------------------------------------------
+2-b sete todas as bases de dados para usar a base local
+
+
+
+criar um banco de dados com as associancaoes, metafisicas, const sept , kinduli, 5 vias, associacoes 
+criar skills de comparacoes checks de validacoes associacoes
+criar skills de associacoes 
+
+variaveis psicometricas , fisiologicas , septenaria , 5 vias , kundali… se conectar pelo trivium e quadrivium (ordem de grandezas)

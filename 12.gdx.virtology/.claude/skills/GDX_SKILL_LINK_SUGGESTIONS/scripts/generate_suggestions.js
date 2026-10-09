@@ -134,17 +134,17 @@ function buildReport(rows, meta) {
   lines.push(`> Generated ${meta.timestamp} by \`GDX_SKILL_TREATMENT_SUGGESTIONS\`.`);
   lines.push(`> Study: **${meta.studyTitle}** (slug \`${meta.studySlug}\`, \`ID_STUDY=${meta.studyId ?? '(sample)'}\`) — every score below is this one study's own average, never blended with another study's participants.`);
   lines.push(`> Source: \`7.multidimensional.database\` (\`DW_FACT_PSY_VARIABLE_RESULT\` × \`DW_DIM_VARIABLE\` × \`DW_DIM_SEPTENARY_LEVEL\` × \`DW_DIM_PERSON\`)${meta.sample ? ' — **SAMPLE DATA, not a live read**' : ` — live read from ${meta.host}`}.`);
-  lines.push('> Virtue catalog: `12.gdx.virtology/Virtology_Knowledge_Base.md` (33 virtudes, institutovirtudes.com.br).');
+  lines.push('> Virtue catalog: `12.gdx.virtology/Virtology_Knowledge_Base.md` (33 virtues, institutovirtudes.com.br).');
   lines.push('>');
-  lines.push('> **Natureza deste documento:** leitura qualitativa/interpretativa, no mesmo espírito de');
-  lines.push('> `SPSS_Septenary_Constitution_Mapping.md` — "qual virtude combate esse déficit" é um');
-  lines.push('> julgamento conceitual (`virtue_knowledge.js`), não um achado estatístico ou clínico.');
-  lines.push('> A lista das 33 virtudes veio de um fetch automático do site-fonte, não de leitura humana');
-  lines.push('> linha a linha — ver a ressalva de confiabilidade em `Virtology_Knowledge_Base.md`.');
+  lines.push('> **Nature of this document:** a qualitative/interpretive reading, in the same spirit as');
+  lines.push('> `SPSS_Septenary_Constitution_Mapping.md` — "which virtue counters this deficit" is a');
+  lines.push('> conceptual judgment call (`virtue_knowledge.js`), not a statistical or clinical finding.');
+  lines.push('> The list of 33 virtues came from an automated fetch of the source site, not a human');
+  lines.push('> line-by-line read — see the reliability caveat in `Virtology_Knowledge_Base.md`.');
   lines.push('');
-  lines.push(`## Os ${rows.length} indicadores psicométricos mais baixos`);
+  lines.push(`## The ${rows.length} lowest psychometric indicators`);
   lines.push('');
-  lines.push('| Indicador (nível) | Score real | O que mede | Virtude sugerida | Por quê |');
+  lines.push('| Indicator (level) | Real score | What it measures | Suggested virtue | Why |');
   lines.push('|---|---|---|---|---|');
 
   for (const row of rows) {
@@ -156,7 +156,7 @@ function buildReport(rows, meta) {
 
     if (!knowledge) {
       unresolved.push(savCol || varName);
-      lines.push(`| ${varName} (${levelName}) | ${score} | — | **sem sugestão (revisar)** | \`${savCol}\` não está em \`virtue_knowledge.js\` — adicione uma entrada e rode de novo |`);
+      lines.push(`| ${varName} (${levelName}) | ${score} | — | **no suggestion (review)** | \`${savCol}\` is not in \`virtue_knowledge.js\` — add an entry and run again |`);
       continue;
     }
 
@@ -166,17 +166,17 @@ function buildReport(rows, meta) {
 
   lines.push('');
   if (unresolved.length > 0) {
-    lines.push(`## Indicadores sem sugestão (${unresolved.length})`);
+    lines.push(`## Indicators with no suggestion (${unresolved.length})`);
     lines.push('');
-    lines.push(`Sem entrada em \`virtue_knowledge.js\` ainda: ${unresolved.map((c) => `\`${c}\``).join(', ')}. Adicione o julgamento de qual virtude se aplica e rode a skill de novo — nenhuma sugestão é adivinhada automaticamente.`);
+    lines.push(`No entry yet in \`virtue_knowledge.js\`: ${unresolved.map((c) => `\`${c}\``).join(', ')}. Add the judgment call for which virtue applies and run the skill again — no suggestion is ever guessed automatically.`);
     lines.push('');
   }
 
-  lines.push('## Ressalvas');
+  lines.push('## Caveats');
   lines.push('');
-  lines.push('1. Score baixo aqui é um dado real do DW, mas a virtude sugerida como "tratamento" é uma correspondência conceitual, não uma prescrição clínica — mesmo padrão de honestidade metodológica de `SPSS_Septenary_Constitution_Mapping.md`.');
-  lines.push(`2. Amostra restrita a um único estudo (**${meta.studyTitle}**, N=${meta.maxN ?? '?'} participantes) — não generalizar os scores como normativos além dessa população.`);
-  lines.push('3. Este relatório é uma fotografia do momento em que rodou; re-execute a skill depois de qualquer atualização de `godatax_human_dw_etl_firebird25.sql` para refletir dados novos.');
+  lines.push('1. The low score here is real DW data, but the virtue suggested as "treatment" is a conceptual correspondence, not a clinical prescription — the same methodological honesty standard as `SPSS_Septenary_Constitution_Mapping.md`.');
+  lines.push(`2. Sample restricted to a single study (**${meta.studyTitle}**, N=${meta.maxN ?? '?'} participants) — do not generalize the scores as normative beyond this population.`);
+  lines.push('3. This report is a snapshot of the moment it ran; re-run the skill after any update to `godatax_human_dw_etl_firebird25.sql` to reflect new data.');
 
   return lines.join('\n') + '\n';
 }

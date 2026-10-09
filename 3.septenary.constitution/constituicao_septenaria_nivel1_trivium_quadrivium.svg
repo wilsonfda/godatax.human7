@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient>
+ <linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0d80d5"/><stop offset="1" stop-color="#073878"/></linearGradient>
+ <filter id="sh"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#0d5b9f" flood-opacity=".17"/></filter>
+ <style>.t{font-family:Arial,Helvetica,sans-serif;fill:#073878;font-weight:700}.s{font-family:Arial,Helvetica,sans-serif;fill:#1879c8}.b{font-family:Arial,Helvetica,sans-serif;fill:#17466f}.card{fill:#fff;stroke:#70bef1;stroke-width:2}.tag{fill:#e5f5ff;stroke:#8acff4;stroke-width:2}.ln{stroke:#55afe8;stroke-width:3;fill:none}</style>
+</defs>
+<rect width="1920" height="1080" fill="url(#bg)"/>
+<circle cx="80" cy="90" r="190" fill="#d7f1ff" opacity=".65"/><circle cx="1850" cy="995" r="220" fill="#dff4ff" opacity=".7"/>
+<text x="960" y="70" text-anchor="middle" class="t" font-size="42">CONSTITUIÇÃO SEPTENÁRIA · NÍVEL 1</text>
+<text x="960" y="106" text-anchor="middle" class="s" font-size="22">Físico-Etérico · Corpo, vitalidade e experiência corporal</text>
+<path d="M150 137H1770" stroke="#9ad4f5" stroke-width="2" stroke-dasharray="8 8"/>
+
+<g filter="url(#sh)"><rect x="60" y="190" width="630" height="525" rx="28" class="card"/><rect x="1230" y="190" width="630" height="525" rx="28" class="card"/></g>
+<rect x="86" y="214" width="180" height="48" rx="24" class="tag"/><text x="176" y="246" text-anchor="middle" class="t" font-size="25">TRIVIUM</text>
+<rect x="1256" y="214" width="220" height="48" rx="24" class="tag"/><text x="1366" y="246" text-anchor="middle" class="t" font-size="25">QUADRIVIUM</text>
+
+<g>
+ <rect x="90" y="290" width="570" height="112" rx="18" class="tag"/>
+ <text x="120" y="326" class="t" font-size="22">GRAMÁTICA</text><text x="120" y="356" class="b" font-size="18">Definir o nível Físico-Etérico como corpo, vitalidade,</text><text x="120" y="382" class="b" font-size="18">presença corporal, repouso e atividade.</text>
+ <rect x="90" y="423" width="570" height="112" rx="18" class="tag"/>
+ <text x="120" y="459" class="t" font-size="22">LÓGICA</text><text x="120" y="489" class="b" font-size="18">Separar dados corporais, autorrelatos e contexto da</text><text x="120" y="515" class="b" font-size="18">camada interpretativa; sem inferência metafísica causal.</text>
+ <rect x="90" y="556" width="570" height="112" rx="18" class="tag"/>
+ <text x="120" y="592" class="t" font-size="22">RETÓRICA</text><text x="120" y="622" class="b" font-size="18">Relato descritivo, transparente e não clínico,</text><text x="120" y="648" class="b" font-size="18">com os limites da interpretação claramente comunicados.</text>
+</g>
+
+<g>
+ <rect x="1260" y="290" width="570" height="84" rx="18" class="tag"/><text x="1290" y="325" class="t" font-size="22">ARITMÉTICA</text><text x="1290" y="352" class="b" font-size="18">Frequência cardíaca, HRV, sono, atividade e fadiga autorreferida.</text>
+ <rect x="1260" y="393" width="570" height="84" rx="18" class="tag"/><text x="1290" y="428" class="t" font-size="22">GEOMETRIA</text><text x="1290" y="455" class="b" font-size="18">Participante, sessão, instrumento, indicador e evento contextual.</text>
+ <rect x="1260" y="496" width="570" height="84" rx="18" class="tag"/><text x="1290" y="531" class="t" font-size="22">MÚSICA</text><text x="1290" y="558" class="b" font-size="18">Respiração, variação cardíaca, sono-vigília e recuperação.</text>
+ <rect x="1260" y="599" width="570" height="84" rx="18" class="tag"/><text x="1290" y="634" class="t" font-size="22">ASTRONOMIA</text><text x="1290" y="661" class="b" font-size="18">Janelas diárias, ciclos semanais e sequência de sessões.</text>
+</g>
+
+<path d="M690 457 C755 457 780 470 810 492" class="ln"/><path d="M1230 457 C1165 457 1140 470 1110 492" class="ln"/>
+<polygon points="810,492 794,483 798,503" fill="#55afe8"/><polygon points="1110,492 1126,483 1122,503" fill="#55afe8"/>
+
+<g filter="url(#sh)"><rect x="710" y="440" width="500" height="310" rx="34" fill="url(#core)"/></g>
+<circle cx="960" cy="535" r="68" fill="#e6f7ff" opacity=".95"/><path d="M960 484c-24 0-42 18-42 42 0 18 10 34 25 40v37h34v-37c15-6 25-22 25-40 0-24-18-42-42-42zm0 20a22 22 0 1 1 0 44 22 22 0 0 1 0-44z" fill="#0a68b7"/>
+<text x="960" y="636" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="30">FÍSICO-ETÉRICO</text>
+<text x="960" y="667" text-anchor="middle" fill="#d9f4ff" font-family="Arial,Helvetica,sans-serif" font-size="17">Camada interpretativa de corpo, vitalidade</text>
+<text x="960" y="691" text-anchor="middle" fill="#d9f4ff" font-family="Arial,Helvetica,sans-serif" font-size="17">e presença corporal.</text>
+<text x="960" y="719" text-anchor="middle" fill="#d9f4ff" font-family="Arial,Helvetica,sans-serif" font-size="16">Não substitui indicadores clínicos ou fisiológicos.</text>
+
+<path d="M960 750V805" class="ln"/><polygon points="960,825 950,806 970,806" fill="#55afe8"/>
+<g filter="url(#sh)"><rect x="275" y="825" width="1370" height="126" rx="28" fill="#fff" stroke="#70bef1" stroke-width="2"/></g>
+<text x="960" y="872" text-anchor="middle" class="t" font-size="26">RESULTADO ORGANIZADO</text>
+<text x="960" y="907" text-anchor="middle" class="b" font-size="20">Presença e vitalidade corporal · medidas fisiológicas · autorrelato · contexto · mapeamento interpretativo separado</text>
+<text x="960" y="1030" text-anchor="middle" class="s" font-size="17">GoDataX Human 7 · Constituição Septenária · Nível 1</text>
+</svg>

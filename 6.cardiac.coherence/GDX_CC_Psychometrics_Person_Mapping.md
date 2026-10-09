@@ -1,6 +1,6 @@
 # GDX_HUMAN — Linking Cardiac-Coherence Participants to a Psychometric Study
 
-> Documents how `6.cardiac.coherence/` (Movesense MD ECG/HRV capture) relates to
+> Documents how `6.cardiac.coherence/` (medical ECG/HRV capture) relates to
 > `2.relational.model.psychometrics/` (the `GDX_PSY_*` schema), and how
 > **GDX_SKILL_LOAD_CC_MAPS_DB** (`.claude/skills/GDX_SKILL_LOAD_CC_MAPS_DB/`) keeps that relation in
 > sync, one new study at a time.

@@ -1,0 +1,17 @@
+{
+  "name": "gdx-skill-identify-virtues",
+  "version": "1.0.0",
+  "description": "Identifies the highest-scoring GDX_HUMAN psychometric indicators (7.multidimensional.database) and points, from the 33 Virtology virtues, which ones are potentially already present as strengths -- the mirror image of GDX_SKILL_LINK_SUGGESTIONS. Prints to the screen only.",
+  "main": "identify_virtues.js",
+  "scripts": {
+    "identify": "node identify_virtues.js",
+    "sample": "node identify_virtues.js --sample"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}

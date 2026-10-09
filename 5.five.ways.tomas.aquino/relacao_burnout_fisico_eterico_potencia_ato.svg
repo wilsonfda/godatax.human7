@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eefaff"/></linearGradient>
+    <linearGradient id="navy" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#147bd1"/><stop offset="1" stop-color="#103d85"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#113c71" flood-opacity=".13"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#52aef0"/></marker>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <circle cx="35" cy="46" r="215" fill="#dff3ff" opacity=".8"/>
+  <circle cx="1850" cy="1000" r="240" fill="#dff3ff" opacity=".75"/>
+  <text x="960" y="67" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="43" fill="#123f88" letter-spacing="1">INTEGRAÇÃO DE PERSPECTIVAS</text>
+  <text x="960" y="104" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" fill="#1673c6">Medição psicométrica · mapeamentos interpretativos · separação metodológica</text>
+  <line x1="140" y1="135" x2="1780" y2="135" stroke="#7bc6f6" stroke-width="2" stroke-dasharray="9 11"/>
+  <rect x="70" y="180" width="540" height="565" rx="28" fill="#fff" stroke="#58aff1" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="96" y="205" width="390" height="48" rx="24" fill="#e2f4ff" stroke="#70c3f8" stroke-width="2"/>
+  <text x="291" y="237" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700" fill="#123f88">1 · INSTRUMENTO DE MEDIDA</text>
+  <text x="340" y="286" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700" fill="#123f88">Avaliação psicométrica de Burnout</text>
+  <rect x="104" y="309" width="472" height="79" rx="17" fill="#e9f6ff" stroke="#75c3f3" stroke-width="2"/>
+  <text x="128" y="340" font-family="Arial" font-size="21" font-weight="700" fill="#123f88">ENTRADA</text>
+  <text x="128" y="370" font-family="Arial" font-size="17" fill="#164779">Itens · escala de resposta · período · regras de qualidade</text>
+  <path d="M340 390 L340 418" stroke="#52aef0" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="104" y="435" width="472" height="246" rx="20" fill="url(#navy)"/>
+  <text x="340" y="476" text-anchor="middle" font-family="Arial" font-size="25" font-weight="700" fill="#fff">ESCORES DE BURNOUT</text>
+  <text x="340" y="505" text-anchor="middle" font-family="Arial" font-size="17" fill="#d7eeff">Dimensões analisadas separadamente</text>
+  <rect x="124" y="526" width="132" height="117" rx="16" fill="#fff"/><rect x="274" y="526" width="132" height="117" rx="16" fill="#fff"/><rect x="424" y="526" width="132" height="117" rx="16" fill="#fff"/>
+  <text x="190" y="562" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#123f88">EXAUSTÃO</text><text x="190" y="584" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#123f88">EMOCIONAL</text>
+  <text x="340" y="562" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700" fill="#123f88">CINISMO /</text><text x="340" y="584" text-anchor="middle" font-family="Arial" font-size="13" font-weight="700" fill="#123f88">DESPERSONALIZAÇÃO</text>
+  <text x="490" y="562" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#123f88">REALIZAÇÃO</text><text x="490" y="584" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#123f88">PESSOAL</text>
+  <text x="340" y="718" text-anchor="middle" font-family="Arial" font-size="17" fill="#164779">Saída mensurável: escores rastreáveis, não um diagnóstico único.</text>
+  <path d="M610 445 C655 445 658 384 700 384" fill="none" stroke="#52aef0" stroke-width="3" stroke-dasharray="9 8" marker-end="url(#arrow)"/>
+  <path d="M610 570 C880 730 1075 760 1330 573" fill="none" stroke="#52aef0" stroke-width="3" stroke-dasharray="9 8" marker-end="url(#arrow)"/>
+  <rect x="718" y="670" width="508" height="45" rx="22" fill="#fff" stroke="#77c3f5" stroke-width="2"/>
+  <text x="972" y="700" text-anchor="middle" font-family="Arial" font-size="18" font-weight="700" fill="#1765a9">MAPEAMENTO INTERPRETATIVO EXPLÍCITO · NÃO CAUSAL</text>
+  <rect x="700" y="180" width="500" height="425" rx="28" fill="#fff" stroke="#58aff1" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="726" y="205" width="326" height="48" rx="24" fill="#e2f4ff" stroke="#70c3f8" stroke-width="2"/>
+  <text x="889" y="237" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#123f88">2 · CAMADA INTERPRETATIVA</text>
+  <rect x="734" y="281" width="432" height="265" rx="22" fill="url(#navy)"/>
+  <circle cx="950" cy="346" r="45" fill="#dff3ff"/><circle cx="950" cy="346" r="19" fill="none" stroke="#1673c6" stroke-width="11"/><path d="M950 365 L950 400" stroke="#1673c6" stroke-width="11"/>
+  <text x="950" y="443" text-anchor="middle" font-family="Arial" font-size="29" font-weight="700" fill="#fff">FÍSICO-ETÉRICO</text>
+  <text x="950" y="475" text-anchor="middle" font-family="Arial" font-size="20" fill="#e1f3ff">Constituição Septenária · Nível 1</text>
+  <text x="950" y="510" text-anchor="middle" font-family="Arial" font-size="18" fill="#d7eeff">Corpo · vitalidade · presença corporal</text>
+  <text x="950" y="574" text-anchor="middle" font-family="Arial" font-size="13.5" fill="#174776">Leitura filosófica identificada; não substitui indicadores fisiológicos ou clínicos.</text>
+  <rect x="1330" y="180" width="520" height="425" rx="28" fill="#fff" stroke="#58aff1" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="1356" y="205" width="324" height="48" rx="24" fill="#e2f4ff" stroke="#70c3f8" stroke-width="2"/>
+  <text x="1518" y="237" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#123f88">3 · VARIÁVEL METAFÍSICA</text>
+  <rect x="1364" y="281" width="452" height="265" rx="22" fill="url(#navy)"/>
+  <circle cx="1465" cy="358" r="42" fill="#dff3ff"/><circle cx="1465" cy="358" r="17" fill="none" stroke="#1673c6" stroke-width="11"/>
+  <path d="M1520 358 L1645 358" stroke="#fff" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <circle cx="1710" cy="358" r="42" fill="#dff3ff"/><path d="M1688 372 L1706 343 L1720 356 L1736 328" fill="none" stroke="#1673c6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1465" y="431" text-anchor="middle" font-family="Arial" font-size="28" font-weight="700" fill="#fff">POTÊNCIA</text><text x="1710" y="431" text-anchor="middle" font-family="Arial" font-size="28" font-weight="700" fill="#fff">ATO</text>
+  <text x="1590" y="471" text-anchor="middle" font-family="Arial" font-size="20" fill="#e1f3ff">Possibilidade de realização → realização atual</text>
+  <text x="1590" y="510" text-anchor="middle" font-family="Arial" font-size="14.5" fill="#d7eeff">Linguagem filosófica para descrever atualização e transformação.</text>
+  <text x="1590" y="574" text-anchor="middle" font-family="Arial" font-size="13.5" fill="#174776">Não é escore, explicação causal, diagnóstico ou validação empírica.</text>
+  <rect x="150" y="805" width="1620" height="155" rx="28" fill="#fff" stroke="#58aff1" stroke-width="2" filter="url(#shadow)"/>
+  <text x="960" y="853" text-anchor="middle" font-family="Arial" font-size="31" font-weight="700" fill="#123f88">RELATO INTEGRADO E TRANSPARENTE</text>
+  <line x1="600" y1="876" x2="600" y2="930" stroke="#9bd4f7" stroke-width="2"/><line x1="1240" y1="876" x2="1240" y2="930" stroke="#9bd4f7" stroke-width="2"/>
+  <text x="380" y="901" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700" fill="#1765a9">EVIDÊNCIA PSICOMÉTRICA</text><text x="380" y="928" text-anchor="middle" font-family="Arial" font-size="18" fill="#174776">instrumento · itens · escores · período</text>
+  <text x="920" y="901" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700" fill="#1765a9">CONTEXTO E CORPO</text><text x="920" y="928" text-anchor="middle" font-family="Arial" font-size="18" fill="#174776">indicadores corporais e relatos, quando disponíveis</text>
+  <text x="1510" y="901" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700" fill="#1765a9">LEITURA INTERPRETATIVA</text><text x="1510" y="928" text-anchor="middle" font-family="Arial" font-size="18" fill="#174776">camadas filosóficas claramente identificadas</text>
+  <text x="960" y="1028" text-anchor="middle" font-family="Arial" font-size="18" fill="#1673c6">GoDataX Human 7 · Estrutura educacional e analítica</text>
+</svg>

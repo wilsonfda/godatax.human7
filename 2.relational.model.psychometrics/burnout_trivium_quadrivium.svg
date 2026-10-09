@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1600 1200" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#0479d7"/><stop offset="1" stop-color="#073a83"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0b4f94" flood-opacity=".16"/></filter>
+    <style>
+      .title{font-family:Arial,Helvetica,sans-serif;fill:#073a83;font-weight:700;letter-spacing:1px}.sub{font-family:Arial,Helvetica,sans-serif;fill:#176fc1;font-weight:600}.h{font-family:Arial,Helvetica,sans-serif;fill:#073a83;font-weight:700}.b{font-family:Arial,Helvetica,sans-serif;fill:#17446d}.small{font-family:Arial,Helvetica,sans-serif;fill:#236fb3}.card{fill:#fff;stroke:#68b8ef;stroke-width:2}.pill{fill:#e7f5ff;stroke:#8bcdf4;stroke-width:2}.line{stroke:#55aee7;stroke-width:3;fill:none}.dash{stroke:#8bcdf4;stroke-width:2;stroke-dasharray:7 8;fill:none}
+    </style>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#bg)"/>
+  <circle cx="90" cy="105" r="170" fill="#d9f2ff" opacity=".58"/><circle cx="1510" cy="1060" r="230" fill="#d7f0ff" opacity=".62"/>
+  <text x="800" y="75" text-anchor="middle" class="title" font-size="44">AVALIAÇÃO DE BURNOUT</text>
+  <text x="800" y="112" text-anchor="middle" class="sub" font-size="21">Uma estrutura metodológica do Trivium e Quadrivium</text>
+  <path d="M120 145H1480" class="dash"/>
+
+  <g filter="url(#shadow)">
+    <rect x="90" y="195" rx="24" ry="24" width="610" height="365" class="card"/>
+    <rect x="900" y="195" rx="24" ry="24" width="610" height="365" class="card"/>
+  </g>
+  <rect x="112" y="216" width="205" height="48" rx="24" fill="#dff3ff"/>
+  <text x="214" y="248" text-anchor="middle" class="h" font-size="25">TRIVIUM</text>
+  <text x="1305" y="248" text-anchor="middle" class="h" font-size="25">QUADRIVIUM</text>
+  <text x="214" y="286" text-anchor="middle" class="small" font-size="15">definição, raciocínio e comunicação</text>
+  <text x="1208" y="286" text-anchor="middle" class="small" font-size="15">medida, estrutura, ritmo e tempo</text>
+
+  <g>
+    <rect x="120" y="316" width="550" height="67" rx="14" class="pill"/>
+    <text x="145" y="345" class="h" font-size="20">GRAMÁTICA</text><text x="350" y="345" class="b" font-size="17">Instrumento, itens, escala e população</text>
+    <text x="310" y="370" class="small" font-size="15">Período, consentimento e regras de qualidade do dado</text>
+    <rect x="120" y="402" width="550" height="67" rx="14" class="pill"/>
+    <text x="145" y="431" class="h" font-size="20">LÓGICA</text><text x="310" y="431" class="b" font-size="17">Escores separados, ausências e consistência</text>
+    <text x="310" y="456" class="small" font-size="15">Correlações contextuais — sem inferência causal</text>
+    <rect x="120" y="488" width="550" height="50" rx="14" class="pill"/>
+    <text x="145" y="519" class="h" font-size="20">RETÓRICA</text><text x="330" y="519" class="b" font-size="17">Relato claro, ético e não clínico</text>
+  </g>
+
+  <g>
+    <rect x="930" y="316" width="550" height="50" rx="14" class="pill"/>
+    <text x="955" y="347" class="h" font-size="20">ARITMÉTICA</text><text x="1142" y="347" class="b" font-size="17">Escores, médias, percentis e tendências</text>
+    <rect x="930" y="382" width="550" height="50" rx="14" class="pill"/>
+    <text x="955" y="413" class="h" font-size="20">GEOMETRIA</text><text x="1142" y="413" class="b" font-size="17">Modelo relacional e Grafo de Conhecimento</text>
+    <rect x="930" y="448" width="550" height="50" rx="14" class="pill"/>
+    <text x="955" y="479" class="h" font-size="20">MÚSICA</text><text x="1142" y="479" class="b" font-size="17">HRV, respiração, sono e ritmos de recuperação</text>
+    <rect x="930" y="514" width="550" height="50" rx="14" class="pill"/>
+    <text x="955" y="545" class="h" font-size="20">ASTRONOMIA</text><text x="1142" y="545" class="b" font-size="17">Sessões, ciclos de trabalho e linha do tempo</text>
+  </g>
+
+  <path d="M395 560 C395 630 520 655 640 690" class="line"/>
+  <path d="M1205 564 C1205 630 1080 655 960 690" class="line"/>
+  <polygon points="640,690 625,678 626,700" fill="#55aee7"/><polygon points="960,690 975,678 974,700" fill="#55aee7"/>
+
+  <g filter="url(#shadow)">
+    <rect x="330" y="680" width="940" height="305" rx="38" fill="url(#core)"/>
+  </g>
+  <text x="800" y="735" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="31">NÚCLEO PSICOMÉTRICO DO BURNOUT</text>
+  <text x="800" y="767" text-anchor="middle" fill="#d7f2ff" font-family="Arial,Helvetica,sans-serif" font-size="18">Analise as dimensões separadamente; não as reduza a um rótulo diagnóstico único.</text>
+  <g>
+    <rect x="370" y="805" width="250" height="130" rx="20" fill="#fff" opacity=".97"/>
+    <text x="495" y="843" text-anchor="middle" class="h" font-size="20">EXAUSTÃO</text><text x="495" y="868" text-anchor="middle" class="h" font-size="20">EMOCIONAL</text>
+    <text x="495" y="903" text-anchor="middle" class="small" font-size="14">esgotamento de energia</text>
+    <rect x="675" y="805" width="250" height="130" rx="20" fill="#fff" opacity=".97"/>
+    <text x="800" y="843" text-anchor="middle" class="h" font-size="20">CINISMO /</text><text x="800" y="868" text-anchor="middle" class="h" font-size="20">DESPERSONALIZAÇÃO</text>
+    <text x="800" y="903" text-anchor="middle" class="small" font-size="14">distanciamento do trabalho</text>
+    <rect x="980" y="805" width="250" height="130" rx="20" fill="#fff" opacity=".97"/>
+    <text x="1105" y="843" text-anchor="middle" class="h" font-size="20">REALIZAÇÃO</text><text x="1105" y="868" text-anchor="middle" class="h" font-size="20">PESSOAL</text>
+    <text x="1105" y="903" text-anchor="middle" class="small" font-size="14">eficácia profissional</text>
+  </g>
+  <path d="M495 935V1015M800 935V1015M1105 935V1015" class="line"/>
+  <g filter="url(#shadow)"><rect x="215" y="1015" width="1170" height="102" rx="25" fill="#fff" stroke="#68b8ef" stroke-width="2"/></g>
+  <text x="800" y="1058" text-anchor="middle" class="h" font-size="24">RESULTADO: Escores rastreáveis • janelas temporais • análise contextual • relato transparente</text>
+  <text x="800" y="1090" text-anchor="middle" class="small" font-size="16">Perspectivas interpretativas, se usadas, permanecem separadas da medição e do cálculo.</text>
+  <text x="800" y="1165" text-anchor="middle" class="sub" font-size="16">GoDataX Human 7 · Framework educacional e analítico</text>
+</svg>

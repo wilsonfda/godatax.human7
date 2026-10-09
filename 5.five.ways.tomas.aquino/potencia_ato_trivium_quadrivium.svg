@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#eaf7ff"/></linearGradient>
+<linearGradient id="core" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1389de"/><stop offset="1" stop-color="#073b82"/></linearGradient>
+<filter id="sh"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#0b5c9e" flood-opacity=".18"/></filter>
+<style>.t{font-family:Arial,Helvetica,sans-serif;fill:#083c82;font-weight:700}.s{font-family:Arial,Helvetica,sans-serif;fill:#1778c7}.b{font-family:Arial,Helvetica,sans-serif;fill:#194870}.card{fill:#fff;stroke:#70bef1;stroke-width:2}.box{fill:#e8f6ff;stroke:#83ccf4;stroke-width:2}.ln{stroke:#55afe8;stroke-width:3;fill:none}</style>
+</defs>
+<rect width="1920" height="1080" fill="url(#bg)"/>
+<circle cx="80" cy="110" r="190" fill="#d9f2ff" opacity=".62"/><circle cx="1840" cy="965" r="235" fill="#ddf3ff" opacity=".66"/>
+<text x="960" y="68" text-anchor="middle" class="t" font-size="44">POTÊNCIA → ATO</text>
+<text x="960" y="104" text-anchor="middle" class="s" font-size="22">Variável metafísica · estrutura filosófica e interpretativa</text>
+<path d="M150 136H1770" stroke="#9bd5f5" stroke-width="2" stroke-dasharray="8 8"/>
+
+<g filter="url(#sh)"><rect x="55" y="180" width="650" height="515" rx="28" class="card"/><rect x="1215" y="180" width="650" height="515" rx="28" class="card"/></g>
+<rect x="82" y="205" width="180" height="47" rx="23" class="box"/><text x="172" y="237" text-anchor="middle" class="t" font-size="25">TRIVIUM</text>
+<rect x="1242" y="205" width="220" height="47" rx="23" class="box"/><text x="1352" y="237" text-anchor="middle" class="t" font-size="25">QUADRIVIUM</text>
+
+<g>
+<rect x="85" y="280" width="590" height="112" rx="18" class="box"/>
+<text x="115" y="316" class="t" font-size="22">GRAMÁTICA</text><text x="115" y="346" class="b" font-size="18">Potência: possibilidade real de atualização.</text><text x="115" y="372" class="b" font-size="18">Ato: realização ou determinação atual dessa possibilidade.</text>
+<rect x="85" y="413" width="590" height="112" rx="18" class="box"/>
+<text x="115" y="449" class="t" font-size="22">LÓGICA</text><text x="115" y="479" class="b" font-size="18">Organizar a passagem conceitual: possibilidade → condições</text><text x="115" y="505" class="b" font-size="18">de atualização → realização; sem tratá-la como causalidade científica.</text>
+<rect x="85" y="546" width="590" height="112" rx="18" class="box"/>
+<text x="115" y="582" class="t" font-size="22">RETÓRICA</text><text x="115" y="612" class="b" font-size="18">Explicitar que é uma leitura filosófica interpretativa,</text><text x="115" y="638" class="b" font-size="18">distinta de medição, diagnóstico ou validação empírica.</text>
+</g>
+
+<g>
+<rect x="1245" y="280" width="590" height="84" rx="18" class="box"/>
+<text x="1275" y="315" class="t" font-size="22">ARITMÉTICA</text><text x="1275" y="342" class="b" font-size="18">Graus, proporções e diferenças entre possibilidade e realização.</text>
+<rect x="1245" y="383" width="590" height="84" rx="18" class="box"/>
+<text x="1275" y="418" class="t" font-size="22">GEOMETRIA</text><text x="1275" y="445" class="b" font-size="18">Mapa relacional de estados, condições, transições e resultados.</text>
+<rect x="1245" y="486" width="590" height="84" rx="18" class="box"/>
+<text x="1275" y="521" class="t" font-size="22">MÚSICA</text><text x="1275" y="548" class="b" font-size="18">Ritmo, sequência e intensidade das transformações no tempo.</text>
+<rect x="1245" y="589" width="590" height="84" rx="18" class="box"/>
+<text x="1275" y="624" class="t" font-size="22">ASTRONOMIA</text><text x="1275" y="651" class="b" font-size="18">Ordem temporal, ciclos e momentos de potencialidade e atualização.</text>
+</g>
+
+<path d="M705 436 C765 436 790 458 820 478" class="ln"/><path d="M1215 436 C1155 436 1130 458 1100 478" class="ln"/>
+<polygon points="820,478 804,469 808,489" fill="#55afe8"/><polygon points="1100,478 1116,469 1112,489" fill="#55afe8"/>
+
+<g filter="url(#sh)"><rect x="700" y="425" width="520" height="290" rx="34" fill="url(#core)"/></g>
+<circle cx="840" cy="525" r="53" fill="#e9f8ff"/><circle cx="840" cy="525" r="25" fill="#0e76c8"/>
+<path d="M907 525H1070" stroke="#fff" stroke-width="8" stroke-linecap="round"/><polygon points="1088,525 1056,506 1056,544" fill="#fff"/>
+<circle cx="1140" cy="525" r="53" fill="#e9f8ff"/><path d="M1115 540l18-32 17 13 15-28" stroke="#0e76c8" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="840" y="605" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="27">POTÊNCIA</text>
+<text x="1140" y="605" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="27">ATO</text>
+<text x="960" y="652" text-anchor="middle" fill="#d9f4ff" font-family="Arial,Helvetica,sans-serif" font-size="17">Possibilidade de realização → realização atual</text>
+<text x="960" y="682" text-anchor="middle" fill="#d9f4ff" font-family="Arial,Helvetica,sans-serif" font-size="16">Uma linguagem filosófica para descrever transformação e atualização.</text>
+
+<path d="M960 715V785" class="ln"/><polygon points="960,805 950,786 970,786" fill="#55afe8"/>
+<g filter="url(#sh)"><rect x="225" y="805" width="1470" height="126" rx="28" fill="#fff" stroke="#70bef1" stroke-width="2"/></g>
+<text x="960" y="851" text-anchor="middle" class="t" font-size="26">SAÍDA INTERPRETATIVA</text>
+<text x="960" y="886" text-anchor="middle" class="b" font-size="20">Definições claras · relações explícitas · sequência temporal · limites metodológicos transparentes</text>
+<text x="960" y="1025" text-anchor="middle" class="s" font-size="17">GoDataX Human 7 · Camada filosófica e interpretativa</text>
+</svg>

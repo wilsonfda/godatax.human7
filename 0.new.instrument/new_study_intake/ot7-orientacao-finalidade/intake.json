@@ -1,0 +1,229 @@
+{
+  "_comment": "OT-7 (Purpose Orientation) - metaphysical instrument prototype. Source: 14.metaphysical.measuring.instrument/Orientacao_a_Finalidade_Trivium_Quadrivium_OT7.pdf (working doc, 2026-09-26) and the GDX H7ph book/article (Beyond the Labyrinth v2.docx). Explicitly NOT a validated instrument -- no norms, cutoffs, or psychometric evidence yet. Anchored in Aquinas's Fifth Way (order/governance/finality) and decomposed into the 7 liberal arts (Trivium: grammar, logic, rhetoric; Quadrivium: arithmetic, geometry, music, astronomy) as 7 observational lenses, one item per lens, scale 0-5. Catalog translated to English on 2026-10-09 (was originally loaded in Portuguese).",
+  "study": {
+    "title": "Purpose Orientation (OT-7) - Exploratory Pilot Study",
+    "objective": "Explore the OT-7 prototype as a case study of how a metaphysical concept (purpose orientation, anchored in Aquinas's Fifth Way) can be decomposed into seven observable dimensions via the Trivium/Quadrivium, formulated into items, and investigated for psychometric properties, with no prior validation.",
+    "method": "Cross-sectional self-report, seven items (one per Trivium/Quadrivium dimension), 0-5 scale, response referring to the last 14 days and to a personal goal chosen by the respondent. Exploratory instrument, still with no norms, cutoffs, or reliability/validity evidence.",
+    "start_date": "2026-09-26",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Purpose Orientation (OT-7)",
+      "version": "2026",
+      "type": "LIKERT_SCALE",
+      "description": "Experimental, NOT validated metaphysicometric prototype, proposed in Andrade, W. (2026), 'Purpose Orientation | OT-7 Working Model' (GoDataX Human 7 working document, 2026-09-26), anchored in Aquinas's Fifth Way (governance, order, and finality) and decomposed into seven lenses from the Trivium (grammar, logic, rhetoric) and Quadrivium (arithmetic, geometry, music, astronomy).",
+      "instructions": "Think of an important personal goal you tried to achieve in the last 14 days. Indicate how much each statement describes your experience during that period.",
+      "phenomenon_name": "Purpose Orientation (OT-7, hypothesis)",
+      "phenomenon_description": "Exploratory interpretive metaphysical phenomenon: how a person formulates a goal/purpose, relates actions and means to it, and revises it over time. Read from Aquinas's Fifth Way (governance, order, and finality); does not constitute proof of an energy or metaphysical substance measured by science -- it is an interpretive lens proposed by the GoDataX Human 7 framework.",
+      "constructs": [
+        {
+          "name": "Purpose Orientation (OT-7, hypothesis)",
+          "domain": "METAPHYSICAL",
+          "definition": "How a person sets a goal, relates actions and means to it, and revises it over time -- the most direct approximation, in the framework, of the idea of orientation toward an end. Perceived vitality is recorded as a separate psychological observable, not a metaphysical one.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Clarity of Purpose (Grammar)",
+          "description": "How the person names and clearly describes the goal they intend to achieve.",
+          "operational_definition": "Response to OT-7 item 1 (Trivium - Grammar): 'I can clearly describe the goal I am trying to achieve.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Clarity of Purpose (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Grammar item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Coherence Between Means and Ends (Logic)",
+          "description": "Whether the actions chosen by the person are coherent with the stated goal.",
+          "operational_definition": "Response to OT-7 item 2 (Trivium - Logic): 'My recent actions are coherent with this goal.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Coherence Between Means and Ends (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Logic item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Expression of Purpose (Rhetoric)",
+          "description": "How the person communicates and justifies the purpose they pursue.",
+          "operational_definition": "Response to OT-7 item 3 (Trivium - Rhetoric): 'I can explain why this goal matters to me.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Expression of Purpose (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Rhetoric item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Proportion Between Resources and Goal (Arithmetic)",
+          "description": "How the person distributes time, effort, and vitality in relation to the goal.",
+          "operational_definition": "Response to OT-7 item 4 (Quadrivium - Arithmetic): 'I distributed time and effort in a way compatible with this goal.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Proportion Between Resources and Goal (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Arithmetic item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Structure Among Goals, Values, and Actions (Geometry)",
+          "description": "How goals, values, and actions relate/align with each other.",
+          "operational_definition": "Response to OT-7 item 5 (Quadrivium - Geometry): 'I can align this goal with my values and my other responsibilities.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Structure Among Goals, Values, and Actions (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Geometry item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Rhythm and Continuity (Music)",
+          "description": "The rhythm of the person's actions and its variation with perceived vitality.",
+          "operational_definition": "Response to OT-7 item 6 (Quadrivium - Music): 'I maintain a sustainable pace and adjust my effort when my vitality changes.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Rhythm and Continuity (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Music item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Purpose Orientation (OT-7, hypothesis)",
+          "name": "Cycles and Broader Context (Astronomy)",
+          "description": "How the person's orientation changes across cycles and contexts.",
+          "operational_definition": "Response to OT-7 item 7 (Quadrivium - Astronomy): 'I reassess this goal when the context, priorities, or conditions change.'",
+          "variable_type": "METAPHYSICS",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Cycles and Broader Context (score)",
+          "indicator_description": "Raw response (0-5) to the OT-7 Astronomy item.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 5
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "OT7_0_5",
+          "alternatives": [
+            {"order": 1, "label": "Does not describe me", "numeric_value": 0},
+            {"order": 2, "label": "Very little", "numeric_value": 1},
+            {"order": 3, "label": "A little", "numeric_value": 2},
+            {"order": 4, "label": "Partially", "numeric_value": 3},
+            {"order": 5, "label": "Quite a lot", "numeric_value": 4},
+            {"order": 6, "label": "Completely", "numeric_value": 5}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "I can clearly describe the goal I am trying to achieve.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Clarity of Purpose (Grammar)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 2,
+          "statement_text": "My recent actions are coherent with this goal.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Coherence Between Means and Ends (Logic)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 3,
+          "statement_text": "I can explain why this goal matters to me.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Expression of Purpose (Rhetoric)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 4,
+          "statement_text": "I distributed time and effort in a way compatible with this goal.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Proportion Between Resources and Goal (Arithmetic)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 5,
+          "statement_text": "I can align this goal with my values and my other responsibilities.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Structure Among Goals, Values, and Actions (Geometry)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 6,
+          "statement_text": "I maintain a sustainable pace and adjust my effort when my vitality changes.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Rhythm and Continuity (Music)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 7,
+          "statement_text": "I reassess this goal when the context, priorities, or conditions change.",
+          "response_type": "LIKERT_0_5",
+          "anchor_set": "OT7_0_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Cycles and Broader Context (Astronomy)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

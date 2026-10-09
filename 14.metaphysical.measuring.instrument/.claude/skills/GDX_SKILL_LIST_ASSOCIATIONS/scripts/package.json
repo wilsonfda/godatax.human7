@@ -1,0 +1,17 @@
+{
+  "name": "gdx-skill-list-associations",
+  "version": "1.0.0",
+  "description": "Lists every conceptual/interpretive association GDX_HUMAN currently claims between its perspectives (chakras, five ways, psychometrics, septenary constitution, virtology) -- framework-wide, not scoped to a study. Firebird-backed correspondences plus the code-only virtue map, cross-referenced where they share a variable.",
+  "main": "list_associations.js",
+  "scripts": {
+    "list": "node list_associations.js",
+    "sample": "node list_associations.js --sample"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}

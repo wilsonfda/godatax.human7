@@ -1,19 +1,22 @@
-# GDX_HUMAN Dashboards — What the 6 Charts Show
+# GDX_HUMAN Dashboards — What the 9 Charts Show
 
 > Generated 2026-09-10, updated the same day when the skill grew from 3 to 6
-> charts, updated again 2026-09-17 when the skill became study-scoped.
+> charts, updated again 2026-09-17 when the skill became study-scoped, updated
+> again 2026-09-24 when a 9th chart (chart 00) was added — see §12.
 > Location: `GDX_HUMAN/8.gdx.dashboards/`
 >
-> The 6 files below were produced by `GDX_SKILL_MAKE_DASHBOARS_DW`
+> The files below were produced by `GDX_SKILL_MAKE_DASHBOARS_DW`
 > (`.claude/skills/GDX_SKILL_MAKE_DASHBOARS_DW/`) reading
-> `7.multidimensional.database` (see `GoDataX_Human_7_DW.md`). Each is a
-> standalone `.html` file — open it directly in a browser, no server needed.
-> The numbers quoted here are the real values from the live `godatax.human`
-> run on 2026-09-10, **before** the skill required `--study <slug>` — at that
-> time the DW held only one study's data, so these numbers happen to match
-> what a study-scoped run for that same study would show today. See §8 below
-> for what changed on 2026-09-17 and why re-running the skill no longer
-> overwrites these files.
+> `7.multidimensional.database` (see `GoDataX_Human_7_DW.md`) and, for chart 00
+> only, the psychometric-properties catalog in `2.relational.model.psychometrics`.
+> Each is a standalone `.html` file — open it directly in a browser, no server
+> needed. The numbers quoted in §1–§7 are the real values from the live
+> `godatax.human` run on 2026-09-10, **before** the skill required
+> `--study <slug>` — at that time the DW held only one study's data, so these
+> numbers happen to match what a study-scoped run for that same study would
+> show today. See §8 below for what changed on 2026-09-17 and why re-running
+> the skill no longer overwrites these files, and §12 for chart 00, the skill's
+> 9th and newest chart.
 
 ## 1. `dashboard_01_physiological_response` — Line chart, 4 series
 
@@ -401,3 +404,63 @@ interpretive mapping it always was (`CONFIDENCE_LEVEL='LOW'`, unchanged) — thi
 availability gap, not a **conceptual** one. The chart now plots a real number where it used to plot
 nothing; it does not make the Physical-Body-↔-Emotional-Exhaustion correspondence itself any more or
 less certain than the project's own documentation already says it is.
+
+## 12. 2026-09-24: a 9th chart — `dashboard_00_means_psychometric_responses`
+
+`GDX_SKILL_MAKE_DASHBOARS_DW` gained a 9th chart, numbered `00` (it sorts before chart 1 in the
+`outputs` array and on disk, as the "pure-psychometric" counterpart to chart 1's "pure-physiological"
+one) — a small-multiples **line chart with 2 panels**, one instrument per x-axis position:
+
+- **Top panel — response score:** the mean `DW_FACT_PSY_VARIABLE_RESULT.RAW_SCORE` participants
+  actually gave, from the DW, scoped to this study like every other chart here.
+- **Bottom panel — factor-analysis loadings:** the mean `|VALUE|` from
+  `GDX_PSY_PSYCHOMETRIC_PROPERTY` in `2.relational.model.psychometrics` (the OLTP catalog, **not** the
+  DW), one line for `EFA_FACTOR_LOADING` (exploratory) and one for `STD_FACTOR_LOADING`
+  (confirmatory/CFA).
+
+**Two panels, not one shared axis, and not an indexed baseline like chart 1:** a response score
+(mostly a 1–5 Likert mean, though not uniformly — Positivity Ratio Scale runs 0–4) and a factor
+loading (−1 to 1) are different quantities; one shared y-axis would be the dual-axis anti-pattern the
+`dataviz` skill flags, and there is no natural "instrument zero" the way chart 1 has a BASELINE phase
+to index against.
+
+**Why this chart is scoped differently from charts 1–8:** the x-axis instrument list is study-scoped —
+only instruments this study actually administered appear, resolved from `GDX_PSY_ITEM_RESPONSE` (which
+instruments this study's applications have real answers for), deliberately **not** from
+`GDX_PSY_APPLICATION.ID_INSTRUMENT` (a legacy study loaded via `GDX_SKILL_LOAD_RLT_MODEL_DB`, like
+`ID_STUDY=1`, gives every person one "umbrella" application row hardcoded to `ID_INSTRUMENT=1`, which
+would misleadingly make the whole battery look like just Hardiness). But `GDX_PSY_PSYCHOMETRIC_PROPERTY`
+has **no `ID_STUDY` column** — a loading plotted here reflects whatever population last had CFA/EFA run
+for that instrument, not necessarily this study's own (see `GDX_SKILL_MAKE_ANALYSES_CFA_EFA`'s own
+`--study` flag for computing a study-specific value instead of reusing whatever is already loaded).
+
+**The real numbers**, from the current run (`ID_STUDY=1`, `20260924-004325`):
+
+| Instrument | Response score | Response N | EFA loading (avg \|value\|) | CFA loading (avg \|value\|) |
+|---|---|---|---|---|
+| Hardiness | 3.54 | 1,269 | 0.36 | 0.40 |
+| Student Engagement Scale | 2.89 | 1,269 | 0.58 | 0.68 |
+| Career Adapt-Abilities Scale | 4.08 | 1,692 | 0.37 | 0.65 |
+| Satisfaction With Life Scale | 3.61 | 423 | 0.61 | 0.75 |
+| Job Satisfaction Scale | 3.79 | 423 | 0.46 | 0.56 |
+| Positivity Ratio Scale | 2.16 | 846 | 0.53 | 0.53 |
+| Personal Satisfaction | 3.91 | 423 | — | — |
+| Perceived Control of Life | 3.77 | 423 | — | — |
+| Maslach Burnout Inventory - Student Survey (hypothesis - unconfirmed) | 3.74 | 423 | 0.37 | 0.52 |
+| Undocumented Organizational Block (hypothesis - an1-an11) | 3.40 | 1,692 | 0.57 | 0.66 |
+| Red Tape / Perceived Bureaucracy (hypothesis - red1-red5) | 3.34 | 422 | 0.77 | 0.76 |
+
+Note some response-score values differ slightly from the scores quoted for the same instruments in §2–§6
+above (e.g. Hardiness 3.54 here vs. 3.95/3.97 earlier, Positivity Ratio 2.16 here vs. 2.71/2.8 earlier) —
+those earlier numbers came from the very first, pre-scoping 2026-09-10 run or from this document's
+embedded sample data, not from the current `ID_STUDY=1` data as it stands after the fixes in §11 and
+whatever else has been loaded since; they are not inconsistent with each other, just snapshots of
+different points in time. **Personal Satisfaction** and **Perceived Control of Life** have no EFA/CFA
+points — absent, not zero, meaning no CFA/EFA run has been recorded for them yet; the chart's own
+caption lists exactly which of the study's instruments do and don't have loadings, computed from the
+data rather than hardcoded.
+
+**Where it lives:** `dashboard_00_means_psychometric_responses__<study-slug>__<study-title-slug>__<timestamp>.html`,
+same filename convention as charts 1–8 (§8). As of this writing the current run is
+`dashboard_00_means_psychometric_responses__1__predictors-of-adaptability-to-military-higher-education__20260924-004325.html`.
+Like every other chart, `--chart 00` can generate just this one file without touching the other 8.

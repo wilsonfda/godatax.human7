@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Septenary Constitution Gradient Portrait: Average Score by Level</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 20px 20px 12px;
+    border: 1px solid var(--grid); overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 2px 8px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 4px 2px 10px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 8px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Septenary Constitution Gradient Portrait: Average Score by Level</h1>
+  <p class="subtitle">The Septenary Constitution diagram (Individuality triangle -- Atma/Buddhi/Manas -- over the Personality stack -- Kama-manas/Kama Rupa/Vital-Etheric/Physical), each band colored by the same single-hue gradient as chart 7 (light = lower, dark = higher) -- driven by the real average <code>RAW_SCORE</code> across every construct/variable mapped to that level (<code>GDX_PSY_SEPT_LEVEL_PSY_MAP</code> via <code>DW_DIM_VARIABLE.ID_SEPTENARY_LEVEL</code>), the exact data chart 2 already plots as a bar. Physical Body has no band color: no variable in this dataset maps to it -- see GoDataX_Human_7_DW.md.</p>
+  <div class="chart-card">
+    <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show table</button></div>
+    
+    <svg class="chart-svg" viewBox="0 0 440 520" role="img" aria-label="Septenary Constitution Gradient Portrait: Average Score by Level" style="max-width:400px;margin:0 auto;">
+      <polygon class="chakra-mark" points="220,30 283.3333333333333,100 156.66666666666669,100" fill="#0d366b" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Atmic Body/Spirit&lt;/strong&gt; (Atma)&lt;br&gt;avg 4.03 (n=423)"></polygon>
+        <text x="220" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Atmic Body/Spirit</text>
+        <text x="220" y="76" text-anchor="middle" font-size="10.5" fill="#ffffff">(Atma) &middot; avg 4.03</text><polygon class="chakra-mark" points="156.66666666666669,100 283.3333333333333,100 346.66666666666663,170 93.33333333333334,170" fill="#7db1ef" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Buddhic Body&lt;/strong&gt; (Buddhi)&lt;br&gt;avg 3.18 (n=1269)"></polygon>
+        <text x="220" y="130" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">Buddhic Body</text>
+        <text x="220" y="146" text-anchor="middle" font-size="10.5" fill="var(--ink)">(Buddhi) &middot; avg 3.18</text><polygon class="chakra-mark" points="93.33333333333334,170 346.66666666666663,170 410,240 30,240" fill="#174d91" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Higher Mental Body&lt;/strong&gt; (Abstract Manas)&lt;br&gt;avg 3.85 (n=1692)"></polygon>
+        <text x="220" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Higher Mental Body</text>
+        <text x="220" y="216" text-anchor="middle" font-size="10.5" fill="#ffffff">(Abstract Manas) &middot; avg 3.85</text><polygon class="chakra-mark" points="30,240 410,240 410,305 30,305" fill="#144787" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Lower Mental Body&lt;/strong&gt; (Concrete Manas)&lt;br&gt;avg 3.9 (n=1269)"></polygon>
+        <text x="220" y="267.5" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Lower Mental Body</text>
+        <text x="220" y="283.5" text-anchor="middle" font-size="10.5" fill="#ffffff">(Concrete Manas) &middot; avg 3.9</text><polygon class="chakra-mark" points="30,305 410,305 410,370 30,370" fill="#1c58a3" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Astral Body&lt;/strong&gt; (Kama Rupa)&lt;br&gt;avg 3.77 (n=1269)"></polygon>
+        <text x="220" y="332.5" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Astral Body</text>
+        <text x="220" y="348.5" text-anchor="middle" font-size="10.5" fill="#ffffff">(Kama Rupa) &middot; avg 3.77</text><polygon class="chakra-mark" points="30,370 410,370 410,435 30,435" fill="#cde2fb" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Vital/Etheric Body&lt;/strong&gt; (Prana/Linga Sharira)&lt;br&gt;avg 2.85 (n=846)"></polygon>
+        <text x="220" y="397.5" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ink)">Vital/Etheric Body</text>
+        <text x="220" y="413.5" text-anchor="middle" font-size="10.5" fill="var(--ink)">(Prana/Linga Sharira) &middot; avg 2.85</text><polygon class="chakra-mark" points="30,435 410,435 410,500 30,500" fill="#1e5ca9" stroke="var(--surface)" stroke-width="1.5" data-tip="&lt;strong&gt;Physical Body&lt;/strong&gt; (Sthula Sharira)&lt;br&gt;avg 3.74 (n=423)"></polygon>
+        <text x="220" y="462.5" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Physical Body</text>
+        <text x="220" y="478.5" text-anchor="middle" font-size="10.5" fill="#ffffff">(Sthula Sharira) &middot; avg 3.74</text>
+      <rect x="209" y="229" width="22" height="22" fill="var(--surface)" stroke="var(--axis)" stroke-width="1.5"/>
+      
+    <text x="18" y="135" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1"
+      fill="var(--muted)" transform="rotate(-90 18 135)">INDIVIDUALITY</text>
+    <text x="18" y="370" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1"
+      fill="var(--muted)" transform="rotate(-90 18 370)">PERSONALITY</text>
+    </svg>
+    <div class="legend">
+      <span>2.85 (lowest)</span>
+      <div style="display:flex;gap:2px"><span class="legend-swatch" style="background:#cde2fb"></span><span class="legend-swatch" style="background:#9ec5f4"></span><span class="legend-swatch" style="background:#6da7ec"></span><span class="legend-swatch" style="background:#3987e5"></span><span class="legend-swatch" style="background:#256abf"></span><span class="legend-swatch" style="background:#184f95"></span><span class="legend-swatch" style="background:#0d366b"></span></div>
+      <span>4.03 (highest)</span>
+      <span style="margin-left:8px;color:var(--muted)">gray dashed = no linked variable</span>
+    </div>
+    <table class="data-table"><thead><tr><th>No.</th><th>Level</th><th>Technical name</th><th>Average score</th><th>N (person x variable)</th></tr></thead>
+      <tbody><tr><td>7</td><td>Atmic Body/Spirit</td><td>Atma</td><td>4.03</td><td>423</td></tr><tr><td>6</td><td>Buddhic Body</td><td>Buddhi</td><td>3.18</td><td>1269</td></tr><tr><td>5</td><td>Higher Mental Body</td><td>Abstract Manas</td><td>3.85</td><td>1692</td></tr><tr><td>4</td><td>Lower Mental Body</td><td>Concrete Manas</td><td>3.9</td><td>1269</td></tr><tr><td>3</td><td>Astral Body</td><td>Kama Rupa</td><td>3.77</td><td>1269</td></tr><tr><td>2</td><td>Vital/Etheric Body</td><td>Prana/Linga Sharira</td><td>2.85</td><td>846</td></tr><tr><td>1</td><td>Physical Body</td><td>Sthula Sharira</td><td>3.74</td><td>423</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    const svgEl = document.querySelector('.chart-svg');
+    const tableEl = document.querySelector('.data-table');
+    const showingTable = tableEl.classList.toggle('visible');
+    svgEl.classList.toggle('hidden-by-table', showingTable);
+    this.textContent = showingTable ? 'Show chart' : 'Show table';
+  });
+  
+    document.querySelectorAll('.chakra-mark').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });
+</script>
+</body>
+</html>

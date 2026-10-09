@@ -1,0 +1,9 @@
+{
+  "_comment": "Minimal intake stub for the legacy study (ID_STUDY=1), which was loaded by hand into Firebird before GDX_SKILL_NEW_STUDY existed -- see GDX_HUMAN7_DEVELOPMENT_KIT.md's note on GDX_SKILL_LOAD_NEW_STUDY_DW's legacy fallback and GoDataX_Human_7_Knowledge_Graph.md section 4/5. This file exists only so --study 1's intake.json/title lookup (shared by GDX_SKILL_GODATAX_HUMAN7_BY_SPU, GDX_SKILL_GODATAX_HUMAN7_LINK_PRED, GDX_SKILL_GODATAX_HUMAN7_COMMUNITY_DETECT) resolves to the correct GDX_PSY_STUDY row. title is copied verbatim from 2.relational.model.psychometrics/samples.SQL/01_load_study.sql.",
+  "study": {
+    "title": "Predictors of Adaptability to Military Higher Education",
+    "objective": "Identify psychological predictors (hardiness, engagement, positivity, satisfaction) of career adaptability in officer cadets.",
+    "method": "Self-report questionnaire battery administered to cadets at the Military Academy; data processed in SPSS.",
+    "status": "COMPLETED"
+  }
+}

@@ -1,9 +1,9 @@
 ---
-name: GDX_SKILL_TREATMENT_SUGGESTIONS
+name: GDX_SKILL_LINK_SUGGESTIONS
 description: Ranks the lowest-scoring psychometric indicators of ONE study (via --study <slug>) in GDX_HUMAN (7.multidimensional.database) and suggests, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which one addresses each one as a treatment suggestion. Writes a timestamped Markdown report to 12.gdx.virtology/. Use when the user asks for virtue/treatment suggestions based on a specific GDX_HUMAN study's psychometric data.
 ---
 
-# GDX_SKILL_TREATMENT_SUGGESTIONS
+# GDX_SKILL_LINK_SUGGESTIONS
 
 Reads the real, live average score of every psychometric variable that has a
 septenary-level mapping, **for one study**, ranks them from lowest to
@@ -40,7 +40,7 @@ never writes to Firebird or Neo4j.
   `scripts/virtue_knowledge.js`, keyed by the variable's `.sav` column
   (`DW_DIM_VARIABLE.SAV_COLUMN`) — same pattern as
   `GDX_SKILL_LOAD_SEPT_MAPS_DB/scripts/knowledge.js`. A variable with no
-  entry there is reported in the output as **"sem sugestão (revisar)"**,
+  entry there is reported in the output as **"no suggestion (review)"**,
   not silently skipped and not auto-assigned.
 - **Never claims clinical validity.** Every generated report repeats, near
   the top, the same methodological caveat already used in
@@ -50,7 +50,7 @@ never writes to Firebird or Neo4j.
 ## Running it
 
 ```
-cd 12.gdx.virtology/.claude/skills/GDX_SKILL_TREATMENT_SUGGESTIONS/scripts
+cd 12.gdx.virtology/.claude/skills/GDX_SKILL_LINK_SUGGESTIONS/scripts
 npm install                          # once, installs node-firebird
 node generate_suggestions.js --study <slug> --sample --dry-run   # sanity check: embedded sample data, prints only, writes nothing
 # copy ../.env.example to ../.env and fill in GDX_HUMAN_FB_PASSWORD, or export the vars directly
@@ -67,14 +67,14 @@ out with a clear message otherwise. In `--sample` mode, a missing
 `intake.json` is not an error: the report just falls back to a generic
 "Sample Study" title.
 
-Output: `12.gdx.virtology/Treatment_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`
+Output: `12.gdx.virtology/Link_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`
 (one file per run — old runs are never overwritten, so a history of
 analyses accumulates naturally in the folder, one thread per study).
 
 ## Extending it
 
-To add a suggestion for a variable the report currently lists as "sem
-sugestão", add an entry to `VARIABLE_VIRTUE_MAP` in
+To add a suggestion for a variable the report currently lists as "no
+suggestion", add an entry to `VARIABLE_VIRTUE_MAP` in
 `scripts/virtue_knowledge.js` (keyed by the exact `.sav` column name),
 with `behavior` (what the variable measures), `virtue` (the exact `pt` name
 from the `VIRTUES` list in the same file), and `justification` (why that
