@@ -1,6 +1,6 @@
 # GDX_HUMAN — Conceptual Associations Between Perspectives
 
-> Generated 2026-10-09T21:41:23.973Z by `GDX_SKILL_LIST_ASSOCIATIONS`.
+> Generated 2026-10-10T08:01:27.184Z by `GDX_SKILL_LIST_ASSOCIATIONS`.
 > Scope: the whole framework — **not** per study. Every row below is catalog/reference data (or code), the same for any study.
 > Source: DDL from `3.septenary.constitution`, `4.kundalini.chakras`, `5.five.ways.tomas.aquino`, `2.relational.model.psychometrics`, `7.multidimensional.database` — live read from localhost, plus the two `virtue_knowledge.js` files in `12.gdx.virtology` (those never touch Firebird).
 >
