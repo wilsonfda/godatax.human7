@@ -8,8 +8,6 @@ Direitos autorais © 2026 Wilson Farias Dantas de Andrade.
 
 **Repositório oficial:** `[https://github.com/wilsonfda/godatax.human7]`
 
-**Situação:** Minuta de licença personalizada para revisão jurídica antes da publicação.
-
 ## 1. Abrangência e definições
 
 Esta Licença aplica-se apenas ao código-fonte original, ao software, à documentação e aos demais materiais do GoDataX Human 7ph expressamente identificados como sujeitos a ela (os “Materiais Licenciados”).

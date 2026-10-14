@@ -8,8 +8,6 @@ Copyright © 2026 Wilson Farias Dantas de Andrade.
 
 **Official repository:** `[https://github.com/wilsonfda/godatax.human7]`
 
-**Status:** Custom license draft for legal review before publication.
-
 ## 1. Scope and definitions
 
 This License applies only to the original source code, software, documentation, and other materials of GoDataX Human 7ph expressly designated as subject to it (the “Licensed Materials”).
