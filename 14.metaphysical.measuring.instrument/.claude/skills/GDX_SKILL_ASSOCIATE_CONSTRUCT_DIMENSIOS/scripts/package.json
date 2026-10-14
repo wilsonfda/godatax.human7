@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-associate-construct-dimensios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB executor for the GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS skill: writes one interpretive correspondence at a time between a GDX_PSY_VARIABLE row and a Septenary Level (GDX_PSY_SEPT_LEVEL_PSY_MAP), a Way of Aquinas (GDX_TA_WAY_SEPT_MAP), or a Chakra (GDX_PSY_CHAKRA_VAR_MAP), over the Firebird wire protocol (no native client library needed).",
+  "main": "associate_variable.js",
+  "scripts": {
+    "associate": "node associate_variable.js",
+    "dry-run": "node associate_variable.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^1.1.9"
+  }
+}
