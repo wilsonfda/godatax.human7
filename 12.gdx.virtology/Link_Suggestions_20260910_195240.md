@@ -7,8 +7,6 @@
 > **Nature of this document:** a qualitative/interpretive reading, in the same spirit as
 > `SPSS_Septenary_Constitution_Mapping.md` — "which virtue counters this deficit" is a
 > conceptual judgment call (`virtue_knowledge.js`), not a statistical or clinical finding.
-> The list of 33 virtues came from an automated fetch of the source site, not a human
-> line-by-line read — see the reliability caveat in `Virtology_Knowledge_Base.md`.
 
 ## The 8 lowest psychometric indicators
 

@@ -80,12 +80,15 @@ const SAMPLE_CHAKRA_ROWS = [
   { ORDER_NUM: 7, SANSKRIT_NAME: 'Sahasrara', COMMON_NAME: 'Crown Chakra', LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', SEPTENARY_LEVEL_JUSTIFICATION: 'Corresponds to the Atmic Body/Spirit (level 7) -- both represent the top of the ladder of consciousness' },
 ];
 const SAMPLE_WAY_ROWS = [
-  { ORDER_NUM: 1, LATIN_NAME: 'Prima Via', ENGLISH_NAME: 'Argument from Motion', LEVEL_ORDER: 4, LEVEL_NAME: 'Lower Mental Body', CORRESPONDENCE_JUSTIFICATION: 'Reasons about concrete, observable change -- practical, this-worldly causal reasoning', CONFIDENCE_LEVEL: 'MEDIUM' },
-  { ORDER_NUM: 5, LATIN_NAME: 'Quinta Via', ENGLISH_NAME: 'Argument from the Governance of the World', LEVEL_ORDER: 6, LEVEL_NAME: 'Buddhic Body', CORRESPONDENCE_JUSTIFICATION: 'Recognizing purpose/design in nature is an act of grasping meaning beyond mechanical description', CONFIDENCE_LEVEL: 'SPECULATIVE' },
+  { ORDER_NUM: 1, LATIN_NAME: 'Prima Via', ENGLISH_NAME: 'Argument from Motion', LEVEL_ORDER: 4, LEVEL_NAME: 'Lower Mental Body', CORRESPONDENCE_JUSTIFICATION: 'Reasons about concrete, observable change -- practical, this-worldly causal reasoning', CONFIDENCE_LEVEL: 'MEDIUM', NUMBER_CONFIRMATIONS: 1 },
+  { ORDER_NUM: 5, LATIN_NAME: 'Quinta Via', ENGLISH_NAME: 'Argument from the Governance of the World', LEVEL_ORDER: 6, LEVEL_NAME: 'Buddhic Body', CORRESPONDENCE_JUSTIFICATION: 'Recognizing purpose/design in nature is an act of grasping meaning beyond mechanical description', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0 },
+];
+const SAMPLE_CHAKRA_VAR_ROWS = [
+  { ORDER_NUM: 2, SANSKRIT_NAME: 'Svadhisthana', COMMON_NAME: 'Sacral Chakra', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', RECORDED_BEHAVIOR: 'Vital energy invested in an activity', CORRESPONDENCE_JUSTIFICATION: 'Sacral chakra governs vital/creative energy, matching Vigor', CONFIDENCE_LEVEL: 'MEDIUM', NUMBER_CONFIRMATIONS: 1 },
 ];
 const SAMPLE_PSY_SEPT_ROWS = [
-  { LEVEL_ORDER: 2, LEVEL_NAME: 'Vital/Etheric Body', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition, energy, willingness to invest effort in studying', CORRESPONDENCE_JUSTIFICATION: 'Vigor is by definition vital energy applied to an activity -- a direct mapping', CONFIDENCE_LEVEL: 'HIGH' },
-  { LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', INSTRUMENT_LABEL: 'Block an1-an11 (undocumented, hypothesis)', VARIABLE_LABEL: 'Personal Fulfillment -> RealizPess', SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', CORRESPONDENCE_JUSTIFICATION: 'The name and semantics suggest the highest level of meaning, beyond the abstract mind', CONFIDENCE_LEVEL: 'SPECULATIVE' },
+  { LEVEL_ORDER: 2, LEVEL_NAME: 'Vital/Etheric Body', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition, energy, willingness to invest effort in studying', CORRESPONDENCE_JUSTIFICATION: 'Vigor is by definition vital energy applied to an activity -- a direct mapping', CONFIDENCE_LEVEL: 'HIGH', NUMBER_CONFIRMATIONS: 1 },
+  { LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', INSTRUMENT_LABEL: 'Block an1-an11 (undocumented, hypothesis)', VARIABLE_LABEL: 'Personal Fulfillment -> RealizPess', SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', CORRESPONDENCE_JUSTIFICATION: 'The name and semantics suggest the highest level of meaning, beyond the abstract mind', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0 },
 ];
 
 // ----------------------------------------------------------------------
@@ -163,7 +166,8 @@ async function fetchFiveWaysLinks(fbDb) {
   const rows = await fbQuery(fbDb, `
     SELECT W.ORDER_NUM AS ORDER_NUM, W.LATIN_NAME AS LATIN_NAME, W.ENGLISH_NAME AS ENGLISH_NAME,
            L.ORDER_NUM AS LEVEL_ORDER, L.NAME AS LEVEL_NAME,
-           M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION, M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL
+           M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION, M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL,
+           M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
     FROM GDX_TA_WAY_SEPT_MAP M
     JOIN GDX_TA_WAY W ON W.ID_WAY = M.ID_WAY
     JOIN GDX_PSY_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = M.ID_SEPTENARY_LEVEL
@@ -180,12 +184,29 @@ async function fetchFiveWaysVariableLinks(fbDb) {
            L.ORDER_NUM AS LEVEL_ORDER, L.NAME AS LEVEL_NAME,
            M.INSTRUMENT_LABEL AS INSTRUMENT_LABEL, M.VARIABLE_LABEL AS VARIABLE_LABEL,
            M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR, M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION,
-           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
     FROM GDX_TA_WAY_SEPT_MAP M
     JOIN GDX_TA_WAY W ON W.ID_WAY = M.ID_WAY
     JOIN GDX_PSY_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = M.ID_SEPTENARY_LEVEL
     WHERE M.ID_VARIABLE IS NOT NULL
     ORDER BY W.ORDER_NUM, M.ID_MAPPING`);
+  return rows;
+}
+
+async function fetchChakraVarLinks(fbDb) {
+  // Concrete instrument/variable rows linking a Kundalini Chakra to a
+  // psychometric/metaphysical variable (metaphysical_variable_chakra_map_firebird25.sql).
+  // Distinct from fetchChakraLinks: that one is the conceptual
+  // chakra<->septenary-level table (GDX_PSY_CHAKRA), which has no
+  // NUMBER_CONFIRMATIONS column; this one does.
+  const rows = await fbQuery(fbDb, `
+    SELECT C.ORDER_NUM AS ORDER_NUM, C.SANSKRIT_NAME AS SANSKRIT_NAME, C.COMMON_NAME AS COMMON_NAME,
+           M.INSTRUMENT_LABEL AS INSTRUMENT_LABEL, M.VARIABLE_LABEL AS VARIABLE_LABEL,
+           M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR, M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION,
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
+    FROM GDX_PSY_CHAKRA_VAR_MAP M
+    JOIN GDX_PSY_CHAKRA C ON C.ID_CHAKRA = M.ID_CHAKRA
+    ORDER BY C.ORDER_NUM, M.ID_MAPPING`);
   return rows;
 }
 
@@ -195,7 +216,7 @@ async function fetchPsySeptenaryLinks(fbDb) {
            M.INSTRUMENT_LABEL AS INSTRUMENT_LABEL, M.VARIABLE_LABEL AS VARIABLE_LABEL,
            DV.SAV_COLUMN AS SAV_COLUMN, V.VARIABLE_TYPE AS VARIABLE_TYPE,
            M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR, M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION,
-           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
     FROM GDX_PSY_SEPT_LEVEL_PSY_MAP M
     JOIN GDX_PSY_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = M.ID_SEPTENARY_LEVEL
     LEFT JOIN DW_DIM_VARIABLE DV ON DV.ID_VARIABLE = M.ID_VARIABLE
@@ -217,7 +238,11 @@ function confidenceCounts(rows, field) {
   return counts;
 }
 
-function buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample, host, timestamp }) {
+function sumConfirmations(rows) {
+  return rows.reduce((total, r) => total + (Number(r.NUMBER_CONFIRMATIONS) || 0), 0);
+}
+
+function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtue, sample, host, timestamp }) {
   const lines = [];
 
   lines.push('# GDX_HUMAN — Conceptual Associations Between Perspectives');
@@ -246,22 +271,38 @@ function buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample,
   }
   lines.push('');
 
+  // Section 1b: Metaphysical Variables <-> Chakras (GDX_PSY_CHAKRA_VAR_MAP)
+  if (chakraVarRows.length > 0) {
+    lines.push('## 1b. Metaphysical Variables ↔ Kundalini Chakras');
+    lines.push('');
+    lines.push(`Source: \`GDX_PSY_CHAKRA_VAR_MAP\` (14.metaphysical.measuring.instrument/metaphysical_variable_chakra_map_firebird25.sql) — **DATABASE**, ${chakraVarRows.length} concrete instrument/variable↔chakra correspondence(s).`);
+    lines.push('');
+    lines.push('| Chakra | Instrument | Variable | What it measures | Confidence | Confirmations | Justification |');
+    lines.push('|---|---|---|---|---|---|---|');
+    for (const r of chakraVarRows) {
+      lines.push(`| ${r.SANSKRIT_NAME} (${r.COMMON_NAME}) | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    }
+    lines.push('');
+    lines.push(`Confirmations total: ${sumConfirmations(chakraVarRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${chakraVarRows.length} row(s)).`);
+    lines.push('');
+  }
+
   // Section 2: Five Ways
   lines.push('## 2. The Five Ways (Aquinas) ↔ Septenary Constitution');
   lines.push('');
   lines.push(`Source: \`GDX_TA_WAY_SEPT_MAP\` (5.five.ways.tomas.aquino) × \`GDX_PSY_SEPTENARY_LEVEL\` — **DATABASE**, ${wayRows.length} of 5 ways.`);
   lines.push('');
-  lines.push('| Way | Septenary Level | Confidence | Justification |');
-  lines.push('|---|---|---|---|');
+  lines.push('| Way | Septenary Level | Confidence | Confirmations | Justification |');
+  lines.push('|---|---|---|---|---|');
   for (const r of wayRows) {
-    lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${r.CONFIDENCE_LEVEL} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
   }
   lines.push('');
   lines.push('**Note:** level 7 (Atmic Body/Spirit) was deliberately left without an associated way — the 5 ways converge on the same conclusion ("this all men call God"), so mapping any way to level 7 would make the relation trivial/uninformative (see the comment in `five_ways_septenary_map_firebird25.sql`).');
   lines.push('');
 
   const wayConf = confidenceCounts(wayRows, 'CONFIDENCE_LEVEL');
-  lines.push(`Confidence distribution: HIGH=${wayConf.HIGH}, MEDIUM=${wayConf.MEDIUM}, LOW=${wayConf.LOW}, SPECULATIVE=${wayConf.SPECULATIVE}.`);
+  lines.push(`Confidence distribution: HIGH=${wayConf.HIGH}, MEDIUM=${wayConf.MEDIUM}, LOW=${wayConf.LOW}, SPECULATIVE=${wayConf.SPECULATIVE}. Confirmations total: ${sumConfirmations(wayRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${wayRows.length} row(s)).`);
   lines.push('');
 
   // Section 2b: Five Ways <-> concrete metaphysical instrument/variable rows
@@ -270,11 +311,13 @@ function buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample,
     lines.push('');
     lines.push(`Source: \`GDX_TA_WAY_SEPT_MAP\` (same table as Section 2, extended by \`metaphysical_variable_way_map_firebird25.sql\`) — **DATABASE**, ${wayVarRows.length} concrete instrument/variable↔way correspondence(s), in addition to Section 2's 5 conceptual rows.`);
     lines.push('');
-    lines.push('| Way | Septenary Level | Instrument | Variable | What it measures | Confidence | Justification |');
-    lines.push('|---|---|---|---|---|---|---|');
+    lines.push('| Way | Septenary Level | Instrument | Variable | What it measures | Confidence | Confirmations | Justification |');
+    lines.push('|---|---|---|---|---|---|---|---|');
     for (const r of wayVarRows) {
-      lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+      lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
     }
+    lines.push('');
+    lines.push(`Confirmations total: ${sumConfirmations(wayVarRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${wayVarRows.length} row(s)).`);
     lines.push('');
   }
 
@@ -283,17 +326,17 @@ function buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample,
   lines.push('');
   lines.push(`Source: \`GDX_PSY_SEPT_LEVEL_PSY_MAP\` (3.septenary.constitution) × \`GDX_PSY_SEPTENARY_LEVEL\`, cross-referenced with \`DW_DIM_VARIABLE\` (7.multidimensional.database) just to bring in the real \`SAV_COLUMN\` — **DATABASE**, ${psyRows.length} cataloged correspondences.`);
   lines.push('');
-  lines.push('| Septenary Level | Instrument | Variable (.sav) | What it measures | Confidence | Justification |');
-  lines.push('|---|---|---|---|---|---|');
+  lines.push('| Septenary Level | Instrument | Variable (.sav) | What it measures | Confidence | Confirmations | Justification |');
+  lines.push('|---|---|---|---|---|---|---|');
   for (const r of psyRows) {
     const sav = r.SAV_COLUMN
       ? `\`${r.SAV_COLUMN}\``
       : (r.VARIABLE_TYPE === 'METAPHYSICS' ? '— (metaphysical instrument, no .sav)' : '— (not yet reconciled with the catalog)');
-    lines.push(`| #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${sav} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    lines.push(`| #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${sav} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
   }
   lines.push('');
   const psyConf = confidenceCounts(psyRows, 'CONFIDENCE_LEVEL');
-  lines.push(`Confidence distribution: HIGH=${psyConf.HIGH}, MEDIUM=${psyConf.MEDIUM}, LOW=${psyConf.LOW}, SPECULATIVE=${psyConf.SPECULATIVE}.`);
+  lines.push(`Confidence distribution: HIGH=${psyConf.HIGH}, MEDIUM=${psyConf.MEDIUM}, LOW=${psyConf.LOW}, SPECULATIVE=${psyConf.SPECULATIVE}. Confirmations total: ${sumConfirmations(psyRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${psyRows.length} row(s)).`);
   lines.push('');
 
   // Section 4: Psychometrics <-> Virtology (CODE-ONLY)
@@ -331,19 +374,23 @@ function buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample,
   lines.push('');
 
   // Summary
-  const totalDb = chakraRows.length + wayRows.length + wayVarRows.length + psyRows.length;
+  const totalDb = chakraRows.length + chakraVarRows.length + wayRows.length + wayVarRows.length + psyRows.length;
+  const totalConfirmations = sumConfirmations(chakraVarRows) + sumConfirmations(wayRows) + sumConfirmations(wayVarRows) + sumConfirmations(psyRows);
   lines.push('## Summary');
   lines.push('');
-  lines.push('| Perspective pair | # of associations | Where it lives |');
-  lines.push('|---|---|---|');
-  lines.push(`| Chakras ↔ Septenary Constitution | ${chakraRows.length} | Firebird — \`GDX_PSY_CHAKRA\` |`);
-  lines.push(`| Five Ways ↔ Septenary Constitution | ${wayRows.length} | Firebird — \`GDX_TA_WAY_SEPT_MAP\` |`);
-  if (wayVarRows.length > 0) {
-    lines.push(`| Metaphysical Variables ↔ Five Ways | ${wayVarRows.length} | Firebird — \`GDX_TA_WAY_SEPT_MAP\` |`);
+  lines.push('| Perspective pair | # of associations | Confirmations | Where it lives |');
+  lines.push('|---|---|---|---|');
+  lines.push(`| Chakras ↔ Septenary Constitution | ${chakraRows.length} | — (no \`NUMBER_CONFIRMATIONS\` column) | Firebird — \`GDX_PSY_CHAKRA\` |`);
+  if (chakraVarRows.length > 0) {
+    lines.push(`| Metaphysical Variables ↔ Chakras | ${chakraVarRows.length} | ${sumConfirmations(chakraVarRows)} | Firebird — \`GDX_PSY_CHAKRA_VAR_MAP\` |`);
   }
-  lines.push(`| Psychometrics ↔ Septenary Constitution | ${psyRows.length} | Firebird — \`GDX_PSY_SEPT_LEVEL_PSY_MAP\` |`);
-  lines.push(`| Psychometrics ↔ Virtues (Virtology) | ${virtue.rows.length} | Code — \`virtue_knowledge.js\` (×2 copies) |`);
-  lines.push(`| **Total cataloged associations** | **${totalDb + virtue.rows.length}** | ${totalDb} in the database + ${virtue.rows.length} in code only |`);
+  lines.push(`| Five Ways ↔ Septenary Constitution | ${wayRows.length} | ${sumConfirmations(wayRows)} | Firebird — \`GDX_TA_WAY_SEPT_MAP\` |`);
+  if (wayVarRows.length > 0) {
+    lines.push(`| Metaphysical Variables ↔ Five Ways | ${wayVarRows.length} | ${sumConfirmations(wayVarRows)} | Firebird — \`GDX_TA_WAY_SEPT_MAP\` |`);
+  }
+  lines.push(`| Psychometrics ↔ Septenary Constitution | ${psyRows.length} | ${sumConfirmations(psyRows)} | Firebird — \`GDX_PSY_SEPT_LEVEL_PSY_MAP\` |`);
+  lines.push(`| Psychometrics ↔ Virtues (Virtology) | ${virtue.rows.length} | — (code-only, no confirmations column) | Code — \`virtue_knowledge.js\` (×2 copies) |`);
+  lines.push(`| **Total cataloged associations** | **${totalDb + virtue.rows.length}** | **${totalConfirmations}** | ${totalDb} in the database + ${virtue.rows.length} in code only |`);
   lines.push('');
 
   lines.push('## Caveats');
@@ -352,6 +399,7 @@ function buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample,
   lines.push('2. The three Firebird tables don\'t share the same rigor: only `GDX_TA_WAY_SEPT_MAP` and `GDX_PSY_SEPT_LEVEL_PSY_MAP` have a per-row `CONFIDENCE_LEVEL`; `GDX_PSY_CHAKRA` has none.');
   lines.push('3. The Virtue association never went through a "capture knowledge → design schema → load into the database" step like the others — it remains code-only, manually duplicated across two skills.');
   lines.push('4. This command is read-only: it never writes to Firebird or Neo4j. The generated `.md` file is the only side effect.');
+  lines.push('5. `NUMBER_CONFIRMATIONS` (added by `confirmation_fields_association_maps_firebird25.sql`) counts independent corroborations of a correspondence, separate from `CONFIDENCE_LEVEL` (a self-assessed label). It exists on `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA_VAR_MAP`, and `GDX_TA_WAY_SEPT_MAP` only — not on `GDX_PSY_CHAKRA`.');
 
   return lines.join('\n') + '\n';
 }
@@ -362,6 +410,7 @@ async function main() {
   const timestamp = now.toISOString();
 
   let chakraRows;
+  let chakraVarRows;
   let wayRows;
   let wayVarRows;
   let psyRows;
@@ -370,6 +419,7 @@ async function main() {
   if (args.sample) {
     console.log('[SAMPLE] using embedded synthetic data for the Firebird-backed sections -- no DB connection.');
     chakraRows = SAMPLE_CHAKRA_ROWS;
+    chakraVarRows = SAMPLE_CHAKRA_VAR_ROWS;
     wayRows = SAMPLE_WAY_ROWS;
     wayVarRows = [];
     psyRows = SAMPLE_PSY_SEPT_ROWS;
@@ -388,6 +438,7 @@ async function main() {
     const fbDb = await fbConnect(fbOptions);
     try {
       chakraRows = await fetchChakraLinks(fbDb);
+      chakraVarRows = await fetchChakraVarLinks(fbDb);
       wayRows = await fetchFiveWaysLinks(fbDb);
       wayVarRows = await fetchFiveWaysVariableLinks(fbDb);
       psyRows = await fetchPsySeptenaryLinks(fbDb);
@@ -398,7 +449,7 @@ async function main() {
 
   const virtue = loadVirtueKnowledge();
 
-  const report = buildReport({ chakraRows, wayRows, wayVarRows, psyRows, virtue, sample: args.sample, host, timestamp });
+  const report = buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtue, sample: args.sample, host, timestamp });
 
   const outPath = args.out
     ? path.resolve(args.out)

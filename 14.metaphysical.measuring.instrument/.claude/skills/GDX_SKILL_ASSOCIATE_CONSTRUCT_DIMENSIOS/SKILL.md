@@ -1,6 +1,6 @@
 ---
 name: GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS
-description: Interactively associates ONE psychometric or metaphysical variable (GDX_PSY_VARIABLE, any VARIABLE_TYPE, from 2.relational.model.psychometrics) to a Septenary Constitution level (GDX_PSY_SEPT_LEVEL_PSY_MAP), a Way of Thomas Aquinas (GDX_TA_WAY_SEPT_MAP), or a Kundalini Chakra (GDX_PSY_CHAKRA_VAR_MAP) -- asking the user for the recorded behavior, the correspondence justification and the confidence level, never inventing them. Use when the user wants to connect/map/link a specific variable (e.g. an OT-7 metaphysical variable, or any existing psychometric variable) to one of these three frameworks, one association at a time -- not for onboarding a whole new study's variables in batch (that is GDX_SKILL_LOAD_SEPT_MAPS_DB's job).
+description: Interactively associates ONE psychometric or metaphysical variable (GDX_PSY_VARIABLE, any VARIABLE_TYPE, from 2.relational.model.psychometrics) to a Septenary Constitution level (GDX_PSY_SEPT_LEVEL_PSY_MAP), a Way of Thomas Aquinas (GDX_TA_WAY_SEPT_MAP), or a Kundalini Chakra (GDX_PSY_CHAKRA_VAR_MAP) -- asking the user for the recorded behavior, the correspondence justification, the confidence level, and (mandatory) who is confirming it and their institution, never inventing any of them. Also handles confirming an EXISTING association (adds a corroboration, +1 on NUMBER_CONFIRMATIONS, without touching its content). Use when the user wants to connect/map/link a specific variable (e.g. an OT-7 metaphysical variable, or any existing psychometric variable) to one of these three frameworks, or wants to confirm/corroborate one that already exists -- one association at a time, not for onboarding a whole new study's variables in batch (that is GDX_SKILL_LOAD_SEPT_MAPS_DB's job).
 ---
 
 # GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS
@@ -40,6 +40,33 @@ Use this skill when the user wants to connect/map/link one specific variable
 to the Septenary Constitution, a Way of Aquinas, or a Chakra. Use
 `GDX_SKILL_LOAD_SEPT_MAPS_DB` instead when onboarding a brand-new study's
 whole variable set to the Septenary Constitution in one pass.
+
+## Prerequisite: the confirmation columns
+
+All three target tables now carry `NUMBER_CONFIRMATIONS` (`INTEGER DEFAULT 0
+NOT NULL`), `CONFIRMATION_BY` (nullable), and `NAME_INSTITUTION` (nullable),
+added by
+`14.metaphysical.measuring.instrument/confirmation_fields_association_maps_firebird25.sql`.
+`NUMBER_CONFIRMATIONS` is a different concept from `CONFIDENCE_LEVEL`: it
+counts how many times the correspondence has been **independently
+corroborated**, not how confident the person who first recorded it was.
+`CONFIRMATION_BY`/`NAME_INSTITUTION` only ever hold the **most recent**
+confirmer -- they are overwritten, not appended, on every confirmation.
+
+This skill never leaves these three columns unset:
+
+- **Creating a new association** counts as its first confirmation. The
+  script always inserts `NUMBER_CONFIRMATIONS = 1` plus the confirmer's name
+  and institution -- both are **mandatory arguments** (`--confirmed-by`,
+  `--institution`), asked in conversation, never guessed or defaulted.
+- **Confirming an existing association** (the user has independently
+  reviewed/validated a row that's already there) is a separate action,
+  `--confirm <id_mapping>`: it increments `NUMBER_CONFIRMATIONS` by exactly
+  `+1` and overwrites `CONFIRMATION_BY`/`NAME_INSTITUTION` with this
+  confirmer. Same mandatory-argument rule applies. It never touches
+  `RECORDED_BEHAVIOR`/`CORRESPONDENCE_JUSTIFICATION`/`CONFIDENCE_LEVEL` --
+  that's `--update`'s job, kept deliberately separate because correcting the
+  content of a correspondence and corroborating it are different actions.
 
 ## Prerequisite for `--target chakra`
 
@@ -111,6 +138,9 @@ Ask the user for:
 - **Confidence level** (`--confidence`) — `HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE`,
   default `SPECULATIVE`. Same scale and same default as every other
   correspondence table in this framework.
+- **Who is confirming it** (`--confirmed-by`) and **their institution**
+  (`--institution`) — mandatory for every new association. Ask for both by
+  name; never reuse a name from a previous run without asking again.
 
 Never fill these in with a guess. If the user doesn't have an answer yet,
 stop and ask — do not proceed with a placeholder.
@@ -122,23 +152,38 @@ in the chosen target table (none of the three tables has a `UNIQUE` on
 `ID_VARIABLE`, so nothing in the database itself would stop a duplicate):
 
 - If one exists and `--allow-duplicate` was not passed, the script prints the
-  existing row(s) and writes nothing — tell the user, and ask whether they
-  want to `--update` the existing row instead, or really add a second one
-  (`--allow-duplicate`).
-- Otherwise, always run with `--dry-run` first, show the user the exact
-  `INSERT` it would run (variable, instrument, target, confidence), and only
-  re-run without `--dry-run` after they confirm.
+  existing row(s) (including its current `NUMBER_CONFIRMATIONS`) and writes
+  nothing — tell the user, and ask whether they want to:
+  - **`--confirm <id_mapping>`** — they're independently corroborating the
+    row that's already there, no content changes. Ask for `--confirmed-by`
+    and `--institution`, show the `--dry-run` (current → new
+    `NUMBER_CONFIRMATIONS`), confirm, then re-run without `--dry-run`.
+  - **`--update <id_mapping>`** — they want to correct the recorded
+    behavior/justification/confidence instead. This does not touch
+    `NUMBER_CONFIRMATIONS`.
+  - **`--allow-duplicate`** — they really want a second, independent row.
+- Otherwise (a genuinely new association), always run with `--dry-run`
+  first, show the user the exact `INSERT` it would run (variable,
+  instrument, target, confidence, confirmer, institution, starting
+  `NUMBER_CONFIRMATIONS = 1`), and only re-run without `--dry-run` after they
+  confirm.
 
 ## What it will never do
 
-- **Never invents the level/way/chakra, the recorded behavior, or the
-  justification.** Every one of these is a question to the user, never a
-  model guess.
+- **Never invents the level/way/chakra, the recorded behavior, the
+  justification, the confirmer's name, or their institution.** Every one of
+  these is a question to the user, never a model guess.
+- **Never inserts or confirms an association without `--confirmed-by` and
+  `--institution`.** Both are mandatory for `--confirm` and for every new
+  insert — there is no default, no reuse of a stale value.
 - **Never writes without a confirmed `--dry-run` first.**
 - **Never silently overwrites an existing association.** A variable that
   already has a row in the target table blocks a plain insert; only
-  `--update <id_mapping>` (explicit) or `--allow-duplicate` (explicit)
-  proceeds.
+  `--update <id_mapping>`, `--confirm <id_mapping>`, or `--allow-duplicate`
+  (all explicit) proceeds.
+- **Never bumps `NUMBER_CONFIRMATIONS` from `--update`.** Correcting content
+  and corroborating an association are different actions; only a new insert
+  (`= 1`) or `--confirm` (`+= 1`) changes that column.
 - **Never touches the fixed catalogs** (`GDX_PSY_SEPTENARY_LEVEL`,
   `GDX_TA_WAY`, `GDX_PSY_CHAKRA`) — only the three association tables.
 - **Never runs DDL.** `GDX_PSY_CHAKRA_VAR_MAP` must already exist for
@@ -156,29 +201,37 @@ npm install
 
 # Septenary Constitution
 node associate_variable.js --variable-id <id> --target septenary --level <1-7> \
-  --behavior "<text>" --justification "<text>" [--confidence HIGH|MEDIUM|LOW|SPECULATIVE] --dry-run
+  --behavior "<text>" --justification "<text>" \
+  --confirmed-by "<name>" --institution "<name>" \
+  [--confidence HIGH|MEDIUM|LOW|SPECULATIVE] --dry-run
 
 # Way of Aquinas (septenary level resolved automatically, not asked)
 node associate_variable.js --variable-id <id> --target way --way <1-5> \
-  --behavior "<text>" --justification "<text>" --dry-run
+  --behavior "<text>" --justification "<text>" \
+  --confirmed-by "<name>" --institution "<name>" --dry-run
 
 # Chakra (requires metaphysical_variable_chakra_map_firebird25.sql applied first)
 node associate_variable.js --variable-id <id> --target chakra --chakra <1-7> \
-  --behavior "<text>" --justification "<text>" --dry-run
+  --behavior "<text>" --justification "<text>" \
+  --confirmed-by "<name>" --institution "<name>" --dry-run
 
 # drop --dry-run once confirmed, to actually write the row
 
-# correcting an existing association
+# correcting an existing association's content (does NOT touch NUMBER_CONFIRMATIONS)
 node associate_variable.js --update <id_mapping> --target <septenary|way|chakra> \
   --behavior "<text>" --justification "<text>" --confidence <level> --dry-run
+
+# confirming/corroborating an existing association (NUMBER_CONFIRMATIONS += 1, content untouched)
+node associate_variable.js --confirm <id_mapping> --target <septenary|way|chakra> \
+  --confirmed-by "<name>" --institution "<name>" --dry-run
 ```
 
 ## Files in this skill
 
 - `scripts/associate_variable.js` — resolves the variable + instrument +
-  target catalog row live, checks for a duplicate, and inserts/updates the
-  correspondence row (Node.js + `node-firebird`, no native client library
-  required)
+  target catalog row live, checks for a duplicate, and inserts / updates /
+  confirms the correspondence row (Node.js + `node-firebird`, no native
+  client library required)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)
 
@@ -190,5 +243,9 @@ node associate_variable.js --update <id_mapping> --target <septenary|way|chakra>
 - `14.metaphysical.measuring.instrument/metaphysical_variable_chakra_map_firebird25.sql`
   — the DDL for the new `GDX_PSY_CHAKRA_VAR_MAP` table (apply once before
   using `--target chakra`).
+- `14.metaphysical.measuring.instrument/confirmation_fields_association_maps_firebird25.sql`
+  — the DDL that added `NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/
+  `NAME_INSTITUTION` to all three target tables (already applied; required
+  for `--confirmed-by`/`--institution`/`--confirm` to work).
 - `14.metaphysical.measuring.instrument/plan_to_GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS.md`
   — the design plan this skill was built from.

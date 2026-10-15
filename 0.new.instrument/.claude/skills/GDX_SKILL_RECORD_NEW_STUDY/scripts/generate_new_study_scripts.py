@@ -53,6 +53,14 @@ def load_validator():
     return module
 
 
+def default_variable_type(study):
+    """GDX_PSY_VARIABLE.VARIABLE_TYPE default for every variable in this intake,
+    derived from the study_type the interview asks first (GDX_SKILL_NEW_STUDY
+    SKILL.md step 1). Falls back to 'PSYCHOLOGICAL' for older intake files
+    written before study_type existed."""
+    return "METAPHYSICS" if study.get("study_type") == "METAPHYSICOMETRIC" else "PSYCHOLOGICAL"
+
+
 def slugify(text):
     text = re.sub(r"[^a-zA-Z0-9]+", "_", text.strip().lower())
     return re.sub(r"_+", "_", text).strip("_")[:60] or "instrument"
@@ -88,6 +96,12 @@ HEADER = """/* =================================================================
 
 """
 
+INSTRUMENT_HEADER_EXTRA = """/* study_type = {study_type!r} -> default GDX_PSY_VARIABLE.VARIABLE_TYPE = {var_type_default!r}
+   for every variable below, unless the intake set that variable's own
+   variable_type explicitly (check the INSERT INTO GDX_PSY_VARIABLE lines). */
+
+"""
+
 
 def gen_study_script(study, source_name):
     title = study["title"]
@@ -112,7 +126,7 @@ END
     return HEADER.format(title="Data load - GDX_PSY_STUDY", source=source_name) + body
 
 
-def gen_instrument_script(instrument, source_name):
+def gen_instrument_script(instrument, source_name, var_type_default, study_type=None):
     lines = []
     decl = ["DECLARE VARIABLE V_ID_PHENOMENON BIGINT;", "DECLARE VARIABLE V_ID_INSTRUMENT BIGINT;",
             "DECLARE VARIABLE V_ID_ITEM BIGINT;"]
@@ -174,7 +188,7 @@ def gen_instrument_script(instrument, source_name):
         vvar, ivar = variable_indicator_var[v["name"]]
         cvar = construct_var[v["construct_name"]]
         body.append(f"  INSERT INTO GDX_PSY_VARIABLE (ID_CONSTRUCT, NAME, DESCRIPTION, OPERATIONAL_DEFINITION, VARIABLE_TYPE, MEASUREMENT_LEVEL)")
-        body.append(f"    VALUES (:{cvar}, {sql_str(v['name'])}, {sql_str(v.get('description'))}, {sql_str(v.get('operational_definition'))}, {sql_str(v.get('variable_type', 'PSYCHOLOGICAL'))}, {sql_str(v.get('measurement_level'))})")
+        body.append(f"    VALUES (:{cvar}, {sql_str(v['name'])}, {sql_str(v.get('description'))}, {sql_str(v.get('operational_definition'))}, {sql_str(v.get('variable_type') or var_type_default)}, {sql_str(v.get('measurement_level'))})")
         body.append(f"    RETURNING ID_VARIABLE INTO :{vvar};")
         body.append(f"  INSERT INTO GDX_PSY_INDICATOR (ID_VARIABLE, NAME, DESCRIPTION, INDICATOR_TYPE, MEASUREMENT_UNIT, DIRECTION, MIN_VALUE, MAX_VALUE)")
         body.append(f"    VALUES (:{vvar}, {sql_str(v['indicator_name'])}, {sql_str(v.get('indicator_description'))}, {sql_str(v.get('indicator_type'))}, {sql_str(v.get('measurement_unit'))}, {sql_str(v.get('direction'))}, {sql_num(v.get('min_value'))}, {sql_num(v.get('max_value'))})")
@@ -207,6 +221,7 @@ def gen_instrument_script(instrument, source_name):
     full = "EXECUTE BLOCK AS\n" + "\n".join(decl) + "\nBEGIN\n" + "\n".join(body[1:])
     header = HEADER.format(title=f"Data load - GDX_PSY_INSTRUMENT '{instrument['name']}' and everything under it",
                             source=source_name)
+    header += INSTRUMENT_HEADER_EXTRA.format(study_type=study_type, var_type_default=var_type_default)
     return header + full + "\n"
 
 
@@ -235,6 +250,10 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     source_name = os.path.basename(args.intake_json)
 
+    var_type_default = default_variable_type(data["study"])
+    print(f"study_type={data['study'].get('study_type')!r} -> default VARIABLE_TYPE={var_type_default!r} "
+          f"(per-variable 'variable_type' in the intake overrides this where set)")
+
     study_path = os.path.join(out_dir, "01_new_study.sql")
     with open(study_path, "w", encoding="utf-8") as f:
         f.write(gen_study_script(data["study"], source_name))
@@ -244,7 +263,7 @@ def main():
         slug = slugify(instrument["name"])
         path = os.path.join(out_dir, f"02_new_instrument_{i:02d}_{slug}.sql")
         with open(path, "w", encoding="utf-8") as f:
-            f.write(gen_instrument_script(instrument, source_name))
+            f.write(gen_instrument_script(instrument, source_name, var_type_default, data["study"].get("study_type")))
         n_items = len(instrument["items"])
         n_vars = len(instrument["variables"])
         print(f"wrote {path}  ({n_vars} variable(s), {n_items} item(s))")

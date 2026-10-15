@@ -1,6 +1,7 @@
 {
   "_comment": "Worked example for GDX_SKILL_NEW_STUDY / GDX_SKILL_RECORD_NEW_STUDY. A short, fictitious 2-item scale, kept tiny on purpose to show every part of the shape (study, one instrument, one construct, one variable/indicator, one shared anchor set, two items feeding the same indicator, one of them reverse-scored). Real intakes will usually have many more items and possibly several variables per construct.",
   "study": {
+    "study_type": "PSYCHOMETRIC",
     "title": "Pilot Study of Workplace Resilience in Remote Teams",
     "objective": "Explore whether a short resilience scale predicts self-reported burnout in fully remote employees.",
     "method": "Cross-sectional online self-report questionnaire, single wave.",

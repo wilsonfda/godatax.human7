@@ -44,7 +44,12 @@
  *   --intake-dir     override the default new_study_intake/<slug>/ location.
  *   --top N          how many candidate levels to report per unmapped variable (default 3,
  *                    matching the design doc's "ranked top-3 list").
- *   --dry-run        run everything, print the report, write no file.
+ *   --dry-run        run everything, print the report, write no file -- AND skip the one real
+ *                    graph write this script makes (MERGE-materializing MAPS_TO_LEVEL). In
+ *                    dry-run, that step is replaced by a read-only count of whatever
+ *                    MAPS_TO_LEVEL edges a previous real run already materialized; if there
+ *                    are none yet, the console warns that the ranking will be meaningless
+ *                    (no positive examples to train on) until a real run has happened once.
  *
  * Connection: NEO4J_* environment variables only (see ../.env.example). Never hardcode
  * credentials here. Never connects to Firebird -- this reads the graph, nothing else.
@@ -169,12 +174,24 @@ async function main() {
 
     // Materialize the direct VARIABLE -> LEVEL relationship this model trains on, from the
     // (junction-table) mapping already in the graph. Idempotent (MERGE); owned by this skill.
-    const materialized = await session.run(`
-      MATCH (m:GDX_PSY_SEPT_LEVEL_PSY_MAP)-[:FK_GDX_PSY_SLPM_VARIABLE]->(v:GDX_PSY_VARIABLE)
-      MATCH (m)-[:FK_GDX_PSY_SLPM_LEVEL]->(l:GDX_PSY_SEPTENARY_LEVEL)
-      MERGE (v)-[:MAPS_TO_LEVEL]->(l)
-      RETURN count(*) AS n`);
-    console.log(`MAPS_TO_LEVEL materialized: ${toNum(materialized.records[0].get('n'))} edge(s).`);
+    // This is a real write to the graph, so -- unlike the read-only steps below -- it must be
+    // skipped in --dry-run (the one actual bug this gate fixes: every other write in this
+    // script is already --dry-run-safe, this MERGE used to run unconditionally).
+    if (!args.dryRun) {
+      const materialized = await session.run(`
+        MATCH (m:GDX_PSY_SEPT_LEVEL_PSY_MAP)-[:FK_GDX_PSY_SLPM_VARIABLE]->(v:GDX_PSY_VARIABLE)
+        MATCH (m)-[:FK_GDX_PSY_SLPM_LEVEL]->(l:GDX_PSY_SEPTENARY_LEVEL)
+        MERGE (v)-[:MAPS_TO_LEVEL]->(l)
+        RETURN count(*) AS n`);
+      console.log(`MAPS_TO_LEVEL materialized: ${toNum(materialized.records[0].get('n'))} edge(s).`);
+    } else {
+      const existing = await session.run(`MATCH (:GDX_PSY_VARIABLE)-[r:MAPS_TO_LEVEL]->(:GDX_PSY_SEPTENARY_LEVEL) RETURN count(r) AS n`);
+      const existingCount = toNum(existing.records[0].get('n'));
+      console.log(`[DRY RUN] Skipped MAPS_TO_LEVEL materialization (no write performed) -- ${existingCount} edge(s) already in the graph from a previous real run.`);
+      if (existingCount === 0) {
+        console.log('[DRY RUN] WARNING: MAPS_TO_LEVEL has never been materialized (0 edges) -- this dry-run has no positive examples to train on and its ranking will be meaningless. Run once without --dry-run first.');
+      }
+    }
 
     // --- graph projection + FastRP embeddings ---
     try { await session.run(`CALL gds.graph.drop($g, false)`, { g: GRAPH_NAME }); } catch (e) { /* didn't exist */ }

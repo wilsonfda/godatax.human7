@@ -57,6 +57,20 @@ before child). Keep questions natural/conversational -- do not read column names
 every answer you record must land in the field noted in parentheses. Skip a question and use a
 sensible default only for the fields marked *(optional)*; everything else is required.
 
+0. **Study type -- ask this FIRST, before the title or anything else** *(`study.study_type`, not a
+   `GDX_PSY_STUDY` column -- see `intake_schema.json`)*
+   - Is this a **psychometric** study (a standard psychological/behavioral instrument -- the usual
+     case, e.g. a Likert scale measuring Hardiness, Burnout, Engagement...) or a
+     **metaphysicometric** one (a metaphysical instrument in the GoDataX Human 7 framework, the way
+     OT-7 -- Purpose Orientation was onboarded, see `14.metaphysical.measuring.instrument/`)?
+   - Record it verbatim as `"PSYCHOMETRIC"` or `"METAPHYSICOMETRIC"`.
+   - This single answer sets the **default** `GDX_PSY_VARIABLE.VARIABLE_TYPE` that
+     `GDX_SKILL_RECORD_NEW_STUDY` will stamp on every variable you capture in step 5 below
+     (`'PSYCHOLOGICAL'` for PSYCHOMETRIC, `'METAPHYSICS'` for METAPHYSICOMETRIC) -- you do not need
+     to ask the type again per variable. Only come back to it per-variable (step 5's
+     `variable_type` override) for the rare study that genuinely mixes both kinds of variables under
+     one instrument.
+
 1. **The study** (`GDX_PSY_STUDY`)
    - Title *(TITLE, <=200 chars)*
    - What is it trying to find out? *(OBJECTIVE, optional)*
@@ -89,6 +103,10 @@ sensible default only for the fields marked *(optional)*; everything else is req
 
 5. **The variable(s)/dimension(s) inside each construct** (`GDX_PSY_VARIABLE` + `GDX_PSY_INDICATOR`)
    - Name, description, operational definition, measurement level (nominal/ordinal/interval/ratio).
+   - `VARIABLE_TYPE` already defaults to whatever step 0 answered (`PSYCHOLOGICAL`/`METAPHYSICS`) --
+     leave `variable_type` out of the intake for a normal, single-type study. Only set it explicitly
+     on a given variable if this one dimension is the opposite type from the rest of the study (a
+     mixed instrument); do not ask the user about it otherwise.
    - For the indicator (the actual calculation): a name (usually "`<Variable> (score)`"), how it's
      computed in words (mean of items? sum? something else -- `INDICATOR_TYPE`), the unit, the
      **direction** (does a *higher* raw score mean *more* of the construct, or less?), and the

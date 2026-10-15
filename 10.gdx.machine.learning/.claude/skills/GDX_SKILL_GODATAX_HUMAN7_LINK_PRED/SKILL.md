@@ -82,6 +82,12 @@ If a future Aura Graph Analytics release fixes this, Track B could be retired in
   list for a human to review — same discipline as `GDX_SKILL_LOAD_SEPT_MAPS_DB`'s own
   `knowledge.js`: accepting a suggestion still means adding it there by hand, with its own
   written justification.
+- **`--dry-run` performs no graph write at all.** The one real write this script makes --
+  `MERGE`-materializing the `MAPS_TO_LEVEL` relationship from the existing
+  `GDX_PSY_SEPT_LEVEL_PSY_MAP` mapping -- is skipped under `--dry-run`; it falls back to a
+  read-only count of whatever a previous real run already materialized (2026-10-15 fix: this
+  `MERGE` used to run unconditionally even under `--dry-run`, the one gap in an otherwise
+  consistent dry-run contract across this project's write-skills).
 - **Never claims a confident classification.** The report states the exact positive-example
   count every run (18 as of 2026-09-18/19, one more than the design doc's original 19-vs-7-level
   baseline mentioned — see `GoDataX_Human_7_DW.md`/`Dashboards_DW_Explanation.md` §11 in

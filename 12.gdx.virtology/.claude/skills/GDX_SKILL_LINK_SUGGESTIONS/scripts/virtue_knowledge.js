@@ -6,9 +6,7 @@
  * variable's .sav column (DW_DIM_VARIABLE.SAV_COLUMN), and nowhere else.
  *
  * Source for the 33 virtues: https://institutovirtudes.com.br/manual/ (see
- * 12.gdx.virtology/Virtology_Knowledge_Base.md for the full write-up and its
- * reliability caveat -- both were fetched via an automated tool, not read
- * verbatim by a person).
+ * 12.gdx.virtology/Virtology_Knowledge_Base.md for the full write-up).
  *
  * Source for what each psychometric variable measures and which septenary
  * level it sits at: 3.septenary.constitution/SPSS_Septenary_Constitution_

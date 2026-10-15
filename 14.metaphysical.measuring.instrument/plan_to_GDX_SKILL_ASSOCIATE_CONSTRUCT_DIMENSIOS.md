@@ -1,6 +1,10 @@
 # Plan: GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS
 
-Status: planning only, nothing implemented yet.
+Status: implemented. The sections below describe the original design and
+are kept as the historical record of that build (the "Open points" section
+at the end shows how each point was actually resolved). The "Confirmation
+tracking extension" section, added 2026-10-15, documents a later extension
+built on top of the original skill, after it was already in use.
 Target location: `14.metaphysical.measuring.instrument/.claude/skills/GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS/`
 
 ## Goal
@@ -184,6 +188,11 @@ node associate_variable.js --variable-id <id> --target chakra --chakra <1-7> \
 node associate_variable.js --update <id_mapping> --behavior "..." --justification "..."
 ```
 
+As actually implemented, every insert also requires `--confirmed-by` and
+`--institution`, and a fourth flag, `--confirm <id_mapping>`, was added for
+confirming an existing row without touching its content. See "Confirmation
+tracking extension" below for the full, up-to-date command shapes.
+
 ## Safety rules (what the skill will never do)
 
 - Never invents the level/way/chakra or the justification — that is always a
@@ -202,19 +211,96 @@ node associate_variable.js --update <id_mapping> --behavior "..." --justificatio
 - Never uses hardcoded Firebird credentials in the script — same rule as the
   sibling skills (`.env` gitignored, `.env.example` only as a template).
 
-## Open points to confirm before implementation
+## Confirmation tracking extension (2026-10-15)
 
-- Final skill name: this document uses
-  `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS` (the name requested for the plan
-  file); confirm whether this is the final name, or whether it was
-  `GDX_SKILL_ASSOCIATE_VARIABLE` (the name used in the earlier conversation)
-  with only the plan file itself named differently.
-- Whether the association should really stay at the **variable** level
-  (`GDX_PSY_VARIABLE`) as described above, or whether "CONSTRUCT_DIMENSIOS"
-  signals that the association should happen at the **construct** level
-  (`GDX_PSY_CONSTRUCT`) instead — today none of the three target tables has
-  an `ID_CONSTRUCT` column; that would require an additional schema change
-  beyond the one already noted for chakras.
-- Confirm the proposed new table name (`GDX_PSY_CHAKRA_VAR_MAP`) and DDL
-  script name (`metaphysical_variable_chakra_map_firebird25.sql`), or
-  provide different ones.
+After the skill above was built and in use, a separate schema change added
+corroboration tracking to all three target tables — not part of the original
+plan, so documented here as an addendum rather than rewritten into the
+sections above.
+
+### Schema change
+
+`14.metaphysical.measuring.instrument/confirmation_fields_association_maps_firebird25.sql`
+added three columns to `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA_VAR_MAP`,
+and `GDX_TA_WAY_SEPT_MAP` (the same three tables this skill writes to):
+
+- `NUMBER_CONFIRMATIONS` — `INTEGER DEFAULT 0 NOT NULL`. Counts how many
+  times the correspondence has been **independently corroborated** — a
+  different concept from `CONFIDENCE_LEVEL`, which only reflects how
+  confident the person who first recorded the row was.
+- `CONFIRMATION_BY` — `VARCHAR(160)`, nullable. Name of the **most recent**
+  confirmer only (overwritten, not appended, on every confirmation).
+- `NAME_INSTITUTION` — `VARCHAR(160)`, nullable. Institution of that same
+  most-recent confirmer.
+
+A companion DML script
+(`confirmation_fields_association_maps_dml_firebird25.sql`) set
+`NUMBER_CONFIRMATIONS = 1`, `CONFIRMATION_BY = 'WFDA'`,
+`NAME_INSTITUTION = 'Nova Acropole Lisboa'` on every row that already
+existed in the three tables at the time — treating each as already
+confirmed once, by the person who originally recorded it.
+
+### Skill changes to `associate_variable.js`
+
+- **`--confirmed-by "<name>"`** and **`--institution "<name>"`** — two new
+  flags, both **mandatory**, never defaulted or invented:
+  - Required on every new insert (the three `septenary`/`way`/`chakra`
+    flows). Creating a new association counts as its first confirmation, so
+    the `INSERT` now always sets `NUMBER_CONFIRMATIONS = 1` plus these two
+    columns, alongside the behavior/justification/confidence already asked
+    for.
+  - Required on the new `--confirm` action below.
+- **`--confirm <id_mapping>`** (new action, alongside the existing
+  `--update <id_mapping>`) — records a new, independent corroboration of a
+  row that already exists:
+  - `UPDATE <table> SET NUMBER_CONFIRMATIONS = NUMBER_CONFIRMATIONS + 1, CONFIRMATION_BY = <name>, NAME_INSTITUTION = <institution> WHERE ID_MAPPING = <id>`
+  - Never touches `RECORDED_BEHAVIOR`/`CORRESPONDENCE_JUSTIFICATION`/
+    `CONFIDENCE_LEVEL` — correcting content (`--update`) and corroborating a
+    correspondence (`--confirm`) are kept as deliberately separate actions.
+  - Mutually exclusive with `--update` (passing both is a startup error).
+  - `--update` itself was **not** changed to touch `NUMBER_CONFIRMATIONS` —
+    it still only edits content, exactly as before this extension.
+
+Updated command shapes:
+
+```
+# new association -- --confirmed-by and --institution are now mandatory
+node associate_variable.js --variable-id <id> --target septenary --level <1-7> \
+  --behavior "..." --justification "..." \
+  --confirmed-by "<name>" --institution "<name>" \
+  [--confidence HIGH|MEDIUM|LOW|SPECULATIVE] --dry-run
+
+# correcting an existing association's content -- NUMBER_CONFIRMATIONS untouched
+node associate_variable.js --update <id_mapping> --target <septenary|way|chakra> \
+  --behavior "..." --justification "..." --confidence <level> --dry-run
+
+# confirming/corroborating an existing association -- NUMBER_CONFIRMATIONS += 1
+node associate_variable.js --confirm <id_mapping> --target <septenary|way|chakra> \
+  --confirmed-by "<name>" --institution "<name>" --dry-run
+```
+
+### Safety rules added by this extension
+
+- Never inserts or confirms an association without `--confirmed-by` and
+  `--institution` — both mandatory, no default, no reuse of a value from an
+  earlier run without asking again.
+- Never lets `--update` and `--confirm` be combined — they are mutually
+  exclusive, since one edits content and the other only corroborates.
+- Never changes `NUMBER_CONFIRMATIONS` from `--update` — only a new insert
+  (sets it to `1`) or `--confirm` (`+= 1`) touches that column.
+
+## Open points to confirm before implementation (resolved)
+
+These were open questions at planning time; this section now records how
+each was actually resolved once the skill was built.
+
+- Final skill name: **`GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`**, as used
+  throughout this document — kept as the final name.
+- Association level: kept at the **variable** level (`GDX_PSY_VARIABLE`),
+  not the construct level — none of the three target tables gained an
+  `ID_CONSTRUCT` column; the "CONSTRUCT_DIMENSIOS" in the skill name did not
+  end up changing the association grain.
+- Table/script names: built exactly as proposed —
+  `GDX_PSY_CHAKRA_VAR_MAP` and
+  `metaphysical_variable_chakra_map_firebird25.sql`, both in
+  `14.metaphysical.measuring.instrument/`.

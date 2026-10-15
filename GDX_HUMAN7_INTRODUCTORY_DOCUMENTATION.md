@@ -204,8 +204,7 @@ scientifically validated causal relation, never diagnose).
 
 ### 4.11 `12.gdx.virtology/` — The 33 virtues and treatment suggestions
 
-`Virtology_Knowledge_Base.md` captures (via automated fetch, with a reliability caveat) Eduardo
-Casarotto's "Virtology" system — 33 ordered virtues, with Humility as the declared foundation,
+`Virtology_Knowledge_Base.md` captures Eduardo Casarotto's "Virtology" system — 33 ordered virtues, with Humility as the declared foundation,
 plus two hypothetical primitive neural systems (SNO/SNE) the virtues are claimed to neutralize.
 `GDX_SKILL_LINK_SUGGESTIONS` uses this base, together with a project-authored
 **variable→virtue** map (distinct from, and narrower than, virtue→neural-system, which remains

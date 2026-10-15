@@ -17,12 +17,12 @@ psychometric variable `ACconfianc` correspond to a virtue?
 Every other `GDX_SKILL_*` that reads `7.multidimensional.database` requires
 `--study <slug>` because it scores one study's participants. This skill
 takes **no `--study` flag at all** — every table it reads is a catalog /
-reference table (`GDX_PSY_CHAKRA`, `GDX_TA_WAY_SEPT_MAP`,
-`GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_SEPTENARY_LEVEL`), populated once for
-the whole framework, identical regardless of which study you're looking at.
-The one exception, `DW_DIM_VARIABLE`, is only joined in to recover each
-variable's real `.sav` column name (`SAV_COLUMN`) — never its per-study
-scores.
+reference table (`GDX_PSY_CHAKRA`, `GDX_PSY_CHAKRA_VAR_MAP`,
+`GDX_TA_WAY_SEPT_MAP`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`,
+`GDX_PSY_SEPTENARY_LEVEL`), populated once for the whole framework,
+identical regardless of which study you're looking at. The one exception,
+`DW_DIM_VARIABLE`, is only joined in to recover each variable's real `.sav`
+column name (`SAV_COLUMN`) — never its per-study scores.
 
 ## Two sources, two different epistemic weights — never blurred
 
@@ -30,14 +30,31 @@ scores.
    - `GDX_PSY_CHAKRA` (4.kundalini.chakras) → `GDX_PSY_SEPTENARY_LEVEL` —
      7 rows, ascending-order correspondence, **no `CONFIDENCE_LEVEL` column
      at all** (the load script's header calls the whole table symbolic/
-     interpretive, not graded row by row).
+     interpretive, not graded row by row). Also **no `NUMBER_CONFIRMATIONS`**
+     — that column was never added to this table (see below).
+   - `GDX_PSY_CHAKRA_VAR_MAP` (14.metaphysical.measuring.instrument) →
+     concrete instrument/variable ↔ chakra correspondences — graded with
+     `CONFIDENCE_LEVEL` + `RECORDED_BEHAVIOR` + `CORRESPONDENCE_JUSTIFICATION`
+     + `NUMBER_CONFIRMATIONS`.
    - `GDX_TA_WAY_SEPT_MAP` (5.five.ways.tomas.aquino) → `GDX_PSY_SEPTENARY_LEVEL`
      — 5 rows, **has** `CONFIDENCE_LEVEL` (`HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE`)
-     and a `CORRESPONDENCE_JUSTIFICATION` per row.
+     and a `CORRESPONDENCE_JUSTIFICATION` per row, plus `NUMBER_CONFIRMATIONS`.
    - `GDX_PSY_SEPT_LEVEL_PSY_MAP` (3.septenary.constitution) →
      `GDX_PSY_SEPTENARY_LEVEL` / psychometric variables — ~19 rows, also
      graded with `CONFIDENCE_LEVEL` + `RECORDED_BEHAVIOR` +
-     `CORRESPONDENCE_JUSTIFICATION`.
+     `CORRESPONDENCE_JUSTIFICATION` + `NUMBER_CONFIRMATIONS`.
+
+   `NUMBER_CONFIRMATIONS` (added by
+   `confirmation_fields_association_maps_firebird25.sql`, plus
+   `CONFIRMATION_BY`/`NAME_INSTITUTION` which this skill does not print) is
+   a separate concept from `CONFIDENCE_LEVEL`: it counts how many times a
+   correspondence has been **independently corroborated**, not how
+   confident the original author was. It exists only on
+   `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA_VAR_MAP`, and
+   `GDX_TA_WAY_SEPT_MAP` — never on `GDX_PSY_CHAKRA`, and never on the
+   code-only virtue map. Every table/section that has the column shows a
+   per-row count plus a summed total for that section, and the Summary
+   table sums it again across all sections.
 2. **Code-only** (never written to Firebird or Neo4j):
    - `virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP`, duplicated by design in
      `12.gdx.virtology/.claude/skills/GDX_SKILL_LINK_SUGGESTIONS/scripts/`
@@ -97,9 +114,10 @@ of the report is for.
 ## Files in this skill
 
 - `scripts/list_associations.js` — connects to Firebird (or uses `--sample`
-  data), reads the three DB-backed correspondence tables, `require()`s both
-  `virtue_knowledge.js` copies, cross-references by `.sav` column, and
-  writes/prints the consolidated report (Node.js + `node-firebird`, no
-  native client library required)
+  data), reads the four DB-backed correspondence tables (including
+  `GDX_PSY_CHAKRA_VAR_MAP` and each table's `NUMBER_CONFIRMATIONS`),
+  `require()`s both `virtue_knowledge.js` copies, cross-references by
+  `.sav` column, and writes/prints the consolidated report (Node.js +
+  `node-firebird`, no native client library required)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)

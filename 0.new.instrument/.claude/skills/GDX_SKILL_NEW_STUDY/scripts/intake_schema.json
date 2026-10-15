@@ -5,8 +5,9 @@
   "properties": {
     "study": {
       "type": "object",
-      "required": ["title"],
+      "required": ["title", "study_type"],
       "properties": {
+        "study_type": {"type": "string", "enum": ["PSYCHOMETRIC", "METAPHYSICOMETRIC"], "description": "Asked FIRST, before the title or anything else. Not persisted as its own GDX_PSY_STUDY column (the table has none) -- used only to set the default GDX_PSY_VARIABLE.VARIABLE_TYPE for every variable captured later in this intake ('PSYCHOLOGICAL' for PSYCHOMETRIC, 'METAPHYSICS' for METAPHYSICOMETRIC), unless a given variable explicitly sets its own variables[].variable_type."},
         "title": {"type": "string", "maxLength": 200, "description": "GDX_PSY_STUDY.TITLE"},
         "objective": {"type": ["string", "null"], "maxLength": 1000, "description": "GDX_PSY_STUDY.OBJECTIVE"},
         "method": {"type": ["string", "null"], "maxLength": 1000, "description": "GDX_PSY_STUDY.METHOD"},
@@ -54,7 +55,7 @@
                 "name": {"type": "string", "maxLength": 150, "description": "GDX_PSY_VARIABLE.NAME -- unique per construct."},
                 "description": {"type": ["string", "null"], "maxLength": 1000},
                 "operational_definition": {"type": ["string", "null"], "maxLength": 1000},
-                "variable_type": {"type": "string", "maxLength": 40, "default": "PSYCHOLOGICAL"},
+                "variable_type": {"type": ["string", "null"], "maxLength": 40, "description": "GDX_PSY_VARIABLE.VARIABLE_TYPE. Optional override -- when omitted, GDX_SKILL_RECORD_NEW_STUDY fills it in from study.study_type ('PSYCHOLOGICAL' for PSYCHOMETRIC, 'METAPHYSICS' for METAPHYSICOMETRIC). Only set this per-variable for the rare mixed study that has both psychometric and metaphysicometric variables under the same instrument."},
                 "measurement_level": {"type": ["string", "null"], "maxLength": 30, "description": "NOMINAL, ORDINAL, INTERVAL or RATIO."},
                 "indicator_name": {"type": "string", "maxLength": 150, "description": "GDX_PSY_INDICATOR.NAME -- unique per variable; usually '<Variable name> (score)'."},
                 "indicator_description": {"type": ["string", "null"], "maxLength": 1000},

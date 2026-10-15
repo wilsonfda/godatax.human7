@@ -59,6 +59,12 @@ by hand. Output goes next to the intake file unless `--out-dir <dir>` is given.
 - Item statement text, response alternatives and `REVERSED` flags read back correctly — this is the
   actual scientific content of the instrument; a mistake here is a data-quality bug, not a syntax
   one, and neither this script nor Firebird can catch it for you.
+- Each `INSERT INTO GDX_PSY_VARIABLE` row's `VARIABLE_TYPE` is the one you expect. It comes from
+  `intake.json`'s `study.study_type` (`'PSYCHOLOGICAL'` for a `PSYCHOMETRIC` study, `'METAPHYSICS'`
+  for a `METAPHYSICOMETRIC` one — asked as the very first question by `GDX_SKILL_NEW_STUDY`), unless
+  a given `variables[].variable_type` overrode it for a mixed study. The generator also prints this
+  default to stdout (`study_type=... -> default VARIABLE_TYPE=...`) and repeats it as a comment at
+  the top of every `02_new_instrument_*.sql` file.
 
 ## Step 2 — execute against the database
 

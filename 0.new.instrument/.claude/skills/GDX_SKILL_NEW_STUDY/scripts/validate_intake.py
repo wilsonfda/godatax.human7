@@ -47,6 +47,7 @@ MAX_LEN = {
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 STATUS_VALUES = {"PLANNED", "ACTIVE", "COMPLETED", "CANCELLED"}
+STUDY_TYPE_VALUES = {"PSYCHOMETRIC", "METAPHYSICOMETRIC"}
 
 
 class Problems:
@@ -76,7 +77,10 @@ def validate(data):
         p.add("$", "missing required top-level field 'study'")
     else:
         study = data["study"]
-        p.check_required(study, "study", "title")
+        p.check_required(study, "study", "title", "study_type")
+        study_type = study.get("study_type")
+        if study_type is not None and study_type not in STUDY_TYPE_VALUES:
+            p.add("study.study_type", f"must be one of {sorted(STUDY_TYPE_VALUES)}, got {study_type!r}")
         p.check_len("study.title", study.get("title"), "study.title")
         p.check_len("study.objective", study.get("objective"), "study.objective")
         p.check_len("study.method", study.get("method"), "study.method")

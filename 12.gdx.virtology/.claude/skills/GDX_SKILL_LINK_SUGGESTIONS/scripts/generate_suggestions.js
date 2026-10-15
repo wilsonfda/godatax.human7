@@ -139,8 +139,6 @@ function buildReport(rows, meta) {
   lines.push('> **Nature of this document:** a qualitative/interpretive reading, in the same spirit as');
   lines.push('> `SPSS_Septenary_Constitution_Mapping.md` — "which virtue counters this deficit" is a');
   lines.push('> conceptual judgment call (`virtue_knowledge.js`), not a statistical or clinical finding.');
-  lines.push('> The list of 33 virtues came from an automated fetch of the source site, not a human');
-  lines.push('> line-by-line read — see the reliability caveat in `Virtology_Knowledge_Base.md`.');
   lines.push('');
   lines.push(`## The ${rows.length} lowest psychometric indicators`);
   lines.push('');

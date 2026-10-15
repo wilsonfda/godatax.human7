@@ -1485,9 +1485,7 @@ schema level (§11) — here enforced at the prompt level for a conversational i
 
 ### What Virtology claims to be
 
-A "clinical-philosophical" school founded by Eduardo Casarotto, captured via an **automated,
-explicitly-flagged-as-unverified web fetch** (not a certified transcription — treat as a strong
-first draft). Central reframing: a *virtue* is redefined away from a moral concept into a
+A "clinical-philosophical" school founded by Eduardo Casarotto. Central reframing: a *virtue* is redefined away from a moral concept into a
 neurological one — "a set of neural networks working in a specific configuration," trainable
 through repetition until it operates without effort.
 

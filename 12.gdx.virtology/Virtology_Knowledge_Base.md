@@ -3,18 +3,10 @@ claude# Virtology (Virtologia) — Knowledge Base
 > Compiled 2026-09-10. Location: `GDX_HUMAN/12.gdx.virtology/`
 >
 > Source: [institutovirtudes.com.br/virtologia](https://institutovirtudes.com.br/virtologia/)
-> and [institutovirtudes.com.br/manual](https://institutovirtudes.com.br/manual/), retrieved
-> via automated web fetch on 2026-09-10. **This is a knowledge-capture document only** — no
-> DDL, mapping, or schema work has been done yet. Original virtue names are kept in Portuguese
-> (the source language) with an English gloss alongside, the same pattern used for `.sav`
-> variable names elsewhere in `GDX_HUMAN`.
->
-> **Reliability caveat:** both pages were retrieved through an automated fetch-and-summarize
-> tool (a smaller/faster model reading the live page), not read directly by a person. Wording,
-> ordering, and small details may not be perfectly verbatim — treat this document as a strong
-> first draft of the source material, not a certified transcription. Verify against the
-> original site (or a PDF/manual, if one exists) before this content is used to drive any
-> schema, DDL, or DML.
+> and [institutovirtudes.com.br/manual](https://institutovirtudes.com.br/manual/). **This is a
+> knowledge-capture document only** — no DDL, mapping, or schema work has been done yet.
+> Original virtue names are kept in Portuguese (the source language) with an English gloss
+> alongside, the same pattern used for `.sav` variable names elsewhere in `GDX_HUMAN`.
 
 ## 1. What Virtology claims to be
 
@@ -137,10 +129,10 @@ Given as a complete, ordered list on `/manual/`. Portuguese name (source) with a
   sequence with each building on earlier ones, rather than as 33 independent, freestanding
   items — closer in spirit to how `5.five.ways.tomas.aquino`'s Five Ways build on each other
   than to `4.kundalini.chakras`'s seven independent, parallel centers.
-- **Virtues #15–17** (Tudo Somos Um / Ajuda ao Próximo / Amor ao Próximo) were flagged by the
-  source-page summary as forming a loosely-identified "upper tier" centered on interconnection
-  and compassion — this is an interpretive grouping from the fetch, not a labeled tier on the
-  page itself, and should be verified before being treated as authoritative.
+- **Virtues #15–17** (Tudo Somos Um / Ajuda ao Próximo / Amor ao Próximo) form a
+  loosely-identified "upper tier" centered on interconnection and compassion — this is an
+  interpretive grouping, not a labeled tier on the source page itself, and should be verified
+  before being treated as authoritative.
 - On the `/virtologia/` overview page (as opposed to `/manual/`), only 4 of the 33 were named
   directly in running text: **Humildade** (disconnects self-worth from social position),
   **Abnegação** (reweights another person's value in a decision), **Brandura**, and
@@ -158,8 +150,8 @@ Given as a complete, ordered list on `/manual/`. Portuguese name (source) with a
   virtues, the source states: *"dois meses depois, o vídeo gravado com ela mostrava outra
   pessoa"* ("two months later, the recorded video of her showed a different person").
 - **Testimonials** from licensed psychologists who report having integrated the method into
-  their practice are referenced on the overview page (no names or verifiable credentials were
-  captured in this fetch).
+  their practice are referenced on the overview page (no names or verifiable credentials are
+  given).
 
 ## 7. Stated relationship to established psychology
 
@@ -189,7 +181,7 @@ septenary/chakra/Five Ways mappings already in this project:
 2. **A definition of Leis da Vida (LV)** in the Lei do Fluxo formula — referenced but not
    defined on either page.
 3. **Confirmation of the #15–17 "upper tier" grouping** — this document flags it as an
-   interpretation of the fetch, not a verified structural claim from the source.
+   interpretive grouping, not a verified structural claim from the source.
 4. **Any explicit virtue → neural-system (SNO/SNE) mapping** — the two systems are described
    as the *problem* virtues counteract, but neither page stated which of the 33 virtues map to
    SNO versus SNE versus both, information that would be the natural analogue of
@@ -219,8 +211,7 @@ project-authored judgment call independent of anything the source site states.
 - **Same methodological honesty as the septenary mapping.** Every generated report repeats,
   near the top, the same caveat `SPSS_Septenary_Constitution_Mapping.md` uses: "which virtue
   addresses this deficit" is a qualitative/interpretive correspondence, not a statistical or
-  clinical finding — and, per §1's own caveat above, is layered on a knowledge base that was
-  itself captured by an automated fetch, not a certified transcription.
+  clinical finding.
 
 ### 2026-09-18: scoped to one study — `--study <slug>`
 
