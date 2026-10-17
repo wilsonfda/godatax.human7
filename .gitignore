@@ -10,10 +10,32 @@ node_modules/
 .idea/
 .vscode/
 
-# Environment / secrets
+# Environment / secrets -- any Firebird, Neo4j, Google Forms OAuth, or other
+# personal/local credential must never be committed. Patterns with no leading
+# or inner slash match the filename at ANY depth in the tree (every skill's
+# own .env, wherever it lives), not just the repo root.
 .env
 !.env.example
 Neo4j-*-Created-*.txt
+google_token.json
+client_secret_*.json
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+service-account*.json
+secrets.json
+secrets.yaml
+secrets.yml
+
+# Firebird database files -- these hold the actual data (psychometric catalog,
+# and eventually real participant responses), not just credentials, and
+# should stay local rather than live in git history.
+*.gdb
+*.GDB
+*.fdb
+*.FDB
 
 # OS
 .DS_Store
