@@ -13,9 +13,14 @@
  *
  * Covers, in one run: 2.relational.model.psychometrics, 3_septenary.
  * constitution, 4.kundalini.chakras, 5.five.ways.tomas.aquino,
- * 6.cardiac.coherence, and 7.multidimensional.database (the DW) -- because
+ * 6.cardiac.coherence, 7.multidimensional.database (the DW), and (2026-10-15)
+ * 12.gdx.virtology (GDX_VT_VIRTUE, GDX_VT_VARIABLE_VIRTUE_MAP) -- because
  * all of those already live in the same Firebird database and all of their
- * tables match the prefixes above.
+ * tables match the prefixes above. GDX_VT_VARIABLE_VIRTUE_MAP's two foreign
+ * keys (-> GDX_PSY_VARIABLE, -> GDX_VT_VIRTUE) become real relationships in
+ * the graph the same way every other "_MAP" table's FKs do -- no special
+ * case needed, since this exporter was already schema-driven, not
+ * hardcoded, before this table existed.
  *
  * Usage:
  *   node export_graph.js --study <slug> [--dry-run] [--tables T1,T2,...] [--limit N] [--intake-dir <path>]
@@ -93,7 +98,9 @@ function loadIntake(args) {
  * resolved numeric studyId. A table with no entry here is exported in FULL,
  * regardless of --study -- it is shared reference/catalog data (septenary
  * levels, chakras, instrument/construct/variable/item definitions, devices,
- * the DW's calendar dimension, ...), the same "bootstrapped once, not
+ * the 33 Virtology virtues and their variable correspondences
+ * (GDX_VT_VIRTUE, GDX_VT_VARIABLE_VIRTUE_MAP), the DW's calendar dimension,
+ * ...), the same "bootstrapped once, not
  * scoped by study" philosophy GDX_SKILL_LOAD_NEW_STUDY_DW already documents
  * for its own global dimensions. Filtering catalogs too would risk starving
  * a relationship of its parent node for no real benefit -- they are small

@@ -8,8 +8,16 @@
  * DW_DIM_VARIABLE), ranks them descending (the highest scores are read as
  * potential strengths already present), and for each one looks up a
  * corresponding virtue -- out of the 33 catalogued in
- * 12.gdx.virtology/Virtology_Knowledge_Base.md -- from the fixed judgment
- * call in scripts/virtue_knowledge.js.
+ * 12.gdx.virtology/Virtology_Knowledge_Base.md -- from GDX_VT_VARIABLE_VIRTUE_MAP
+ * joined to GDX_VT_VIRTUE in Firebird (12.gdx.virtology/virtology_model_firebird25.sql),
+ * reading the JUSTIFICATION_STRENGTH column (this skill's strength/already-present framing).
+ *
+ * 2026-10-15: switched from requiring scripts/virtue_knowledge.js (a
+ * code-only, hand-written JS map) to this live DB read -- the table is now
+ * the source of truth for this skill. virtue_knowledge.js still exists (two
+ * copies, one per sibling skill) only because GDX_SKILL_LIST_ASSOCIATIONS's
+ * code-vs-database sync check still reads both of them directly; it is no
+ * longer required by this script.
  *
  * This is a read-only skill: it never writes to Firebird or Neo4j, and
  * (unlike GDX_SKILL_LINK_SUGGESTIONS) it never writes a file at all -- the
@@ -32,7 +40,6 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
-const { virtueByPt, VARIABLE_VIRTUE_MAP } = require('./virtue_knowledge');
 
 function parseArgs(argv) {
   const args = { top: 3, sample: false, study: null, intakeDir: null };
@@ -106,6 +113,43 @@ const SAMPLE_ROWS = [
   { SAV_COLUMN: 'HARDcompromis', VARIABLE_NAME: 'Commitment', LEVEL_NAME: 'Buddhic Body', AVG_SCORE: 4.22, N: 423 },
 ];
 
+// Synthetic virtue-map data for --sample (no DB connection), covering exactly
+// the SAV_COLUMNs used in SAMPLE_ROWS above -- values mirror the real rows in
+// GDX_VT_VARIABLE_VIRTUE_MAP (virtology_model_firebird25.sql) as of 2026-10-15.
+const SAMPLE_VIRTUE_MAP = {
+  RealizPess: { behavior: 'Sense of ultimate fulfillment, purpose achieved', virtuePt: 'Individuação', virtueEn: 'Individuation', virtueOrder: 2, justification: 'An already-high sense of personal fulfillment is the direct psychological correlate of an Individuation process already underway -- the Self already on its way to integration' },
+  ENGAGdedicac: { behavior: 'Enthusiasm, pride, and meaning attributed to the student role', virtuePt: 'Fé', virtueEn: 'Faith', virtueOrder: 14, justification: 'Enthusiasm and meaning already attributed to the student role show an investment of identity sustained by something beyond the immediate outcome -- the already-active core of Faith' },
+  ACconfianc: { behavior: 'Self-efficacy projected onto the professional future', virtuePt: 'Otimismo', virtueEn: 'Optimism', virtueOrder: 11, justification: 'High confidence in one\'s own professional future is, by definition, an already-sustained positive expectation -- Optimism in exercise' },
+  SATISFVIDA: { behavior: 'Global affective evaluation of one\'s own life', virtuePt: 'Aceitação', virtueEn: 'Acceptance', virtueOrder: 9, justification: 'High life satisfaction is the affective portrait of already accepting life as it is -- a sign that Acceptance is already present and sustaining that positive global evaluation' },
+  HARDcompromis: { behavior: 'Engagement with values and life purpose (not just the task)', virtuePt: 'Fé', virtueEn: 'Faith', virtueOrder: 14, justification: 'High engagement with values and life purpose indicates a Faith already sustaining that long-term commitment' },
+};
+
+/** Reads the variable<->virtue correspondence live from GDX_VT_VARIABLE_VIRTUE_MAP
+ * joined to GDX_VT_VIRTUE, keyed by SAV_COLUMN -- the DB-backed replacement
+ * for virtue_knowledge.js's VARIABLE_VIRTUE_MAP. Returns a plain object,
+ * same shape as SAMPLE_VIRTUE_MAP above, reading JUSTIFICATION_STRENGTH
+ * (this skill's strength/already-present framing -- GDX_SKILL_LINK_SUGGESTIONS
+ * reads JUSTIFICATION_DEFICIT instead). */
+async function fetchVirtueMap(fbDb) {
+  const rows = await fbQuery(fbDb, `
+    SELECT M.SAV_COLUMN AS SAV_COLUMN, M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR,
+           M.JUSTIFICATION_STRENGTH AS JUSTIFICATION_STRENGTH,
+           V.NAME_PT AS VIRTUE_NAME_PT, V.NAME_EN AS VIRTUE_NAME_EN, V.ORDER_NUM AS VIRTUE_ORDER_NUM
+    FROM GDX_VT_VARIABLE_VIRTUE_MAP M
+    JOIN GDX_VT_VIRTUE V ON V.ID_VIRTUE = M.ID_VIRTUE`);
+  const map = {};
+  for (const r of rows) {
+    map[r.SAV_COLUMN] = {
+      behavior: r.RECORDED_BEHAVIOR,
+      virtuePt: r.VIRTUE_NAME_PT,
+      virtueEn: r.VIRTUE_NAME_EN,
+      virtueOrder: r.VIRTUE_ORDER_NUM,
+      justification: r.JUSTIFICATION_STRENGTH,
+    };
+  }
+  return map;
+}
+
 async function fetchHighestIndicators(fbDb, top, studyId) {
   const rows = await fbQuery(fbDb, `
     SELECT V.SAV_COLUMN AS SAV_COLUMN, V.NAME AS VARIABLE_NAME, L.NAME AS LEVEL_NAME,
@@ -120,7 +164,7 @@ async function fetchHighestIndicators(fbDb, top, studyId) {
   return rows.slice(0, top);
 }
 
-function buildReport(rows, meta) {
+function buildReport(rows, virtueMap, meta) {
   const unresolved = [];
   const lines = [];
 
@@ -129,14 +173,14 @@ function buildReport(rows, meta) {
   lines.push(`> Generated ${meta.timestamp} by \`GDX_SKILL_IDENTIFY_VIRTUES\`.`);
   lines.push(`> Study: **${meta.studyTitle}** (slug \`${meta.studySlug}\`, \`ID_STUDY=${meta.studyId ?? '(sample)'}\`) — every score below is this one study's own average, never blended with another study's participants.`);
   lines.push(`> Source: \`7.multidimensional.database\` (\`DW_FACT_PSY_VARIABLE_RESULT\` × \`DW_DIM_VARIABLE\` × \`DW_DIM_SEPTENARY_LEVEL\` × \`DW_DIM_PERSON\`)${meta.sample ? ' — **SAMPLE DATA, not a live read**' : ` — live read from ${meta.host}`}.`);
-  lines.push('> Virtue catalog: `12.gdx.virtology/Virtology_Knowledge_Base.md` (33 virtudes, institutovirtudes.com.br).');
+  lines.push('> Virtue catalog: `GDX_VT_VIRTUE` × `GDX_VT_VARIABLE_VIRTUE_MAP` (Firebird, `12.gdx.virtology/virtology_model_firebird25.sql`) — 33 virtudes, institutovirtudes.com.br.');
   lines.push('>');
   lines.push('> **Natureza deste documento:** o oposto de `GDX_SKILL_LINK_SUGGESTIONS` — ali, o score');
   lines.push('> mais baixo aponta um déficit e a virtude sugerida é um alvo de tratamento; aqui, o');
   lines.push('> score mais alto é lido como um recurso/força **já presente**, e a virtude apontada é');
   lines.push('> um potencial já manifestado nesta população — mesmo julgamento conceitual');
-  lines.push('> (`virtue_knowledge.js`), não um achado estatístico ou clínico. Este comando não');
-  lines.push('> escreve nenhum arquivo: o resultado é só o que aparece na tela.');
+  lines.push('> (`GDX_VT_VARIABLE_VIRTUE_MAP.JUSTIFICATION_STRENGTH`), não um achado estatístico ou');
+  lines.push('> clínico. Este comando não escreve nenhum arquivo: o resultado é só o que aparece na tela.');
   lines.push('>');
   lines.push('> Este comando não avalia, por variável, se "score alto" é desejável (ex.: uma');
   lines.push('> variável de polo negativo, como emoções negativas, teria score alto lido como');
@@ -153,23 +197,22 @@ function buildReport(rows, meta) {
     const varName = (row.VARIABLE_NAME || savCol).trim();
     const levelName = (row.LEVEL_NAME || '').trim();
     const score = Number(row.AVG_SCORE).toFixed(2);
-    const knowledge = VARIABLE_VIRTUE_MAP[savCol];
+    const knowledge = virtueMap[savCol];
 
     if (!knowledge) {
       unresolved.push(savCol || varName);
-      lines.push(`| ${varName} (${levelName}) | ${score} | — | **sem virtude identificada (revisar)** | \`${savCol}\` não está em \`virtue_knowledge.js\` — adicione uma entrada e rode de novo |`);
+      lines.push(`| ${varName} (${levelName}) | ${score} | — | **sem virtude identificada (revisar)** | \`${savCol}\` não está em \`GDX_VT_VARIABLE_VIRTUE_MAP\` — adicione uma linha e rode de novo |`);
       continue;
     }
 
-    const virtue = virtueByPt(knowledge.virtue);
-    lines.push(`| ${varName} (${levelName}) | ${score} | ${knowledge.behavior} | **${virtue.pt}** (${virtue.en}, #${virtue.n}) | ${knowledge.justification} |`);
+    lines.push(`| ${varName} (${levelName}) | ${score} | ${knowledge.behavior} | **${knowledge.virtuePt}** (${knowledge.virtueEn}, #${knowledge.virtueOrder}) | ${knowledge.justification} |`);
   }
 
   lines.push('');
   if (unresolved.length > 0) {
     lines.push(`## Indicadores sem virtude identificada (${unresolved.length})`);
     lines.push('');
-    lines.push(`Sem entrada em \`virtue_knowledge.js\` ainda: ${unresolved.map((c) => `\`${c}\``).join(', ')}. Adicione o julgamento de qual virtude se aplica e rode a skill de novo — nenhuma virtude é adivinhada automaticamente.`);
+    lines.push(`Sem linha em \`GDX_VT_VARIABLE_VIRTUE_MAP\` ainda: ${unresolved.map((c) => `\`${c}\``).join(', ')}. Adicione o julgamento de qual virtude se aplica e rode a skill de novo — nenhuma virtude é adivinhada automaticamente.`);
     lines.push('');
   }
 
@@ -207,9 +250,12 @@ async function main() {
   let fbDb = null;
   let studyId = null;
 
+  let virtueMap;
+
   if (args.sample) {
     console.log('[SAMPLE] using embedded synthetic data -- no Firebird connection.');
     rows = SAMPLE_ROWS.slice(0, args.top);
+    virtueMap = SAMPLE_VIRTUE_MAP;
   } else {
     const fbOptions = {
       host: requireEnv('GDX_HUMAN_FB_HOST'),
@@ -227,6 +273,7 @@ async function main() {
       studyId = await resolveStudyId(fbDb, studyTitle, args.study);
       console.log(`Resolved study "${studyTitle}" (slug "${args.study}") -> ID_STUDY=${studyId}.`);
       rows = await fetchHighestIndicators(fbDb, args.top, studyId);
+      virtueMap = await fetchVirtueMap(fbDb);
     } finally {
       fbDb.detach();
     }
@@ -237,7 +284,7 @@ async function main() {
     return;
   }
 
-  const report = buildReport(rows, {
+  const report = buildReport(rows, virtueMap, {
     timestamp: now.toISOString(),
     sample: args.sample,
     host,

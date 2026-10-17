@@ -8,8 +8,21 @@
  * embeddings over the knowledge graph GDX_SKILL_GODATAX_HUMAN7_BY_SPU (9.knowledge.graph)
  * writes.
  *
+ * 2026-10-15: extended to ALSO suggest which of the 33 Virtology virtues
+ * (GDX_VT_VIRTUE) a variable with no existing GDX_VT_VARIABLE_VIRTUE_MAP row most
+ * likely corresponds to -- same model, same embedding space (one graph projection now
+ * includes both targets), a second MAPS_TO_VIRTUE relationship materialized the same
+ * way MAPS_TO_LEVEL already was, and a second in-process classifier trained the same
+ * way (own training set, own negatives -- septenary-level and virtue link prediction
+ * are different tasks over the same embeddings, not one combined task). Kept as one
+ * script/one skill (not a separate "Model 2") because the only things that differ are
+ * the target label and the materialized relationship -- everything else (embeddings,
+ * Track B design, Track A's AUCPR-only role, the --dry-run write gate) is identical.
+ *
  * Reads ONLY from Neo4j -- never connects to Firebird. The graph must already have been
- * populated by GDX_SKILL_GODATAX_HUMAN7_BY_SPU for the study passed via --study.
+ * populated by GDX_SKILL_GODATAX_HUMAN7_BY_SPU for the study passed via --study (and, for
+ * the virtue suggestions, GDX_VT_VIRTUE/GDX_VT_VARIABLE_VIRTUE_MAP must be in that export's
+ * scope -- true since GDX_SKILL_GODATAX_HUMAN7_BY_SPU's 2026-10-15 GDX_VT_* extension).
  *
  * Two-track design (see "Why a custom classifier" below):
  *   Track A -- gds.beta.pipeline.linkPrediction (the full GDS pipeline: FastRP + a
@@ -38,18 +51,20 @@
  *                    a GDX_PSY_STUDY node for this study already exists in the graph (i.e.
  *                    GDX_SKILL_GODATAX_HUMAN7_BY_SPU has run for it) before doing anything
  *                    else -- this model's own subgraph (variables/constructs/instruments/
- *                    levels/chakras/ways) is global catalog data, not study-scoped, so
+ *                    levels/chakras/ways/virtues) is global catalog data, not study-scoped, so
  *                    --study does not filter it (see SKILL.md); it is the run's identity
  *                    check and appears in the report header.
  *   --intake-dir     override the default new_study_intake/<slug>/ location.
- *   --top N          how many candidate levels to report per unmapped variable (default 3,
- *                    matching the design doc's "ranked top-3 list").
- *   --dry-run        run everything, print the report, write no file -- AND skip the one real
- *                    graph write this script makes (MERGE-materializing MAPS_TO_LEVEL). In
- *                    dry-run, that step is replaced by a read-only count of whatever
- *                    MAPS_TO_LEVEL edges a previous real run already materialized; if there
- *                    are none yet, the console warns that the ranking will be meaningless
- *                    (no positive examples to train on) until a real run has happened once.
+ *   --top N          how many candidates to report per unmapped variable, for EACH target
+ *                    (levels and virtues separately -- default 3, matching the design doc's
+ *                    "ranked top-3 list").
+ *   --dry-run        run everything, print the report, write no file -- AND skip the two real
+ *                    graph writes this script makes (MERGE-materializing MAPS_TO_LEVEL and
+ *                    MAPS_TO_VIRTUE). In dry-run, each is replaced by a read-only count of
+ *                    whatever edges a previous real run already materialized; if either is
+ *                    zero, the console warns that the corresponding ranking will be
+ *                    meaningless (no positive examples to train on) until a real run has
+ *                    happened once.
  *
  * Connection: NEO4J_* environment variables only (see ../.env.example). Never hardcode
  * credentials here. Never connects to Firebird -- this reads the graph, nothing else.
@@ -69,10 +84,12 @@ const EMBEDDING_DIM_INT = neo4j.int(EMBEDDING_DIM); // neo4j-driver params: a pl
 // only values passed via $params do.
 
 const NODE_LABELS = ['GDX_PSY_VARIABLE', 'GDX_PSY_CONSTRUCT', 'GDX_PSY_INSTRUMENT', 'GDX_PSY_SEPTENARY_LEVEL',
-  'GDX_PSY_CHAKRA', 'GDX_TA_WAY', 'GDX_PSY_SEPT_LEVEL_PSY_MAP', 'GDX_TA_WAY_SEPT_MAP', 'GDX_PSY_INSTRUMENT_CONSTRUCT'];
+  'GDX_PSY_CHAKRA', 'GDX_TA_WAY', 'GDX_PSY_SEPT_LEVEL_PSY_MAP', 'GDX_TA_WAY_SEPT_MAP', 'GDX_PSY_INSTRUMENT_CONSTRUCT',
+  'GDX_VT_VIRTUE', 'GDX_VT_VARIABLE_VIRTUE_MAP'];
 const REL_TYPES = ['FK_GDX_PSY_VARIABLE_CONSTRUCT', 'FK_GDX_PSY_IC_CONSTRUCT', 'FK_GDX_PSY_IC_INSTRUMENT',
   'FK_GDX_PSY_CHAKRA_LEVEL', 'FK_GDX_PSY_CONSTRUCT_PARENT', 'FK_GDX_PSY_SLPM_INSTRUMENT',
-  'FK_GDX_PSY_SLPM_LEVEL', 'FK_GDX_PSY_SLPM_VARIABLE', 'FK_GDX_TA_WSM_LEVEL', 'FK_GDX_TA_WSM_WAY', 'MAPS_TO_LEVEL'];
+  'FK_GDX_PSY_SLPM_LEVEL', 'FK_GDX_PSY_SLPM_VARIABLE', 'FK_GDX_TA_WSM_LEVEL', 'FK_GDX_TA_WSM_WAY',
+  'FK_GDX_VT_VVM_VIRTUE', 'FK_GDX_VT_VVM_VARIABLE', 'MAPS_TO_LEVEL', 'MAPS_TO_VIRTUE'];
 
 function parseArgs(argv) {
   const args = { study: null, intakeDir: null, top: 3, dryRun: false };
@@ -144,6 +161,56 @@ function mulberry32(seed) {
   };
 }
 
+/** Track B for ONE target label (septenary level, or -- 2026-10-15 -- virtue): builds the
+ * (feature, label) training set from real positive edges + deterministically-sampled
+ * non-edges, trains an in-process logistic regression, and scores every (unmapped
+ * variable, target) candidate. `varName` maps nodeId -> name; `targetMeta` maps nodeId ->
+ * an object that MUST include a `name` field (used to match against `positivePairs`, keyed
+ * "varName::targetName") plus whatever else the caller wants echoed into the report (e.g.
+ * `order` for levels, `namePt`/`nameEn`/`order` for virtues). `seed` must differ between
+ * calls sharing the same process run so the two targets don't sample identical negatives. */
+function scoreCandidates({ varIdList, varVec, varName, targetIdList, targetVec, targetMeta, positivePairs, top, seed }) {
+  const positives = [];
+  for (const vId of varIdList) {
+    for (const tId of targetIdList) {
+      const key = `${varName[vId]}::${targetMeta[tId].name}`;
+      if (positivePairs.has(key)) positives.push({ f: hadamard(varVec[vId], targetVec[tId]), label: 1 });
+    }
+  }
+  const allNonEdges = [];
+  for (const vId of varIdList) {
+    for (const tId of targetIdList) {
+      const key = `${varName[vId]}::${targetMeta[tId].name}`;
+      if (!positivePairs.has(key)) allNonEdges.push({ vId, tId });
+    }
+  }
+  const rand = mulberry32(seed);
+  const shuffled = allNonEdges.map((x) => [rand(), x]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  const negatives = shuffled.slice(0, positives.length).map(({ vId, tId }) => ({ f: hadamard(varVec[vId], targetVec[tId]), label: 0 }));
+
+  // No positive edges for this target yet (e.g. MAPS_TO_VIRTUE on its very first run, or
+  // under --dry-run before any real run has materialized it) -- there is nothing to train
+  // on. Report this explicitly rather than crashing (trainLogisticRegression would throw on
+  // an empty feature matrix) or silently returning an untrained model's meaningless scores.
+  if (positives.length === 0) {
+    return { positives, negatives, predictions: [], skipped: true };
+  }
+
+  const trainSet = [...positives, ...negatives];
+  const model = trainLogisticRegression(trainSet.map((r) => r.f), trainSet.map((r) => r.label));
+
+  const unmappedVarIds = varIdList.filter((vId) => ![...positivePairs].some((k) => k.startsWith(`${varName[vId]}::`)));
+  const predictions = unmappedVarIds.map((vId) => {
+    const scores = targetIdList.map((tId) => ({
+      ...targetMeta[tId],
+      probability: model.predict(hadamard(varVec[vId], targetVec[tId])),
+    })).sort((a, b) => b.probability - a.probability);
+    return { variable: varName[vId], top: scores.slice(0, top) };
+  });
+
+  return { positives, negatives, predictions };
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   const intake = loadIntake(args);
@@ -193,6 +260,24 @@ async function main() {
       }
     }
 
+    // Same materialization, for MAPS_TO_VIRTUE (variable <-> Virtology virtue), from
+    // GDX_VT_VARIABLE_VIRTUE_MAP -- added 2026-10-15, same --dry-run write gate as above.
+    if (!args.dryRun) {
+      const materializedVirtue = await session.run(`
+        MATCH (m:GDX_VT_VARIABLE_VIRTUE_MAP)-[:FK_GDX_VT_VVM_VARIABLE]->(v:GDX_PSY_VARIABLE)
+        MATCH (m)-[:FK_GDX_VT_VVM_VIRTUE]->(t:GDX_VT_VIRTUE)
+        MERGE (v)-[:MAPS_TO_VIRTUE]->(t)
+        RETURN count(*) AS n`);
+      console.log(`MAPS_TO_VIRTUE materialized: ${toNum(materializedVirtue.records[0].get('n'))} edge(s).`);
+    } else {
+      const existingVirtue = await session.run(`MATCH (:GDX_PSY_VARIABLE)-[r:MAPS_TO_VIRTUE]->(:GDX_VT_VIRTUE) RETURN count(r) AS n`);
+      const existingVirtueCount = toNum(existingVirtue.records[0].get('n'));
+      console.log(`[DRY RUN] Skipped MAPS_TO_VIRTUE materialization (no write performed) -- ${existingVirtueCount} edge(s) already in the graph from a previous real run.`);
+      if (existingVirtueCount === 0) {
+        console.log('[DRY RUN] WARNING: MAPS_TO_VIRTUE has never been materialized (0 edges) -- this dry-run has no positive examples to train on and its virtue ranking will be meaningless. Run once without --dry-run first.');
+      }
+    }
+
     // --- graph projection + FastRP embeddings ---
     try { await session.run(`CALL gds.graph.drop($g, false)`, { g: GRAPH_NAME }); } catch (e) { /* didn't exist */ }
     const proj = await session.run(`
@@ -212,57 +297,49 @@ async function main() {
     // first, and Track A (independent, best-effort, non-fatal) runs after.
     const varEmbRes = await session.run(`CALL gds.graph.nodeProperty.stream($g, 'embedding', ['GDX_PSY_VARIABLE']) YIELD nodeId, propertyValue RETURN nodeId, propertyValue`, { g: GRAPH_NAME });
     const levelEmbRes = await session.run(`CALL gds.graph.nodeProperty.stream($g, 'embedding', ['GDX_PSY_SEPTENARY_LEVEL']) YIELD nodeId, propertyValue RETURN nodeId, propertyValue`, { g: GRAPH_NAME });
+    const virtueEmbRes = await session.run(`CALL gds.graph.nodeProperty.stream($g, 'embedding', ['GDX_VT_VIRTUE']) YIELD nodeId, propertyValue RETURN nodeId, propertyValue`, { g: GRAPH_NAME });
 
     const varIds = varEmbRes.records.map((r) => toNum(r.get('nodeId')));
     const levelIds = levelEmbRes.records.map((r) => toNum(r.get('nodeId')));
+    const virtueIds = virtueEmbRes.records.map((r) => toNum(r.get('nodeId')));
     const varNamesRes = await session.run(`MATCH (n:GDX_PSY_VARIABLE) WHERE id(n) IN $ids RETURN id(n) AS id, n.NAME AS name`, { ids: varIds });
     const levelNamesRes = await session.run(`MATCH (n:GDX_PSY_SEPTENARY_LEVEL) WHERE id(n) IN $ids RETURN id(n) AS id, n.NAME AS name, n.ORDER_NUM AS orderNum`, { ids: levelIds });
+    const virtueNamesRes = await session.run(`MATCH (n:GDX_VT_VIRTUE) WHERE id(n) IN $ids RETURN id(n) AS id, n.NAME_PT AS namePt, n.NAME_EN AS nameEn, n.ORDER_NUM AS orderNum`, { ids: virtueIds });
 
     const varName = {}; varNamesRes.records.forEach((r) => { varName[toNum(r.get('id'))] = r.get('name'); });
-    const levelName = {}; levelNamesRes.records.forEach((r) => { levelName[toNum(r.get('id'))] = { name: r.get('name'), order: toNum(r.get('orderNum')) }; });
+    const levelMeta = {}; levelNamesRes.records.forEach((r) => { levelMeta[toNum(r.get('id'))] = { name: r.get('name'), order: toNum(r.get('orderNum')) }; });
+    const virtueMeta = {}; virtueNamesRes.records.forEach((r) => { virtueMeta[toNum(r.get('id'))] = { name: r.get('namePt'), namePt: r.get('namePt'), nameEn: r.get('nameEn'), order: toNum(r.get('orderNum')) }; });
     const varVec = {}; varEmbRes.records.forEach((r) => { varVec[toNum(r.get('nodeId'))] = r.get('propertyValue'); });
     const levelVec = {}; levelEmbRes.records.forEach((r) => { levelVec[toNum(r.get('nodeId'))] = r.get('propertyValue'); });
+    const virtueVec = {}; virtueEmbRes.records.forEach((r) => { virtueVec[toNum(r.get('nodeId'))] = r.get('propertyValue'); });
 
-    const existingRes = await session.run(`MATCH (v:GDX_PSY_VARIABLE)-[:MAPS_TO_LEVEL]->(l:GDX_PSY_SEPTENARY_LEVEL) RETURN v.NAME AS variable, l.NAME AS level`);
-    const positivePairs = new Set(existingRes.records.map((r) => `${r.get('variable')}::${r.get('level')}`));
+    const existingLevelRes = await session.run(`MATCH (v:GDX_PSY_VARIABLE)-[:MAPS_TO_LEVEL]->(l:GDX_PSY_SEPTENARY_LEVEL) RETURN v.NAME AS variable, l.NAME AS level`);
+    const positivePairsLevel = new Set(existingLevelRes.records.map((r) => `${r.get('variable')}::${r.get('level')}`));
+    const existingVirtueRes = await session.run(`MATCH (v:GDX_PSY_VARIABLE)-[:MAPS_TO_VIRTUE]->(t:GDX_VT_VIRTUE) RETURN v.NAME AS variable, t.NAME_PT AS virtue`);
+    const positivePairsVirtue = new Set(existingVirtueRes.records.map((r) => `${r.get('variable')}::${r.get('virtue')}`));
 
     const varIdList = Object.keys(varVec).map(Number);
     const levelIdList = Object.keys(levelVec).map(Number);
+    const virtueIdList = Object.keys(virtueVec).map(Number);
 
-    // Build (feature, label) training set: all existing positives + an equal number of
-    // deterministically-sampled non-edges as negatives (same 1:1 ratio GDS's own pipeline
-    // used for Track A's split).
-    const positives = [];
-    for (const vId of varIdList) {
-      for (const lId of levelIdList) {
-        const key = `${varName[vId]}::${levelName[lId].name}`;
-        if (positivePairs.has(key)) positives.push({ f: hadamard(varVec[vId], levelVec[lId]), label: 1 });
-      }
-    }
-    const allNonEdges = [];
-    for (const vId of varIdList) {
-      for (const lId of levelIdList) {
-        const key = `${varName[vId]}::${levelName[lId].name}`;
-        if (!positivePairs.has(key)) allNonEdges.push({ vId, lId });
-      }
-    }
-    const rand = mulberry32(42);
-    const shuffled = allNonEdges.map((x) => [rand(), x]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
-    const negatives = shuffled.slice(0, positives.length).map(({ vId, lId }) => ({ f: hadamard(varVec[vId], levelVec[lId]), label: 0 }));
-
-    const trainSet = [...positives, ...negatives];
-    const model = trainLogisticRegression(trainSet.map((r) => r.f), trainSet.map((r) => r.label));
-    console.log(`Trained in-process classifier on ${positives.length} positive + ${negatives.length} sampled-negative examples.`);
-
-    // Score every (unmapped variable, level) candidate.
-    const unmappedVarIds = varIdList.filter((vId) => ![...positivePairs].some((k) => k.startsWith(`${varName[vId]}::`)));
-    const predictions = unmappedVarIds.map((vId) => {
-      const scores = levelIdList.map((lId) => ({
-        level: levelName[lId].name, order: levelName[lId].order,
-        probability: model.predict(hadamard(varVec[vId], levelVec[lId])),
-      })).sort((a, b) => b.probability - a.probability);
-      return { variable: varName[vId], top: scores.slice(0, args.top) };
+    // Two independent Track B runs over the SAME embeddings: septenary level (as before)
+    // and -- 2026-10-15 -- virtue. Different seeds so the two negative samples don't
+    // deterministically overlap in a way that would make one a subset of the other.
+    const { positives, negatives, predictions } = scoreCandidates({
+      varIdList, varVec, varName, targetIdList: levelIdList, targetVec: levelVec, targetMeta: levelMeta,
+      positivePairs: positivePairsLevel, top: args.top, seed: 42,
     });
+    console.log(`Trained in-process classifier (level) on ${positives.length} positive + ${negatives.length} sampled-negative examples.`);
+
+    const { positives: positivesVirtue, negatives: negativesVirtue, predictions: predictionsVirtue, skipped: virtueSkipped } = scoreCandidates({
+      varIdList, varVec, varName, targetIdList: virtueIdList, targetVec: virtueVec, targetMeta: virtueMeta,
+      positivePairs: positivePairsVirtue, top: args.top, seed: 1337,
+    });
+    if (virtueSkipped) {
+      console.log('Virtue classifier NOT trained -- 0 MAPS_TO_VIRTUE positive edges exist yet (run once without --dry-run after at least one GDX_VT_VARIABLE_VIRTUE_MAP row exists).');
+    } else {
+      console.log(`Trained in-process classifier (virtue) on ${positivesVirtue.length} positive + ${negativesVirtue.length} sampled-negative examples.`);
+    }
 
     // --- Track A: GDS's own pipeline, only for an independent AUCPR metric (best-effort,
     // runs after Track B has already extracted everything it needs -- see that block's note).
@@ -271,6 +348,8 @@ async function main() {
     // Track B already added directly (gds.fastRP.mutate) and makes the pipeline's internal
     // step fail -- a clean projection sidesteps the name collision entirely. ---
     let aucpr = null;
+    let aucprVirtue = null;
+    let pipelineReady = false;
     try {
       try { await session.run(`CALL gds.graph.drop($g, false)`, { g: GRAPH_NAME }); } catch (e) {}
       await session.run(`
@@ -288,17 +367,49 @@ async function main() {
       await session.run(`
         CALL gds.beta.pipeline.linkPrediction.configureSplit($g, $p, {testFraction: 0.2, trainFraction: 0.6, validationFolds: 2})`,
         { g: GRAPH_NAME, p: PIPELINE_NAME });
-      const trainRes = await session.run(`
-        CALL gds.beta.pipeline.linkPrediction.train($g, {
-          pipeline: $p, modelName: $p,
-          targetRelationshipType: 'MAPS_TO_LEVEL',
-          sourceNodeLabel: 'GDX_PSY_VARIABLE', targetNodeLabel: 'GDX_PSY_SEPTENARY_LEVEL',
-          metrics: ['AUCPR']
-        }) YIELD modelInfo`, { g: GRAPH_NAME, p: PIPELINE_NAME });
-      aucpr = trainRes.records[0].get('modelInfo').metrics.AUCPR;
-      console.log('GDS pipeline AUCPR (independent validation metric):', JSON.stringify(aucpr));
+      pipelineReady = true;
     } catch (e) {
-      console.log('WARNING: GDS pipeline training for the AUCPR metric failed (report will note this):', e.message.slice(0, 300));
+      console.log('WARNING: GDS pipeline setup (projection/fastRP/feature/split) failed -- skipping both AUCPR trainings:', e.message.slice(0, 300));
+    }
+
+    // Level AUCPR -- same pipeline definition as before this extension, just now named
+    // explicitly so the virtue training below (same pipeline, different target) doesn't
+    // collide with it under the same modelName.
+    if (pipelineReady) {
+      try {
+        const trainRes = await session.run(`
+          CALL gds.beta.pipeline.linkPrediction.train($g, {
+            pipeline: $p, modelName: $modelName,
+            targetRelationshipType: 'MAPS_TO_LEVEL',
+            sourceNodeLabel: 'GDX_PSY_VARIABLE', targetNodeLabel: 'GDX_PSY_SEPTENARY_LEVEL',
+            metrics: ['AUCPR']
+          }) YIELD modelInfo`, { g: GRAPH_NAME, p: PIPELINE_NAME, modelName: `${PIPELINE_NAME}-level` });
+        aucpr = trainRes.records[0].get('modelInfo').metrics.AUCPR;
+        console.log('GDS pipeline AUCPR, level (independent validation metric):', JSON.stringify(aucpr));
+      } catch (e) {
+        console.log('WARNING: GDS pipeline training for the level AUCPR metric failed (report will note this):', e.message.slice(0, 300));
+      } finally {
+        try { await session.run(`CALL gds.model.drop($name, false)`, { name: `${PIPELINE_NAME}-level` }); } catch (e) {}
+      }
+
+      // Virtue AUCPR -- same pipeline object (fastRP + Hadamard + logistic regression steps
+      // don't reference a target; only train()'s targetRelationshipType/targetNodeLabel do),
+      // reused for a second, independent train() call against MAPS_TO_VIRTUE.
+      try {
+        const trainResVirtue = await session.run(`
+          CALL gds.beta.pipeline.linkPrediction.train($g, {
+            pipeline: $p, modelName: $modelName,
+            targetRelationshipType: 'MAPS_TO_VIRTUE',
+            sourceNodeLabel: 'GDX_PSY_VARIABLE', targetNodeLabel: 'GDX_VT_VIRTUE',
+            metrics: ['AUCPR']
+          }) YIELD modelInfo`, { g: GRAPH_NAME, p: PIPELINE_NAME, modelName: `${PIPELINE_NAME}-virtue` });
+        aucprVirtue = trainResVirtue.records[0].get('modelInfo').metrics.AUCPR;
+        console.log('GDS pipeline AUCPR, virtue (independent validation metric):', JSON.stringify(aucprVirtue));
+      } catch (e) {
+        console.log('WARNING: GDS pipeline training for the virtue AUCPR metric failed (report will note this):', e.message.slice(0, 300));
+      } finally {
+        try { await session.run(`CALL gds.model.drop($name, false)`, { name: `${PIPELINE_NAME}-virtue` }); } catch (e) {}
+      }
     }
 
     // --- report ---
@@ -312,28 +423,54 @@ async function main() {
     lines.push('> Design spec: `10.gdx.machine.learning/Septenary_Link_Prediction_and_Community_Detection.md` (Model 1).');
     lines.push('>');
     lines.push('> **Triage aid, not an auto-write.** These are ranked suggestions for human review — the');
-    lines.push('> accepted suggestion still needs to be added to `GDX_SKILL_LOAD_SEPT_MAPS_DB`\'s knowledge.js');
-    lines.push('> with its own justification, the same as every existing mapping. Nothing here writes to');
-    lines.push('> `GDX_PSY_SEPT_LEVEL_PSY_MAP` automatically.');
+    lines.push('> accepted level suggestion still needs to be added to `GDX_SKILL_LOAD_SEPT_MAPS_DB`\'s');
+    lines.push('> knowledge.js (or run through `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`), and the accepted');
+    lines.push('> virtue suggestion through `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` -- each with its own');
+    lines.push('> justification, the same as every existing mapping. Nothing here writes to');
+    lines.push('> `GDX_PSY_SEPT_LEVEL_PSY_MAP` or `GDX_VT_VARIABLE_VIRTUE_MAP` automatically.');
     lines.push('');
     lines.push('## Method');
     lines.push('');
-    lines.push(`- **Embeddings:** Neo4j GDS FastRP, ${EMBEDDING_DIM} dimensions, over the catalog subgraph (variables, constructs, instruments, septenary levels, chakras, Five Ways, and their mapping edges) — ${varIdList.length} variable nodes, ${levelIdList.length} level nodes.`);
-    lines.push(`- **Training set:** ${positives.length} real \`MAPS_TO_LEVEL\` positive edges (materialized from \`GDX_PSY_SEPT_LEVEL_PSY_MAP\`) + ${negatives.length} sampled non-edges, Hadamard-product features, a logistic regression trained in-process (see this file's header for why the classifier runs here instead of via \`gds.beta.pipeline.linkPrediction.predict\` — a real platform bug in that step's relationship-endpoint write-back was found and worked around, not a design preference).`);
-  lines.push(aucpr
-      ? `- **Independent validation (GDS's own pipeline, same features, different code path):** AUCPR test=${aucpr.test?.toFixed(4)}, validation avg=${aucpr.validation?.avg?.toFixed(4)}.`
-      : '- **Independent validation:** GDS pipeline training did not complete this run (see console log) — only the in-process classifier\'s ranking is available.');
-    lines.push(`- **Small-N caveat:** ${positives.length} positive examples across 7 levels is a small training set — several levels have only 1-3 supporting examples. Treat every score below as a triage rank, not a confident classification (same caveat the design doc raises for the original 19-example baseline).`);
+    lines.push(`- **Embeddings:** Neo4j GDS FastRP, ${EMBEDDING_DIM} dimensions, over the catalog subgraph (variables, constructs, instruments, septenary levels, chakras, Five Ways, Virtology virtues, and their mapping edges) — ${varIdList.length} variable nodes, ${levelIdList.length} level nodes, ${virtueIdList.length} virtue nodes.`);
+    lines.push(`- **Training set (level):** ${positives.length} real \`MAPS_TO_LEVEL\` positive edges (materialized from \`GDX_PSY_SEPT_LEVEL_PSY_MAP\`) + ${negatives.length} sampled non-edges, Hadamard-product features, a logistic regression trained in-process (see this file's header for why the classifier runs here instead of via \`gds.beta.pipeline.linkPrediction.predict\` — a real platform bug in that step's relationship-endpoint write-back was found and worked around, not a design preference).`);
+    lines.push(`- **Training set (virtue):** ${positivesVirtue.length} real \`MAPS_TO_VIRTUE\` positive edges (materialized from \`GDX_VT_VARIABLE_VIRTUE_MAP\`) + ${negativesVirtue.length} sampled non-edges — same embeddings, features, and classifier design as the level task above, trained and scored independently (own positives, own sampled negatives; a variable can be unmapped on one target and mapped on the other).`);
+    lines.push(aucpr
+      ? `- **Independent validation, level (GDS's own pipeline, same features, different code path):** AUCPR test=${aucpr.test?.toFixed(4)}, validation avg=${aucpr.validation?.avg?.toFixed(4)}.`
+      : '- **Independent validation, level:** GDS pipeline training did not complete this run (see console log) — only the in-process classifier\'s ranking is available.');
+    lines.push(aucprVirtue
+      ? `- **Independent validation, virtue (GDS's own pipeline, same features, different code path):** AUCPR test=${aucprVirtue.test?.toFixed(4)}, validation avg=${aucprVirtue.validation?.avg?.toFixed(4)}.`
+      : '- **Independent validation, virtue:** GDS pipeline training did not complete this run (see console log) — only the in-process classifier\'s ranking is available.');
+    lines.push(`- **Small-N caveat:** ${positives.length} positive examples across 7 levels and ${positivesVirtue.length} positive examples across 33 virtues are both small training sets — several levels/virtues have only 1-3 (or 0) supporting examples. Treat every score below as a triage rank, not a confident classification (same caveat the design doc raises for the original 19-example baseline).`);
     lines.push('');
-    lines.push(`## Ranked suggestions for ${predictions.length} unmapped variable(s)`);
+    lines.push(`## Ranked level suggestions for ${predictions.length} unmapped variable(s)`);
     lines.push('');
     for (const p of predictions) {
       lines.push(`### ${p.variable}`);
       lines.push('');
       lines.push('| Rank | Candidate level | Probability |');
       lines.push('|---|---|---|');
-      p.top.forEach((t, i) => lines.push(`| ${i + 1} | ${t.level} (level ${t.order}) | ${t.probability.toFixed(4)} |`));
+      p.top.forEach((t, i) => lines.push(`| ${i + 1} | ${t.name} (level ${t.order}) | ${t.probability.toFixed(4)} |`));
       lines.push('');
+    }
+    if (virtueSkipped) {
+      lines.push('## Ranked virtue suggestions — not available this run');
+      lines.push('');
+      lines.push('No `MAPS_TO_VIRTUE` edge exists in the graph yet (0 positive examples), so no classifier ' +
+        'could be trained for this target. Confirm `GDX_SKILL_GODATAX_HUMAN7_BY_SPU` has exported ' +
+        '`GDX_VT_VARIABLE_VIRTUE_MAP` for this study\'s graph, then re-run this skill once **without** ' +
+        '`--dry-run` so `MAPS_TO_VIRTUE` gets materialized.');
+      lines.push('');
+    } else {
+    lines.push(`## Ranked virtue suggestions for ${predictionsVirtue.length} unmapped variable(s)`);
+    lines.push('');
+    for (const p of predictionsVirtue) {
+      lines.push(`### ${p.variable}`);
+      lines.push('');
+      lines.push('| Rank | Candidate virtue | Probability |');
+      lines.push('|---|---|---|');
+      p.top.forEach((t, i) => lines.push(`| ${i + 1} | ${t.namePt} (${t.nameEn}, #${t.order}) | ${t.probability.toFixed(4)} |`));
+      lines.push('');
+    }
     }
 
     const report = lines.join('\n');

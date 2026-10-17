@@ -164,6 +164,7 @@ function writeCsv(filePath, header, rows) {
 
 function pearson(x, y) {
   const n = x.length;
+  if (n === 0) return 0; // no observations -- no correlation to compute, not NaN
   const mx = x.reduce((a, b) => a + b, 0) / n, my = y.reduce((a, b) => a + b, 0) / n;
   let num = 0, dx2 = 0, dy2 = 0;
   for (let i = 0; i < n; i++) {
@@ -192,6 +193,16 @@ function pearson(x, y) {
  * every subscale actually seen in this dataset (<=11 items) is well under it.
  * Returns { confirmed, items: [{itemOrder, reversed, corr}], maxDiscrepancy, sizeTried } */
 function discoverVariableStructure(itemOrders, itemValuesByOrder, scaleMin, scaleMax, groundTruth, claimed, tolerance) {
+  // No application has a computed GDX_PSY_VARIABLE_RESULT score for this variable yet (e.g. no
+  // SCORE_FORMULA registered for a brand-new instrument) -- there is no ground truth to validate
+  // against. Without this guard, the tolerance check below (`for (i=0; i<n...)` with n=0 never
+  // runs its body, leaving maxDiff at its initial 0, and `0 < tolerance` is trivially true) used
+  // to report the very first candidate item as CONFIRMED with "max discrepancy 0" -- a vacuous
+  // truth (confirmed against zero real observations), not an actual confirmation. Report this
+  // honestly as unconfirmed with nothing claimed, instead.
+  if (groundTruth.length === 0) {
+    return { confirmed: false, items: [], maxDiscrepancy: null, sizeTried: 0, reason: 'no ground truth: 0 applications have a computed GDX_PSY_VARIABLE_RESULT score for this variable' };
+  }
   const MAX_SUBSET = 14;
   const candidates = [];
   for (const order of itemOrders) {
@@ -405,6 +416,10 @@ async function main() {
     const confirmedCount = structure.variables.filter((v) => v.confirmed).length;
     console.log(`\nInstrument ${args.instrument} ("${instrumentName}"): ${nItems} items, ${varRows.length} variable(s), n=${appIdsWithScores.length}.`);
     for (const v of structure.variables) {
+      if (v.reason) {
+        console.log(`  [UNCONFIRMED -- ${v.reason}] ${v.name}: no items evaluated.`);
+        continue;
+      }
       const tag = v.confirmed ? 'CONFIRMED' : 'UNCONFIRMED (best-effort)';
       console.log(`  [${tag}] ${v.name}: ${v.items.length} item(s) [${prefix}${v.items.map((it) => it.itemOrder).join(', ' + prefix)}], max discrepancy ${v.maxDiscrepancy}`);
     }

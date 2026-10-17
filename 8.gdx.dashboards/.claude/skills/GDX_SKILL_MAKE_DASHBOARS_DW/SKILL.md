@@ -93,9 +93,57 @@ dashboard_02_score_by_septenary_level__workplace-resilience-pilot__workplace-res
 This means two different runs — for two different studies, or the same study re-run later — never
 collide or overwrite each other's files.
 
+## Panel 09 — per-respondent profile (`make_dashboard_09_respondent.js`)
+
+Every chart above is an aggregate average across a study's whole population. This one is different:
+one page PER PARTICIPANT, showing their own raw item-by-item answers, their own subscale scores
+plotted against the study group's mean/range for the same variable, the virtue this instrument is
+associated with (`GDX_VT_VARIABLE_VIRTUE_MAP`), and an explicit statement of whether an individual
+EFA/CFA factor score exists for them yet (it won't for a small study — this never fabricates one).
+
+```
+node make_dashboard_09_respondent.js --study <slug> [--person <id-or-name-substring>] [--out-dir <dir>]
+```
+
+Omit `--person` to generate one file per participant the study actually has, in one run. Filename
+pattern: `dashboard_09_virtue_respondent_profile__<slug>__<study-title-slug>__<person-slug>__<timestamp>.html`
+(a person-slug segment is appended, unlike every other chart here, since this one is one file per
+person, not one per study).
+
+**Known driver issue, worked around, not a SQL problem:** `STATEMENT_TEXT` (item wording) is a
+`BLOB SUB_TYPE TEXT` column. `node-firebird`'s `blobAsText: true` convenience option hangs
+indefinitely once it has to resolve more than a handful of blob rows in one result set (reproduced
+directly: fine for ~22 rows filtered to one instrument, hangs for 167 rows across the whole table) —
+a real concurrency bug in its own `fetch_blob_async_transaction` auto-resolution path, which opens
+one implicit transaction per blob and resolves all of them via `Promise.all`. This script never sets
+`blobAsText` at all; it reads each blob manually and sequentially instead (`fetchBlobText()`,
+`resolveItemStatements()`) — reliable across every repeated run, where `blobAsText: true` was not.
+Keep this pattern for any future query here that touches a BLOB column across more than one row.
+
+## Master panel (`make_master_panel.js`)
+
+Combines every dashboard (00–09) into one page, plus a phase-by-phase retrospective of the whole
+onboarding pipeline for one study — registration (Phase 1–2), data collection (Phase 3), factor
+analysis/alpha (Phase 4), metaphysical/virtue associations (Phase 5), the Data Warehouse load
+(Phase 6), the Neo4j knowledge-graph export (Phase 8, queried live), and the link-prediction model's
+latest suggestions (Phase 9, read from its most recent `Link_Prediction_<slug>_*.md` report) — each
+section labeled with the skill(s) responsible for it. Read-only: never writes to Firebird or Neo4j,
+and never re-runs any of the skills it reports on.
+
+```
+node make_master_panel.js --study <slug> [--out-dir <dir>] [--dashboards-dir <dir>] [--ml-dir <dir>]
+```
+
+Needs `neo4j-driver` (installed alongside `node-firebird` in this skill's `package.json`) and the
+same `NEO4J_*` variables as `9.knowledge.graph`'s/`10.gdx.machine.learning`'s own `.env` (see
+`.env.example`) — Phase 8's section reports "not queried" rather than failing the whole page if
+they're missing. Output filename: `dashboard_master_panel__<slug>__<timestamp>.html`.
+
 ## Files in this skill
 
-- `scripts/chart_lib.js` — the 5 renderers (`renderLineChart`, `renderBarChart`, `renderHeatmap`, `renderChakraPortrait`, `renderSeptenaryConstitutionPortrait`) plus the shared self-contained HTML page shell and the reference palette (dataviz skill default — swap the hex values here to retheme)
+- `scripts/chart_lib.js` — the 5 renderers (`renderLineChart`, `renderBarChart`, `renderHeatmap`, `renderChakraPortrait`, `renderSeptenaryConstitutionPortrait`) plus the shared self-contained HTML page shell and the reference palette (dataviz skill default — swap the hex values here to retheme); also exports `pageShell`/`esc`/`niceTicks` directly for panel 09 and the master panel, which build custom (non-chart) page bodies
 - `scripts/make_dashboards.js` — connects (or `--sample`), runs the 8 queries, shapes the data, writes the 8 `.html` files
+- `scripts/make_dashboard_09_respondent.js` — per-respondent profile (see above)
+- `scripts/make_master_panel.js` — combined master panel (see above)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)

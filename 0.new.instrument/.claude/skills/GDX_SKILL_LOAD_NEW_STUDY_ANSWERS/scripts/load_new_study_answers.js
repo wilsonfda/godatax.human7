@@ -54,20 +54,55 @@ const path = require('path');
 const Firebird = require('node-firebird');
 const ExcelJS = require('exceljs');
 
-/** Confirmed scoring formulas: ID_INSTRUMENT -> [{ variable, name, items }], `items` being the
- * ITEM_ORDER values (not ID_ITEM) whose UNWEIGHTED MEAN equals GDX_PSY_VARIABLE_RESULT.RAW_SCORE
- * for that variable. Add an entry here ONLY after independently confirming it the same way this
- * one was: mean(items) reproduces every EXISTING RAW_SCORE for that variable within tolerance (see
- * GDX_SKILL_LOAD_RLT_MODEL_DB/scripts/compute_variable_result.js's --dry-run self-check). This
- * script re-runs that same self-check at load time (see computeConfirmedScores below) before ever
- * writing a new row, so a stale/wrong entry here is caught, not silently trusted. */
+/** Confirmed scoring formulas: ID_INSTRUMENT -> [{ variable, name, items, method?, reverseMax? }].
+ * `items` entries are ITEM_ORDER values (not ID_ITEM), each either a plain number (not
+ * reverse-scored) or `{ order, reversed: true }` (reverse-coded as `reverseMax - raw` before
+ * aggregating -- `reverseMax` is required on the formula whenever any item sets `reversed`).
+ * `method` is `'mean'` (default, unweighted mean -- the only option before this comment) or
+ * `'sum'`. Add an entry here ONLY after independently confirming it the same way the MBI-SS one
+ * below was: the formula reproduces every EXISTING RAW_SCORE for that variable within tolerance
+ * (see GDX_SKILL_LOAD_RLT_MODEL_DB/scripts/compute_variable_result.js's --dry-run self-check).
+ * This script re-runs that same self-check at load time (see computeConfirmedScores below) before
+ * ever writing a new row -- EXCEPT a variable's very first-ever application has zero existing
+ * RAW_SCOREs to check against, so the self-check is a no-op then (checked=0); for a brand-new
+ * instrument's first participant, trust the formula only because it was transcribed directly from
+ * the instrument's own published scoring key (see <variable list below>), not because this
+ * self-check confirmed it. */
 const SCORE_FORMULAS = {
   9: [ // Maslach Burnout Inventory - Student Survey
     { variable: 22, name: 'Emotional Exhaustion', items: [1, 2, 3, 4, 5] }, // verified byte-for-byte against all 423 existing rows, max discrepancy 0
   ],
+  13: [ // Comprehensive Intellectual Humility Scale (Krumrei-Mancuso & Rouse, 2016), PT-BR draft
+        // adaptation -- scoring per 12.gdx.virtology/Intellectual_Humility_Scale_PT_Adaptation.md
+        // "Scoring": reverse-code every (dagger) item as (6 - raw) on this 1-5 scale, then SUM
+        // (not mean) per subscale. Not yet self-check-confirmed against any prior data (this is
+        // the instrument's first-ever application) -- transcribed directly from that doc instead.
+    { variable: 33, name: 'Independence of Intellect and Ego', method: 'sum', reverseMax: 6,
+      items: [16, 17, 18, 21, 22].map((order) => ({ order, reversed: true })) },
+    { variable: 34, name: "Openness to Revising One's Viewpoint", method: 'sum', reverseMax: 6,
+      items: [6, 7, 8, 9, 10] },
+    { variable: 35, name: "Respect for Others' Viewpoints", method: 'sum', reverseMax: 6,
+      items: [11, 13, 14, 15, 19, 20] },
+    { variable: 36, name: 'Lack of Intellectual Overconfidence', method: 'sum', reverseMax: 6,
+      items: [1, 2, 3, 4, 5, 12].map((order) => ({ order, reversed: true })) },
+  ],
 };
 
 function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
+
+/** Extracts the bare ITEM_ORDER from an items[] entry, whichever of the two shapes it is. */
+function itemOrder(spec) { return typeof spec === 'object' ? spec.order : spec; }
+
+/** Reverse-codes and aggregates (mean or sum) a formula's items, given a `getRaw(order)` lookup --
+ * shared between the live computation (numericValueByOrder, a Map) and the self-check
+ * (itemsByApp.get(appId), a plain object), so both apply the exact same transform. */
+function computeAggregate(formula, getRaw) {
+  const vals = formula.items.map((spec) => {
+    const raw = getRaw(itemOrder(spec));
+    return typeof spec === 'object' && spec.reversed ? formula.reverseMax - raw : raw;
+  });
+  return formula.method === 'sum' ? vals.reduce((a, b) => a + b, 0) : mean(vals);
+}
 
 function parseArgs(argv) {
   const args = { file: null, dryRun: false };
@@ -131,7 +166,8 @@ async function computeConfirmedScores(db, instrumentId, applicationId, numericVa
   const formulas = SCORE_FORMULAS[instrumentId] || [];
   const result = { inserted: [], skippedIncomplete: [], skippedMismatch: [], skippedAlreadyScored: [] };
   for (const formula of formulas) {
-    if (!formula.items.every((o) => numericValueByOrder.has(o))) {
+    const orders = formula.items.map(itemOrder);
+    if (!orders.every((o) => numericValueByOrder.has(o))) {
       result.skippedIncomplete.push(formula.name);
       continue;
     }
@@ -144,15 +180,15 @@ async function computeConfirmedScores(db, instrumentId, applicationId, numericVa
       }
     }
 
-    const value = mean(formula.items.map((o) => numericValueByOrder.get(o)));
+    const value = computeAggregate(formula, (o) => numericValueByOrder.get(o));
 
-    // Self-check: does mean(formula.items) reproduce every EXISTING score for this variable?
+    // Self-check: does the formula (reversed + mean/sum) reproduce every EXISTING score for this variable?
     const existingScores = await query(db, 'SELECT ID_APPLICATION, RAW_SCORE FROM GDX_PSY_VARIABLE_RESULT WHERE ID_VARIABLE = ?', [formula.variable]);
     const existingItemRows = await query(db,
       `SELECT ir.ID_APPLICATION, ii.ITEM_ORDER, ir.NUMERIC_VALUE
        FROM GDX_PSY_ITEM_RESPONSE ir
        JOIN GDX_PSY_INSTRUMENT_ITEM ii ON ii.ID_ITEM = ir.ID_ITEM
-       WHERE ii.ID_INSTRUMENT = ? AND ii.ITEM_ORDER IN (${formula.items.join(',')})`,
+       WHERE ii.ID_INSTRUMENT = ? AND ii.ITEM_ORDER IN (${orders.join(',')})`,
       [instrumentId]);
     const itemsByApp = new Map();
     for (const r of existingItemRows) {
@@ -162,9 +198,15 @@ async function computeConfirmedScores(db, instrumentId, applicationId, numericVa
     let checked = 0, maxDiscrepancy = 0;
     for (const { ID_APPLICATION: appId, RAW_SCORE: raw } of existingScores) {
       const vals = itemsByApp.get(appId);
-      if (!vals || !formula.items.every((o) => vals[o] !== undefined && vals[o] !== null)) continue;
+      if (!vals || !orders.every((o) => vals[o] !== undefined && vals[o] !== null)) continue;
       checked++;
-      maxDiscrepancy = Math.max(maxDiscrepancy, Math.abs(mean(formula.items.map((o) => vals[o])) - raw));
+      maxDiscrepancy = Math.max(maxDiscrepancy, Math.abs(computeAggregate(formula, (o) => vals[o]) - raw));
+    }
+    if (checked === 0) {
+      console.log(`  NOTE: formula for "${formula.name}" (variable ${formula.variable}) has no prior ` +
+        `GDX_PSY_VARIABLE_RESULT to self-check against (this is this variable's first-ever scored ` +
+        `application) -- proceeding on the formula's transcription from its published source, not a ` +
+        `confirmed self-check.`);
     }
     if (checked > 0 && maxDiscrepancy > 1e-3) {
       console.log(`  WARNING: formula for "${formula.name}" (variable ${formula.variable}) does not reproduce ` +
@@ -252,6 +294,29 @@ function readMeta(workbook) {
   return meta;
 }
 
+/** Field label aliases: English (GDX_SKILL_EXPORT_NEW_STUDY's own output) and the Portuguese
+ * labels a hand-translated copy of the workbook may use instead (see the PT-BR copy of
+ * GDX_SKILL_EXPORT_NEW_STUDY's output for humildade-na-metafisica) -- readParticipant/readAnswers
+ * accept either, so a translated workbook stays loadable without re-resolving anything by name
+ * (META still carries the real ids either way). */
+const FIELD_ALIASES = {
+  fullName: ['Full Name', 'Nome Completo'],
+  externalId: ['External Identifier / Code', 'Identificador Externo / Código'],
+  birthDate: ['Birth Date (YYYY-MM-DD)', 'Data de Nascimento (AAAA-MM-DD)'],
+  gender: ['Gender', 'Gênero'],
+  educationLevel: ['Education Level', 'Nível de Escolaridade'],
+  applicationDate: ['Application Date (YYYY-MM-DD, blank = today)', 'Data de Aplicação (AAAA-MM-DD, em branco = hoje)'],
+  consent: ['Consent Given (Y/N)', 'Consentimento Dado (S/N)'],
+};
+const ANSWER_HEADER_ALIASES = ['Answer (fill in)', 'Resposta (preencher)'];
+
+function pick(fields, aliases) {
+  for (const key of aliases) {
+    if (fields[key] !== undefined) return fields[key];
+  }
+  return undefined;
+}
+
 function readParticipant(workbook) {
   const ws = workbook.getWorksheet('Participant');
   if (!ws) throw new Error('This workbook has no "Participant" sheet.');
@@ -263,23 +328,23 @@ function readParticipant(workbook) {
     if (label) fields[label] = value;
   });
 
-  const fullName = fields['Full Name'];
-  const externalId = fields['External Identifier / Code'];
+  const fullName = pick(fields, FIELD_ALIASES.fullName);
+  const externalId = pick(fields, FIELD_ALIASES.externalId);
   if (!fullName || !externalId) {
     throw new Error(
-      'The "Participant" sheet must have "Full Name" and "External Identifier / Code" filled in ' +
-      '-- this skill never invents a participant identity.'
+      'The "Participant" sheet must have "Full Name"/"Nome Completo" and "External Identifier / ' +
+      'Code"/"Identificador Externo / Código" filled in -- this skill never invents a participant identity.'
     );
   }
 
-  const consentRaw = fields['Consent Given (Y/N)'] || '';
+  const consentRaw = pick(fields, FIELD_ALIASES.consent) || '';
   return {
     fullName,
     externalId,
-    birthDate: fields['Birth Date (YYYY-MM-DD)'] || null,
-    gender: fields['Gender'] || null,
-    educationLevel: fields['Education Level'] || null,
-    applicationDate: fields['Application Date (YYYY-MM-DD, blank = today)'] || null,
+    birthDate: pick(fields, FIELD_ALIASES.birthDate) || null,
+    gender: pick(fields, FIELD_ALIASES.gender) || null,
+    educationLevel: pick(fields, FIELD_ALIASES.educationLevel) || null,
+    applicationDate: pick(fields, FIELD_ALIASES.applicationDate) || null,
     consent: /^(y|yes|s|sim|1|true)$/i.test(consentRaw.trim()) ? 1 : 0,
   };
 }
@@ -304,8 +369,9 @@ function readAnswers(workbook, sheetName) {
     }
   });
   if (!headerRow) throw new Error(`Could not find the "ID_ITEM" header row in sheet "${sheetName}".`);
-  if (!colIndex['ID_ITEM'] || !colIndex['Answer (fill in)']) {
-    throw new Error(`Sheet "${sheetName}" is missing the "ID_ITEM" or "Answer (fill in)" column.`);
+  const answerCol = ANSWER_HEADER_ALIASES.map((h) => colIndex[h]).find((c) => c !== undefined);
+  if (!colIndex['ID_ITEM'] || !answerCol) {
+    throw new Error(`Sheet "${sheetName}" is missing the "ID_ITEM" or "Answer (fill in)"/"Resposta (preencher)" column.`);
   }
 
   const answers = [];
@@ -313,7 +379,7 @@ function readAnswers(workbook, sheetName) {
     const row = ws.getRow(r);
     const idItemRaw = row.getCell(colIndex['ID_ITEM']).value;
     if (idItemRaw === null || idItemRaw === undefined || idItemRaw === '') continue;
-    answers.push({ ID_ITEM: Number(idItemRaw), answerText: cellText(row.getCell(colIndex['Answer (fill in)']).value) });
+    answers.push({ ID_ITEM: Number(idItemRaw), answerText: cellText(row.getCell(answerCol).value) });
   }
   return answers;
 }

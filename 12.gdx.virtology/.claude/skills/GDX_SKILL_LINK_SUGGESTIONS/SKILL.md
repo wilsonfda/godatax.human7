@@ -30,18 +30,26 @@ separate report; it never mixes two studies' scores into one ranking.
 `7.multidimensional.database`'s `DW_FACT_PSY_VARIABLE_RESULT` joined to
 `DW_DIM_VARIABLE`, `DW_DIM_SEPTENARY_LEVEL`, and `DW_DIM_PERSON` (for the
 `ID_STUDY` filter) — the same DW built by the scripts in that folder and
-already consumed by `8.gdx.dashboards`. This skill is **read-only**: it
-never writes to Firebird or Neo4j.
+already consumed by `8.gdx.dashboards`. The virtue suggestion itself comes
+from `GDX_VT_VARIABLE_VIRTUE_MAP` joined to `GDX_VT_VIRTUE`
+(`12.gdx.virtology/virtology_model_firebird25.sql`), keyed by
+`SAV_COLUMN` and reading its `JUSTIFICATION_DEFICIT` column. This skill is
+**read-only**: it never writes to Firebird or Neo4j.
+
+**2026-10-15:** this used to read a hand-written `scripts/virtue_knowledge.js`
+file instead of the database. That file still exists (two identical-shape
+copies, one here and one in `GDX_SKILL_IDENTIFY_VIRTUES`) only because
+`GDX_SKILL_LIST_ASSOCIATIONS`'s code-vs-database sync check still reads
+both of them directly — this skill no longer requires it.
 
 ## What it will never do
 
 - **Never guesses a virtue.** Which of the 33 virtues addresses a given
-  psychometric variable, and why, is a fixed interpretive judgment call in
-  `scripts/virtue_knowledge.js`, keyed by the variable's `.sav` column
-  (`DW_DIM_VARIABLE.SAV_COLUMN`) — same pattern as
-  `GDX_SKILL_LOAD_SEPT_MAPS_DB/scripts/knowledge.js`. A variable with no
-  entry there is reported in the output as **"no suggestion (review)"**,
-  not silently skipped and not auto-assigned.
+  psychometric variable, and why, is a fixed interpretive judgment call
+  recorded in `GDX_VT_VARIABLE_VIRTUE_MAP` (Firebird), keyed by the
+  variable's `.sav` column (`SAV_COLUMN`). A variable with no row there is
+  reported in the output as **"no suggestion (review)"**, not silently
+  skipped and not auto-assigned.
 - **Never claims clinical validity.** Every generated report repeats, near
   the top, the same methodological caveat already used in
   `SPSS_Septenary_Constitution_Mapping.md`: this is a qualitative,
@@ -74,19 +82,24 @@ analyses accumulates naturally in the folder, one thread per study).
 ## Extending it
 
 To add a suggestion for a variable the report currently lists as "no
-suggestion", add an entry to `VARIABLE_VIRTUE_MAP` in
-`scripts/virtue_knowledge.js` (keyed by the exact `.sav` column name),
-with `behavior` (what the variable measures), `virtue` (the exact `pt` name
-from the `VIRTUES` list in the same file), and `justification` (why that
-virtue addresses it) — then re-run the skill.
+suggestion", insert a row into `GDX_VT_VARIABLE_VIRTUE_MAP` (Firebird) with
+`SAV_COLUMN` (the exact `.sav` column name), `ID_VIRTUE` (FK to
+`GDX_VT_VIRTUE`), `RECORDED_BEHAVIOR` (what the variable measures), and
+`JUSTIFICATION_DEFICIT`/`JUSTIFICATION_STRENGTH` (why that virtue addresses
+it, in each framing) — then re-run the skill. There is no dedicated
+conversational skill for this yet (planned: `GDX_SKILL_ASSOCIATE_VIRTUE`,
+mirroring `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`'s `--dry-run`/`--confirm`
+pattern); until then this is a manual `INSERT`.
 
 ## Files in this skill
 
-- `scripts/virtue_knowledge.js` — the 33-virtue catalog plus the fixed
-  variable → virtue judgment-call map (edit this when a new psychometric
-  variable needs a treatment-suggestion decision)
-- `scripts/generate_suggestions.js` — reads the DW, ranks, looks up
-  suggestions, writes the timestamped report (Node.js + `node-firebird`, no
-  native client library required)
+- `scripts/virtue_knowledge.js` — **no longer read by this script.** Kept
+  only because `GDX_SKILL_LIST_ASSOCIATIONS`'s code-vs-database sync check
+  still reads both copies of this file (here and in
+  `GDX_SKILL_IDENTIFY_VIRTUES`) to catch drift between them.
+- `scripts/generate_suggestions.js` — reads the DW and
+  `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_VT_VIRTUE`, ranks, looks up suggestions,
+  writes the timestamped report (Node.js + `node-firebird`, no native
+  client library required)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)

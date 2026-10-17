@@ -1508,9 +1508,9 @@ mapping exists from the source at all.
 ### `GDX_SKILL_LINK_SUGGESTIONS` — applying this to real data
 
 Despite the knowledge base itself having no official schema, a **project-authored, narrower**
-mapping exists: `scripts/virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP` relates a psychometric
-variable directly to one of the 33 virtues (not virtue↔SNO/SNE, which stays an open gap). Real
-validated run, `ID_STUDY=1`, top lowest indicators:
+mapping exists: `GDX_VT_VARIABLE_VIRTUE_MAP` (Firebird, `12.gdx.virtology/virtology_model_firebird25.sql`)
+relates a psychometric variable directly to one of the 33 virtues (not virtue↔SNO/SNE, which
+stays an open gap). Real validated run, `ID_STUDY=1`, top lowest indicators:
 
 | Indicator (level) | Score | Suggested virtue |
 |---|---|---|

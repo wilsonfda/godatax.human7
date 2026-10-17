@@ -4,12 +4,15 @@
  * relationship. Anything added to psychometrics_model_firebird25.sql,
  * septenary_constitution_model_firebird25.sql, chakras_model_firebird25.sql,
  * five_ways_model_firebird25.sql(+_septenary_map), gdx_coerencia_cardiaca_
- * fb25_ddl.sql or godatax_human_dw_model_firebird25.sql is picked up on the
- * next run automatically, as long as its table name matches one of the
+ * fb25_ddl.sql, godatax_human_dw_model_firebird25.sql, or (2026-10-15)
+ * virtology_model_firebird25.sql (12.gdx.virtology -- GDX_VT_VIRTUE, the
+ * 33-virtue catalog, and GDX_VT_VARIABLE_VIRTUE_MAP, its correspondence to
+ * psychometric/metaphysical variables) is picked up on the next run
+ * automatically, as long as its table name matches one of the
  * TABLE_PREFIXES below.
  */
 
-const TABLE_PREFIXES = ['GDX_PSY_', 'GDX_TA_', 'GDX_CC_', 'DW_DIM_', 'DW_FACT_'];
+const TABLE_PREFIXES = ['GDX_PSY_', 'GDX_TA_', 'GDX_CC_', 'GDX_VT_', 'DW_DIM_', 'DW_FACT_'];
 
 const FB_BLOB_TYPE = 261; // RDB$FIELD_TYPE code for BLOB columns
 

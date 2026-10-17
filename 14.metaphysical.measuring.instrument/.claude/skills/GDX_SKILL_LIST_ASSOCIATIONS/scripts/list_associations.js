@@ -8,22 +8,27 @@
  * Five Ways run from septenary level 4 to 6", "psychometric variable X sits
  * at septenary level Y", "variable X's high score reads as virtue Z".
  *
- * These are NOT participant results -- they are catalog/reference rows
- * (or, for Virtology, code) that exist once for the whole framework,
- * independent of any --study. This is the deliberate difference from
- * GDX_SKILL_IDENTIFY_VIRTUES / GDX_SKILL_LINK_SUGGESTIONS, which score one
- * study's participants; this skill inventories the fixed judgment calls
- * those (and other) skills read from.
+ * These are NOT participant results -- they are catalog/reference rows that
+ * exist once for the whole framework, independent of any --study. This is
+ * the deliberate difference from GDX_SKILL_IDENTIFY_VIRTUES /
+ * GDX_SKILL_LINK_SUGGESTIONS, which score one study's participants; this
+ * skill inventories the fixed judgment calls those (and other) skills
+ * read from.
  *
- * Two source types, both surfaced explicitly because they carry different
- * epistemic weight:
- *   - DB-BACKED: a real row in Firebird, most with a CONFIDENCE_LEVEL
- *     column (HIGH/MEDIUM/LOW/SPECULATIVE) -- GDX_PSY_CHAKRA (no confidence
- *     column, see caveats), GDX_TA_WAY_SEPT_MAP, GDX_PSY_SEPT_LEVEL_PSY_MAP.
- *   - CODE-ONLY: never written to Firebird or Neo4j -- lives only in
- *     12.gdx.virtology's two virtue_knowledge.js copies
- *     (GDX_SKILL_LINK_SUGGESTIONS and GDX_SKILL_IDENTIFY_VIRTUES), with no
- *     confidence field at all.
+ * Every source this skill reads is a real row in Firebird -- GDX_PSY_CHAKRA,
+ * GDX_PSY_CHAKRA_VAR_MAP, GDX_TA_WAY_SEPT_MAP, GDX_PSY_SEPT_LEVEL_PSY_MAP, and
+ * GDX_VT_VARIABLE_VIRTUE_MAP x GDX_VT_VIRTUE for Virtology -- most with a
+ * CONFIDENCE_LEVEL column (HIGH/MEDIUM/LOW/SPECULATIVE) and a
+ * NUMBER_CONFIRMATIONS column. The one exception is GDX_PSY_CHAKRA, a fixed
+ * 7-row catalog with neither column (see Section 1's own note).
+ *
+ * 2026-10-15: the Virtology section used to read two hand-written
+ * virtue_knowledge.js copies (code, never touching Firebird) instead of a
+ * database table -- GDX_SKILL_LINK_SUGGESTIONS and GDX_SKILL_IDENTIFY_VIRTUES
+ * made the same switch at the same time, to GDX_VT_VARIABLE_VIRTUE_MAP /
+ * GDX_VT_VIRTUE (12.gdx.virtology/virtology_model_firebird25.sql). Those two
+ * virtue_knowledge.js files still exist but are no longer read by anything
+ * in the project.
  *
  * Read-only: never writes to Firebird or Neo4j. Writes one timestamped
  * Markdown report to 14.metaphysical.measuring.instrument/ AND prints it to
@@ -32,10 +37,9 @@
  * Usage:
  *   node list_associations.js [--sample] [--out <path>]
  *
- *   --sample  use embedded synthetic data for the Firebird-backed sections
- *             (no DB connection) -- the code-only virtue section always
- *             reads the real virtue_knowledge.js files, sample or not,
- *             since that source is a local file, not a DB round-trip.
+ *   --sample  use embedded synthetic data for every section (no DB
+ *             connection) -- including Virtology, now that it is DB-backed
+ *             too.
  *   --out     override the default output path (14.metaphysical.measuring.instrument/
  *             Framework_Associations_<timestamp>.md)
  */
@@ -44,10 +48,7 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 
-const REPO_ROOT = path.join(__dirname, '..', '..', '..', '..', '..');
 const OUTPUT_DIR = path.join(__dirname, '..', '..', '..', '..');
-const LINK_SUGGESTIONS_VK = path.join(REPO_ROOT, '12.gdx.virtology', '.claude', 'skills', 'GDX_SKILL_LINK_SUGGESTIONS', 'scripts', 'virtue_knowledge.js');
-const IDENTIFY_VIRTUES_VK = path.join(REPO_ROOT, '12.gdx.virtology', '.claude', 'skills', 'GDX_SKILL_IDENTIFY_VIRTUES', 'scripts', 'virtue_knowledge.js');
 
 function parseArgs(argv) {
   const args = { sample: false, out: null };
@@ -90,59 +91,21 @@ const SAMPLE_PSY_SEPT_ROWS = [
   { LEVEL_ORDER: 2, LEVEL_NAME: 'Vital/Etheric Body', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition, energy, willingness to invest effort in studying', CORRESPONDENCE_JUSTIFICATION: 'Vigor is by definition vital energy applied to an activity -- a direct mapping', CONFIDENCE_LEVEL: 'HIGH', NUMBER_CONFIRMATIONS: 1 },
   { LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', INSTRUMENT_LABEL: 'Block an1-an11 (undocumented, hypothesis)', VARIABLE_LABEL: 'Personal Fulfillment -> RealizPess', SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', CORRESPONDENCE_JUSTIFICATION: 'The name and semantics suggest the highest level of meaning, beyond the abstract mind', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0 },
 ];
+const SAMPLE_VIRTUE_ROWS = [
+  { SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition and energy to invest effort in studying', JUSTIFICATION_DEFICIT: 'Low vigor is depletion of sustained energy -- Perseverance is the practice of maintaining effort despite wear, a direct antidote for the drop in disposition', JUSTIFICATION_STRENGTH: 'High vigor is sustained energy already in action -- a sign that Perseverance, the practice of maintaining effort despite wear, is already a resource present in this population', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 1, VIRTUE_NAME_PT: 'Perseverança', VIRTUE_NAME_EN: 'Perseverance', VIRTUE_ORDER_NUM: 10 },
+  { SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', JUSTIFICATION_DEFICIT: 'Maximal personal fulfillment is the direct psychological correlate of the Jungian process of individuation -- becoming a fully integrated Self', JUSTIFICATION_STRENGTH: 'An already-high sense of personal fulfillment is the direct psychological correlate of an Individuation process already underway -- the Self already on its way to integration', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 1, VIRTUE_NAME_PT: 'Individuação', VIRTUE_NAME_EN: 'Individuation', VIRTUE_ORDER_NUM: 2 },
+];
 
-// ----------------------------------------------------------------------
-// Code-only source: the two virtue_knowledge.js copies in 12.gdx.virtology
-// ----------------------------------------------------------------------
-function loadVirtueKnowledge() {
-  const missingFiles = [];
-  let linkMap = null;
-  let identifyMap = null;
-
-  let virtueByPt = null;
-  if (fs.existsSync(LINK_SUGGESTIONS_VK)) {
-    const mod = require(LINK_SUGGESTIONS_VK);
-    linkMap = mod.VARIABLE_VIRTUE_MAP;
-    virtueByPt = mod.virtueByPt;
-  } else missingFiles.push(path.relative(REPO_ROOT, LINK_SUGGESTIONS_VK));
-
-  if (fs.existsSync(IDENTIFY_VIRTUES_VK)) {
-    const mod = require(IDENTIFY_VIRTUES_VK);
-    identifyMap = mod.VARIABLE_VIRTUE_MAP;
-    if (!virtueByPt) virtueByPt = mod.virtueByPt;
-  } else missingFiles.push(path.relative(REPO_ROOT, IDENTIFY_VIRTUES_VK));
-
-  const allKeys = Array.from(new Set([
-    ...(linkMap ? Object.keys(linkMap) : []),
-    ...(identifyMap ? Object.keys(identifyMap) : []),
-  ])).sort();
-
-  const rows = [];
-  const syncIssues = [];
-
-  for (const key of allKeys) {
-    const a = linkMap && linkMap[key];   // deficit framing (LINK_SUGGESTIONS)
-    const b = identifyMap && identifyMap[key]; // strength framing (IDENTIFY_VIRTUES)
-
-    if (a && !b) syncIssues.push(`\`${key}\`: present in GDX_SKILL_LINK_SUGGESTIONS, missing in GDX_SKILL_IDENTIFY_VIRTUES`);
-    if (b && !a) syncIssues.push(`\`${key}\`: present in GDX_SKILL_IDENTIFY_VIRTUES, missing in GDX_SKILL_LINK_SUGGESTIONS`);
-    if (a && b) {
-      if (a.behavior !== b.behavior) syncIssues.push(`\`${key}\`: "behavior" field diverges between the two copies`);
-      if (a.virtue !== b.virtue) syncIssues.push(`\`${key}\`: "virtue" field diverges between the two copies ("${a.virtue}" vs "${b.virtue}")`);
-    }
-
-    const primary = a || b;
-    const virtueInfo = virtueByPt ? virtueByPt(primary.virtue) : null;
-    rows.push({
-      savColumn: key,
-      behavior: primary.behavior,
-      virtue: virtueInfo ? `${virtueInfo.pt} (${virtueInfo.en})` : primary.virtue,
-      justificationDeficit: a ? a.justification : null,
-      justificationStrength: b ? b.justification : null,
-    });
-  }
-
-  return { rows, syncIssues, missingFiles };
+async function fetchVirtueLinks(fbDb) {
+  const rows = await fbQuery(fbDb, `
+    SELECT M.SAV_COLUMN AS SAV_COLUMN, M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR,
+           M.JUSTIFICATION_DEFICIT AS JUSTIFICATION_DEFICIT, M.JUSTIFICATION_STRENGTH AS JUSTIFICATION_STRENGTH,
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS,
+           V.NAME_PT AS VIRTUE_NAME_PT, V.NAME_EN AS VIRTUE_NAME_EN, V.ORDER_NUM AS VIRTUE_ORDER_NUM
+    FROM GDX_VT_VARIABLE_VIRTUE_MAP M
+    JOIN GDX_VT_VIRTUE V ON V.ID_VIRTUE = M.ID_VIRTUE
+    ORDER BY V.ORDER_NUM, M.ID_MAPPING`);
+  return rows;
 }
 
 // ----------------------------------------------------------------------
@@ -242,19 +205,17 @@ function sumConfirmations(rows) {
   return rows.reduce((total, r) => total + (Number(r.NUMBER_CONFIRMATIONS) || 0), 0);
 }
 
-function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtue, sample, host, timestamp }) {
+function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtueRows, sample, host, timestamp }) {
   const lines = [];
 
   lines.push('# GDX_HUMAN — Conceptual Associations Between Perspectives');
   lines.push('');
   lines.push(`> Generated ${timestamp} by \`GDX_SKILL_LIST_ASSOCIATIONS\`.`);
-  lines.push('> Scope: the whole framework — **not** per study. Every row below is catalog/reference data (or code), the same for any study.');
-  lines.push(`> Source: DDL from \`3.septenary.constitution\`, \`4.kundalini.chakras\`, \`5.five.ways.tomas.aquino\`, \`2.relational.model.psychometrics\`, \`7.multidimensional.database\`${sample ? ' — **SAMPLE DATA for the Firebird-backed sections, not a real read**' : ` — live read from ${host}`}, plus the two \`virtue_knowledge.js\` files in \`12.gdx.virtology\` (those never touch Firebird).`);
+  lines.push('> Scope: the whole framework — **not** per study. Every row below is catalog/reference data, the same for any study.');
+  lines.push(`> Source: DDL from \`3.septenary.constitution\`, \`4.kundalini.chakras\`, \`5.five.ways.tomas.aquino\`, \`2.relational.model.psychometrics\`, \`7.multidimensional.database\`, \`12.gdx.virtology\`${sample ? ' — **SAMPLE DATA, not a real read**' : ` — live read from ${host}`}.`);
   lines.push('>');
-  lines.push('> **Two kinds of association, by design, never silently mixed:**');
-  lines.push('> - **DATABASE (Firebird):** exists as a real table row, most with a `CONFIDENCE_LEVEL` column (`HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE`) filled in by whoever wrote the load.');
-  lines.push('> - **CODE:** lives only in `.js` files inside `12.gdx.virtology`\'s skills, was never persisted to Firebird or Neo4j, and has no confidence field at all.');
-  lines.push('> This command does not judge whether a correspondence is "correct" — it only lists what has already been decided somewhere in the framework, with the justification that already existed, and flags where the decision has no recorded confidence level.');
+  lines.push('> **Every association below is a real row in Firebird**, most with a `CONFIDENCE_LEVEL` column (`HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE`) and a `NUMBER_CONFIRMATIONS` column (independent corroborations, separate from confidence). The one exception is `GDX_PSY_CHAKRA` (Section 1), a 7-row catalog that predates both columns and has neither — flagged explicitly in its own section, not silently treated as confirmed or graded.');
+  lines.push('> This command does not judge whether a correspondence is "correct" — it only lists what has already been decided somewhere in the framework, with the justification that already existed, and flags where a decision has no recorded confidence or confirmation.');
   lines.push('');
 
   // Section 1: Chakras
@@ -339,30 +300,24 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
   lines.push(`Confidence distribution: HIGH=${psyConf.HIGH}, MEDIUM=${psyConf.MEDIUM}, LOW=${psyConf.LOW}, SPECULATIVE=${psyConf.SPECULATIVE}. Confirmations total: ${sumConfirmations(psyRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${psyRows.length} row(s)).`);
   lines.push('');
 
-  // Section 4: Psychometrics <-> Virtology (CODE-ONLY)
-  lines.push('## 4. Psychometric Variables ↔ Virtues (Virtology) — CODE, not Database');
+  // Section 4: Psychometrics <-> Virtology
+  lines.push('## 4. Psychometric Variables ↔ Virtues (Virtology)');
   lines.push('');
-  lines.push('Source: `virtue_knowledge.js`, duplicated (by design) in `12.gdx.virtology/.claude/skills/GDX_SKILL_LINK_SUGGESTIONS/scripts/` and `.../GDX_SKILL_IDENTIFY_VIRTUES/scripts/` — **CODE, never written to Firebird or Neo4j**. No confidence column: `HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE` is implicit nowhere, unlike the three sections above.');
+  lines.push(`Source: \`GDX_VT_VARIABLE_VIRTUE_MAP\` × \`GDX_VT_VIRTUE\` (12.gdx.virtology/virtology_model_firebird25.sql) — **DATABASE**, ${virtueRows.length} cataloged correspondence(s).`);
   lines.push('');
-  lines.push('For each variable, the same virtue association is used in both skills — only the `justification` changes meaning: **deficit/antidote** (low score, `GDX_SKILL_LINK_SUGGESTIONS`) vs. **strength already present** (high score, `GDX_SKILL_IDENTIFY_VIRTUES`). When the same variable also appears in Section 3, its septenary level is shown — the only point in the framework where all three perspectives (Septenary, Psychometrics, Virtology) meet on the same row.');
+  lines.push('This table carries **two** justification columns side by side, by design: `JUSTIFICATION_DEFICIT` (low score → antidote, read by `GDX_SKILL_LINK_SUGGESTIONS`) and `JUSTIFICATION_STRENGTH` (high score → already present, read by `GDX_SKILL_IDENTIFY_VIRTUES`) — the same virtue, two framings of the same correspondence, not two different claims. When the same variable also appears in Section 3, its septenary level is shown — the only point in the framework where all three perspectives (Septenary, Psychometrics, Virtology) meet on the same row.');
   lines.push('');
-  lines.push('| Variable (.sav) | What it measures | Septenary Level (Section 3) | Virtue | Justification (deficit → antidote) | Justification (strength → already present) |');
-  lines.push('|---|---|---|---|---|---|');
+  lines.push('| Variable (.sav) | What it measures | Septenary Level (Section 3) | Virtue | Confidence | Confirmations | Justification (deficit → antidote) | Justification (strength → already present) |');
+  lines.push('|---|---|---|---|---|---|---|---|');
   const psyBySav = new Map(psyRows.filter((r) => r.SAV_COLUMN).map((r) => [r.SAV_COLUMN, r]));
-  for (const r of virtue.rows) {
-    const linked = psyBySav.get(r.savColumn);
+  for (const r of virtueRows) {
+    const linked = psyBySav.get(r.SAV_COLUMN);
     const levelCell = linked ? `#${linked.LEVEL_ORDER} ${linked.LEVEL_NAME}` : '— (no matching row in Section 3)';
-    lines.push(`| \`${r.savColumn}\` | ${r.behavior} | ${levelCell} | ${r.virtue} | ${r.justificationDeficit || '—'} | ${r.justificationStrength || '—'} |`);
+    lines.push(`| \`${r.SAV_COLUMN}\` | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${levelCell} | **${r.VIRTUE_NAME_PT}** (${r.VIRTUE_NAME_EN}, #${r.VIRTUE_ORDER_NUM}) | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.JUSTIFICATION_DEFICIT || '').trim()} | ${(r.JUSTIFICATION_STRENGTH || '').trim()} |`);
   }
   lines.push('');
-
-  if (virtue.missingFiles.length > 0) {
-    lines.push(`**Warning:** could not read ${virtue.missingFiles.length} knowledge file(s): ${virtue.missingFiles.map((f) => `\`${f}\``).join(', ')}.`);
-    lines.push('');
-  }
-  lines.push(virtue.syncIssues.length === 0
-    ? '**Sync check:** the two `virtue_knowledge.js` copies agree on every variable (`behavior` and `virtue` identical) — only the justification prose differs, as intended by design.'
-    : `**Sync check — ${virtue.syncIssues.length} divergence(s) found:**\n\n${virtue.syncIssues.map((s) => `- ${s}`).join('\n')}`);
+  const virtueConf = confidenceCounts(virtueRows, 'CONFIDENCE_LEVEL');
+  lines.push(`Confidence distribution: HIGH=${virtueConf.HIGH}, MEDIUM=${virtueConf.MEDIUM}, LOW=${virtueConf.LOW}, SPECULATIVE=${virtueConf.SPECULATIVE}. Confirmations total: ${sumConfirmations(virtueRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${virtueRows.length} row(s)).`);
   lines.push('');
 
   // Section 5: gaps
@@ -370,12 +325,12 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
   lines.push('');
   lines.push('- **6.cardiac.coherence:** no table or column links `GDX_CC_*` to `GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_CHAKRA`, `GDX_TA_WAY`, or to the virtues. The only existing link (`GDX_CC_PERSON.ID_PERSON -> DW_DIM_PERSON.ID_PERSON`) is person identity across modules, not a conceptual correspondence between perspectives.');
   lines.push('- **Virtology (12.gdx.virtology) ↔ Septenary Constitution / Chakras / Five Ways:** there is no direct association between a virtue and a septenary level/chakra/way — the only bridge today runs through the psychometric variable (Section 4), and only when that same variable is also in Section 3.');
-  lines.push('- **Psychometric variables with no virtue:** any `SAV_COLUMN` that appears in Section 3 but not in `virtue_knowledge.js` has no virtue associated — this is reported by `GDX_SKILL_IDENTIFY_VIRTUES`/`GDX_SKILL_LINK_SUGGESTIONS` as "no virtue identified (review)" when that variable\'s score lands in the top/bottom of the ranking, not listed here row by row.');
+  lines.push('- **Psychometric variables with no virtue:** any `SAV_COLUMN` that appears in Section 3 but not in `GDX_VT_VARIABLE_VIRTUE_MAP` has no virtue associated — this is reported by `GDX_SKILL_IDENTIFY_VIRTUES`/`GDX_SKILL_LINK_SUGGESTIONS` as "no virtue identified (review)" when that variable\'s score lands in the top/bottom of the ranking, not listed here row by row.');
   lines.push('');
 
   // Summary
-  const totalDb = chakraRows.length + chakraVarRows.length + wayRows.length + wayVarRows.length + psyRows.length;
-  const totalConfirmations = sumConfirmations(chakraVarRows) + sumConfirmations(wayRows) + sumConfirmations(wayVarRows) + sumConfirmations(psyRows);
+  const totalDb = chakraRows.length + chakraVarRows.length + wayRows.length + wayVarRows.length + psyRows.length + virtueRows.length;
+  const totalConfirmations = sumConfirmations(chakraVarRows) + sumConfirmations(wayRows) + sumConfirmations(wayVarRows) + sumConfirmations(psyRows) + sumConfirmations(virtueRows);
   lines.push('## Summary');
   lines.push('');
   lines.push('| Perspective pair | # of associations | Confirmations | Where it lives |');
@@ -389,17 +344,16 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
     lines.push(`| Metaphysical Variables ↔ Five Ways | ${wayVarRows.length} | ${sumConfirmations(wayVarRows)} | Firebird — \`GDX_TA_WAY_SEPT_MAP\` |`);
   }
   lines.push(`| Psychometrics ↔ Septenary Constitution | ${psyRows.length} | ${sumConfirmations(psyRows)} | Firebird — \`GDX_PSY_SEPT_LEVEL_PSY_MAP\` |`);
-  lines.push(`| Psychometrics ↔ Virtues (Virtology) | ${virtue.rows.length} | — (code-only, no confirmations column) | Code — \`virtue_knowledge.js\` (×2 copies) |`);
-  lines.push(`| **Total cataloged associations** | **${totalDb + virtue.rows.length}** | **${totalConfirmations}** | ${totalDb} in the database + ${virtue.rows.length} in code only |`);
+  lines.push(`| Psychometrics ↔ Virtues (Virtology) | ${virtueRows.length} | ${sumConfirmations(virtueRows)} | Firebird — \`GDX_VT_VARIABLE_VIRTUE_MAP\` |`);
+  lines.push(`| **Total cataloged associations** | **${totalDb}** | **${totalConfirmations}** | all in the database |`);
   lines.push('');
 
   lines.push('## Caveats');
   lines.push('');
-  lines.push('1. None of the associations here is a statistical or empirical finding — all are interpretive judgments recorded by whoever wrote the load (Firebird) or the file (code), with the same methodological honesty standard as `SPSS_Septenary_Constitution_Mapping.md`.');
-  lines.push('2. The three Firebird tables don\'t share the same rigor: only `GDX_TA_WAY_SEPT_MAP` and `GDX_PSY_SEPT_LEVEL_PSY_MAP` have a per-row `CONFIDENCE_LEVEL`; `GDX_PSY_CHAKRA` has none.');
-  lines.push('3. The Virtue association never went through a "capture knowledge → design schema → load into the database" step like the others — it remains code-only, manually duplicated across two skills.');
-  lines.push('4. This command is read-only: it never writes to Firebird or Neo4j. The generated `.md` file is the only side effect.');
-  lines.push('5. `NUMBER_CONFIRMATIONS` (added by `confirmation_fields_association_maps_firebird25.sql`) counts independent corroborations of a correspondence, separate from `CONFIDENCE_LEVEL` (a self-assessed label). It exists on `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA_VAR_MAP`, and `GDX_TA_WAY_SEPT_MAP` only — not on `GDX_PSY_CHAKRA`.');
+  lines.push('1. None of the associations here is a statistical or empirical finding — all are interpretive judgments recorded by whoever wrote the load, with the same methodological honesty standard as `SPSS_Septenary_Constitution_Mapping.md`.');
+  lines.push('2. Only `GDX_PSY_CHAKRA` (Section 1) lacks a `CONFIDENCE_LEVEL` column — every other table read by this skill (`GDX_PSY_CHAKRA_VAR_MAP`, `GDX_TA_WAY_SEPT_MAP`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_VT_VARIABLE_VIRTUE_MAP`) has one.');
+  lines.push('3. This command is read-only: it never writes to Firebird or Neo4j. The generated `.md` file is the only side effect.');
+  lines.push('4. `NUMBER_CONFIRMATIONS` counts independent corroborations of a correspondence, separate from `CONFIDENCE_LEVEL` (a self-assessed label). Every table this skill reads has it except `GDX_PSY_CHAKRA`.');
 
   return lines.join('\n') + '\n';
 }
@@ -414,15 +368,17 @@ async function main() {
   let wayRows;
   let wayVarRows;
   let psyRows;
+  let virtueRows;
   let host = null;
 
   if (args.sample) {
-    console.log('[SAMPLE] using embedded synthetic data for the Firebird-backed sections -- no DB connection.');
+    console.log('[SAMPLE] using embedded synthetic data for every section -- no DB connection.');
     chakraRows = SAMPLE_CHAKRA_ROWS;
     chakraVarRows = SAMPLE_CHAKRA_VAR_ROWS;
     wayRows = SAMPLE_WAY_ROWS;
     wayVarRows = [];
     psyRows = SAMPLE_PSY_SEPT_ROWS;
+    virtueRows = SAMPLE_VIRTUE_ROWS;
   } else {
     const fbOptions = {
       host: requireEnv('GDX_HUMAN_FB_HOST'),
@@ -442,14 +398,13 @@ async function main() {
       wayRows = await fetchFiveWaysLinks(fbDb);
       wayVarRows = await fetchFiveWaysVariableLinks(fbDb);
       psyRows = await fetchPsySeptenaryLinks(fbDb);
+      virtueRows = await fetchVirtueLinks(fbDb);
     } finally {
       fbDb.detach();
     }
   }
 
-  const virtue = loadVirtueKnowledge();
-
-  const report = buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtue, sample: args.sample, host, timestamp });
+  const report = buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtueRows, sample: args.sample, host, timestamp });
 
   const outPath = args.out
     ? path.resolve(args.out)

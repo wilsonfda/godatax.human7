@@ -657,4 +657,8 @@ function renderSeptenaryConstitutionPortrait({ title, description, rows, favicon
 module.exports = {
   renderLineChart, renderMultiPanelLineChart, renderBarChart, renderHeatmap, renderChakraPortrait,
   renderSeptenaryConstitutionPortrait, PALETTE,
+  // Exposed for dashboard_09 (per-respondent profile) and the combined master panel, both of which
+  // need custom, non-chart page bodies (text sections, embedded iframes, item-answer tables) built
+  // directly on pageShell rather than through one of the fixed render*Chart shapes above.
+  pageShell, esc, niceTicks,
 };

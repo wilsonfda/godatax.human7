@@ -32,18 +32,25 @@ separate console read; it never mixes two studies' scores into one ranking.
 `7.multidimensional.database`'s `DW_FACT_PSY_VARIABLE_RESULT` joined to
 `DW_DIM_VARIABLE`, `DW_DIM_SEPTENARY_LEVEL`, and `DW_DIM_PERSON` (for the
 `ID_STUDY` filter) — the exact same source `GDX_SKILL_LINK_SUGGESTIONS`
-reads, only sorted `DESC` instead of `ASC`. This skill is **read-only**: it
-never writes to Firebird or Neo4j, and (unlike `GDX_SKILL_LINK_SUGGESTIONS`)
-it never writes a Markdown report either — its output lives only in the
-terminal.
+reads, only sorted `DESC` instead of `ASC`. The virtue itself comes from
+`GDX_VT_VARIABLE_VIRTUE_MAP` joined to `GDX_VT_VIRTUE`
+(`12.gdx.virtology/virtology_model_firebird25.sql`), keyed by `SAV_COLUMN`
+and reading its `JUSTIFICATION_STRENGTH` column — the same table
+`GDX_SKILL_LINK_SUGGESTIONS` reads, just a different justification column.
+This skill is **read-only**: it never writes to Firebird or Neo4j, and
+(unlike `GDX_SKILL_LINK_SUGGESTIONS`) it never writes a Markdown report
+either — its output lives only in the terminal.
+
+**2026-10-15:** this used to read a hand-written `scripts/virtue_knowledge.js`
+file instead of the database (see "Keeping this in sync" below for why that
+file still exists).
 
 ## What it will never do
 
 - **Never guesses a virtue.** Which of the 33 virtues corresponds to a given
   psychometric variable is the same fixed interpretive judgment call as
-  `GDX_SKILL_LINK_SUGGESTIONS`, kept in this skill's own
-  `scripts/virtue_knowledge.js` (same `.sav`-column keys, same 33 virtues —
-  see "Keeping this in sync" below). A variable with no entry there is
+  `GDX_SKILL_LINK_SUGGESTIONS` reads, recorded in `GDX_VT_VARIABLE_VIRTUE_MAP`
+  (Firebird), keyed by `SAV_COLUMN`. A variable with no row there is
   reported as **"sem virtude identificada (revisar)"**, not silently
   skipped and not auto-assigned.
 - **Never claims clinical validity.** The console output repeats the same
@@ -83,25 +90,29 @@ prints.
 
 ## Keeping this in sync
 
-`scripts/virtue_knowledge.js` here is a **separate copy** of
+Both this skill and `GDX_SKILL_LINK_SUGGESTIONS` now read the **same**
+Firebird table (`GDX_VT_VARIABLE_VIRTUE_MAP` × `GDX_VT_VIRTUE`), so there is
+no longer a cross-file sync problem for the `behavior`/virtue pairing — a
+new row is visible to both skills immediately, only the justification
+column differs by which one is read
+(`JUSTIFICATION_STRENGTH` here, `JUSTIFICATION_DEFICIT` in the sibling).
+
+`scripts/virtue_knowledge.js` here is **no longer read by this script.** It
+still exists (a separate copy of
 `GDX_SKILL_LINK_SUGGESTIONS/scripts/virtue_knowledge.js`'s `VIRTUES` list
-and `VARIABLE_VIRTUE_MAP` (which virtue a given `.sav` column corresponds
-to) — same pattern the repo already uses for per-skill knowledge files
-(e.g. `GDX_SKILL_LOAD_SEPT_MAPS_DB/scripts/knowledge.js`). When a new
-psychometric variable gets a variable → virtue judgment call added to one
-skill's map, add the identical `behavior`/`virtue` entry to the other's too
-so both skills agree on which virtue a given variable points to; only the
-`justification` prose may legitimately differ, since this skill always
-frames it as a strength-in-potential ("score alto aqui..."), never as a
-deficit-and-antidote the way `GDX_SKILL_LINK_SUGGESTIONS` does.
+and `VARIABLE_VIRTUE_MAP`) only because `GDX_SKILL_LIST_ASSOCIATIONS`'s
+code-vs-database sync check still reads both copies directly, to flag drift
+between them as a historical/code-only data point distinct from the
+database. If that sync check is ever retired too, these two files become
+fully dead and can be deleted.
 
 ## Files in this skill
 
-- `scripts/virtue_knowledge.js` — the 33-virtue catalog plus the fixed
-  variable → virtue judgment-call map, framed for high scores (edit this
-  when a new psychometric variable needs a potential-virtue judgment call,
-  and mirror the `behavior`/`virtue` pairing into `GDX_SKILL_LINK_SUGGESTIONS`)
-- `scripts/identify_virtues.js` — reads the DW, ranks the highest scores,
+- `scripts/virtue_knowledge.js` — **no longer read by this script.** Kept
+  only for `GDX_SKILL_LIST_ASSOCIATIONS`'s code-vs-database sync check (see
+  "Keeping this in sync" above).
+- `scripts/identify_virtues.js` — reads the DW and
+  `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_VT_VIRTUE`, ranks the highest scores,
   looks up potential virtues, prints the result (Node.js + `node-firebird`,
   no native client library required)
 - `scripts/package.json`

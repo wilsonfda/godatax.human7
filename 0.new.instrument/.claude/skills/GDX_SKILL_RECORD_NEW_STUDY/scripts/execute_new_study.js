@@ -119,8 +119,21 @@ function splitFlatStatements(text) {
   return statements;
 }
 
+/** Strips every leading `/* ... *\/` comment block, not just the first one --
+ * 02_new_instrument_*.sql files always have TWO (the standard file header,
+ * then generate_new_study_scripts.py's own "study_type -> default
+ * VARIABLE_TYPE" note), and a single non-repeated strip left the second one
+ * in front of `EXECUTE BLOCK`, so parseFile's `/^EXECUTE\s+BLOCK/i` test
+ * failed and the file was mis-parsed in 'flat' mode instead of 'block' mode
+ * (observed failure: "Trailing content without terminating ';': END"). */
 function stripHeaderComment(sqlText) {
-  return sqlText.replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '');
+  let body = sqlText;
+  let prev;
+  do {
+    prev = body;
+    body = body.replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '');
+  } while (body !== prev);
+  return body;
 }
 
 /** Returns { mode: 'block', statement } or { mode: 'flat', statements: [...] }. */

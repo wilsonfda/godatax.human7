@@ -1,6 +1,6 @@
 ---
 name: GDX_SKILL_GODATAX_HUMAN7_LINK_PRED
-description: Runs Model 1 (link prediction) from 10.gdx.machine.learning/Septenary_Link_Prediction_and_Community_Detection.md against the GDX_HUMAN knowledge graph in Neo4j -- FastRP node embeddings + a trained classifier suggest, for every GDX_PSY_VARIABLE with no existing septenary-level mapping, a ranked top-3 list of candidate GDX_PSY_SEPTENARY_LEVEL targets. Reads only Neo4j, never Firebird. Writes a timestamped Markdown report to 10.gdx.machine.learning/. Use when the user asks which level an unmapped psychometric variable most likely belongs to, or to refresh those suggestions after the graph changes.
+description: Runs Model 1 (link prediction) from 10.gdx.machine.learning/Septenary_Link_Prediction_and_Community_Detection.md against the GDX_HUMAN knowledge graph in Neo4j -- FastRP node embeddings + two independently-trained classifiers suggest, for every GDX_PSY_VARIABLE with no existing mapping, a ranked top-3 list of candidate GDX_PSY_SEPTENARY_LEVEL targets AND (2026-10-15) a ranked top-3 list of candidate GDX_VT_VIRTUE (Virtology) targets. Reads only Neo4j, never Firebird. Writes a timestamped Markdown report to 10.gdx.machine.learning/. Use when the user asks which level or which virtue an unmapped psychometric variable most likely belongs to, or to refresh those suggestions after the graph changes.
 ---
 
 # GDX_SKILL_GODATAX_HUMAN7_LINK_PRED
@@ -11,6 +11,16 @@ Runs **Model 1** exactly as scoped in
 `MAPS_TO_LEVEL` edge, rank the 7 `GDX_PSY_SEPTENARY_LEVEL` nodes by predicted probability of
 being the right one, using FastRP graph embeddings as features. Output is a ranked
 **triage aid for human review** — see "What this will never do" below.
+
+**2026-10-15 extension — virtue prediction.** The same model now also ranks, for every
+`GDX_PSY_VARIABLE` node with no existing `MAPS_TO_VIRTUE` edge, the 33 `GDX_VT_VIRTUE`
+(Virtology) nodes by predicted probability. Same embedding space (one graph projection
+covers both targets now), same Track A/Track B design, but a **separate classifier** per
+target — level and virtue are different link-prediction tasks with their own positive/negative
+sets, not one combined task. Kept inside this one skill rather than split into a "Model 2",
+since the only things that actually differ between the two targets are the target node label
+and the materialized relationship name; everything else (embeddings, Track B's design, Track
+A's AUCPR-only role, the `--dry-run` write gate) is identical code, now parameterized once.
 
 ## Reads only Neo4j — never Firebird
 
@@ -26,30 +36,42 @@ Every run requires `--study <slug>` (same slug/intake.json resolution as the oth
 `--study`-scoped `GDX_HUMAN` skills), and the run confirms a `GDX_PSY_STUDY` node for that
 study exists in the graph before doing anything else. **This does not filter the model's own
 subgraph** — `GDX_PSY_VARIABLE`, `GDX_PSY_CONSTRUCT`, `GDX_PSY_INSTRUMENT`,
-`GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_CHAKRA`, `GDX_TA_WAY` and their mapping edges are shared
-catalog data across every study (see `GDX_SKILL_GODATAX_HUMAN7_BY_SPU/SKILL.md`'s
+`GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_CHAKRA`, `GDX_TA_WAY`, `GDX_VT_VIRTUE` and their mapping
+edges are shared catalog data across every study (see `GDX_SKILL_GODATAX_HUMAN7_BY_SPU/SKILL.md`'s
 scoped-vs-global table), so `--study` here is an identity/sanity check and a label on the
-report, not a data filter.
+report, not a data filter. (Virtue suggestions specifically also require
+`GDX_SKILL_GODATAX_HUMAN7_BY_SPU` to have exported `GDX_VT_VIRTUE`/`GDX_VT_VARIABLE_VIRTUE_MAP`
+at least once — true for any export run from 2026-10-15 onward.)
 
 ## Method
 
-1. **Materialize `MAPS_TO_LEVEL`** — a direct `(:GDX_PSY_VARIABLE)-[:MAPS_TO_LEVEL]->(:GDX_PSY_SEPTENARY_LEVEL)`
-   edge, `MERGE`d from the existing `GDX_PSY_SEPT_LEVEL_PSY_MAP` junction-table mapping (idempotent,
-   owned by this skill — `GDX_SKILL_GODATAX_HUMAN7_BY_SPU` never creates it).
-2. **Project a graph** (`gds.graph.project`, Aura Graph Analytics) over the catalog subgraph
-   plus `MAPS_TO_LEVEL`, undirected.
-3. **FastRP embeddings** (`gds.fastRP.mutate`, 32 dimensions) for every node.
-4. **Two tracks from here** — see "Why a custom classifier" below for why both exist:
+1. **Materialize two relationships** — `(:GDX_PSY_VARIABLE)-[:MAPS_TO_LEVEL]->(:GDX_PSY_SEPTENARY_LEVEL)`,
+   `MERGE`d from `GDX_PSY_SEPT_LEVEL_PSY_MAP`, and (2026-10-15)
+   `(:GDX_PSY_VARIABLE)-[:MAPS_TO_VIRTUE]->(:GDX_VT_VIRTUE)`, `MERGE`d from
+   `GDX_VT_VARIABLE_VIRTUE_MAP` — both idempotent, both owned by this skill
+   (`GDX_SKILL_GODATAX_HUMAN7_BY_SPU` creates neither).
+2. **Project ONE graph** (`gds.graph.project`, Aura Graph Analytics) over the catalog subgraph
+   plus both `MAPS_TO_LEVEL` and `MAPS_TO_VIRTUE`, undirected — shared across both targets, so
+   the virtue nodes' graph position (e.g. which variables already point at them) also informs
+   the level embeddings and vice versa.
+3. **FastRP embeddings** (`gds.fastRP.mutate`, 32 dimensions) for every node, level and virtue
+   nodes included.
+4. **Two tracks, run once per target (level, then virtue)** — see "Why a custom classifier"
+   below for why both tracks exist:
    - **Track A** (metric only): the real `gds.beta.pipeline.linkPrediction` pipeline —
-     FastRP + a cross-validated logistic regression — trained on the existing
-     `MAPS_TO_LEVEL` edges as positives, reported as an independent AUCPR figure in the report.
+     FastRP + a cross-validated logistic regression — trained once per target
+     (`targetRelationshipType: 'MAPS_TO_LEVEL'`, then again with `'MAPS_TO_VIRTUE'`, each its
+     own `modelName` so they don't collide), reported as two independent AUCPR figures.
    - **Track B** (the actual ranking): embeddings pulled back via
      `gds.graph.nodeProperty.stream`, Hadamard-product features, a small logistic regression
-     trained **in this script** (plain JS, ~30 lines, no dependency) on the same positive
-     edges plus an equal number of deterministically-sampled non-edges. This is what scores
-     every (unmapped variable, level) candidate and produces the report's ranking.
-5. **Report** — ranked top-N (default 3) candidate levels per unmapped variable, with
-   probabilities, the AUCPR figure, and the small-N caveat.
+     trained **in this script** (`scoreCandidates()`, shared by both targets) on that target's
+     own positive edges plus an equal number of deterministically-sampled non-edges (different
+     random seed per target, so the two negative samples don't overlap). A target with **zero**
+     positive edges yet (virtue, on this skill's very first run before `MAPS_TO_VIRTUE` has ever
+     been materialized) trains nothing and the report says so explicitly, rather than crashing
+     or showing a meaningless untrained score.
+5. **Report** — ranked top-N (default 3) candidate levels **and** candidate virtues per
+   unmapped variable, with probabilities, both AUCPR figures, and the small-N caveat for each.
 
 ### Why a custom classifier (Track B) instead of trusting the pipeline's own predict step
 
@@ -78,22 +100,27 @@ If a future Aura Graph Analytics release fixes this, Track B could be retired in
 
 ## What this will never do
 
-- **Never auto-writes to `GDX_PSY_SEPT_LEVEL_PSY_MAP`.** The output is a ranked suggestion
-  list for a human to review — same discipline as `GDX_SKILL_LOAD_SEPT_MAPS_DB`'s own
-  `knowledge.js`: accepting a suggestion still means adding it there by hand, with its own
-  written justification.
-- **`--dry-run` performs no graph write at all.** The one real write this script makes --
-  `MERGE`-materializing the `MAPS_TO_LEVEL` relationship from the existing
-  `GDX_PSY_SEPT_LEVEL_PSY_MAP` mapping -- is skipped under `--dry-run`; it falls back to a
-  read-only count of whatever a previous real run already materialized (2026-10-15 fix: this
-  `MERGE` used to run unconditionally even under `--dry-run`, the one gap in an otherwise
-  consistent dry-run contract across this project's write-skills).
+- **Never auto-writes to `GDX_PSY_SEPT_LEVEL_PSY_MAP` or `GDX_VT_VARIABLE_VIRTUE_MAP`.** The
+  output is a ranked suggestion list for a human to review — same discipline as
+  `GDX_SKILL_LOAD_SEPT_MAPS_DB`'s own `knowledge.js`: accepting a level suggestion still means
+  writing it by hand (or via `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`), and accepting a virtue
+  suggestion means writing it via `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` — each with its
+  own justification.
+- **`--dry-run` performs no graph write at all, for either target.** The two real writes this
+  script makes — `MERGE`-materializing `MAPS_TO_LEVEL` (from `GDX_PSY_SEPT_LEVEL_PSY_MAP`) and
+  `MAPS_TO_VIRTUE` (from `GDX_VT_VARIABLE_VIRTUE_MAP`) — are both skipped under `--dry-run`;
+  each falls back to a read-only count of whatever a previous real run already materialized
+  (2026-10-15 fix: the `MAPS_TO_LEVEL` `MERGE` used to run unconditionally even under
+  `--dry-run`, the one gap in an otherwise consistent dry-run contract across this project's
+  write-skills; `MAPS_TO_VIRTUE` was built with the gate from day one).
+- **Never crashes, and never shows a meaningless score, when a target has zero positive
+  examples.** True for virtue the very first time this skill runs after
+  `GDX_VT_VARIABLE_VIRTUE_MAP` first gets rows — the report says training was skipped for that
+  target instead of guessing.
 - **Never claims a confident classification.** The report states the exact positive-example
-  count every run (18 as of 2026-09-18/19, one more than the design doc's original 19-vs-7-level
-  baseline mentioned — see `GoDataX_Human_7_DW.md`/`Dashboards_DW_Explanation.md` §11 in
-  `8.gdx.dashboards` for the variable that changed this) and repeats the design doc's small-N
-  caveat: several levels have only 1-3 supporting examples, so every score is a triage rank,
-  not a confident label.
+  count every run for both targets (18 `MAPS_TO_LEVEL` / 17 `MAPS_TO_VIRTUE` as of 2026-10-15)
+  and repeats the design doc's small-N caveat for each: several levels/virtues have only 1-3
+  (or 0) supporting examples, so every score is a triage rank, not a confident label.
 - **Never connects to Firebird.**
 
 ## Running it
@@ -104,15 +131,17 @@ npm install                          # once, installs neo4j-driver
 # copy ../.env.example to ../.env and fill in the NEO4J_* values, or export the vars directly
 node link_prediction.js --study <slug> --dry-run     # print the report, write no file
 node link_prediction.js --study <slug>                # real run, writes the report
-node link_prediction.js --study <slug> --top 5        # report top 5 candidates per variable instead of 3
+node link_prediction.js --study <slug> --top 5        # top 5 candidates per variable, per target (level AND virtue), instead of 3
 ```
 
 Output: `10.gdx.machine.learning/Link_Prediction_<study-slug>_<YYYYMMDD_HHMMSS>.md` (one file
-per run, old runs never overwritten).
+per run, old runs never overwritten) — now with a "Ranked level suggestions" section and a
+"Ranked virtue suggestions" section.
 
 ## Files in this skill
 
-- `scripts/link_prediction.js` — projects the graph, computes embeddings, runs both tracks,
-  writes the report (Node.js + `neo4j-driver`, no native dependency, no Firebird driver)
+- `scripts/link_prediction.js` — projects the graph (now including `GDX_VT_VIRTUE`), computes
+  embeddings, runs both tracks for both targets (level and virtue), writes the report (Node.js
+  + `neo4j-driver`, no native dependency, no Firebird driver)
 - `scripts/package.json`
 - `.env.example` — Neo4j connection variable template (no secrets)

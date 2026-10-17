@@ -9,6 +9,7 @@
     "build": "node make_dashboards.js"
   },
   "dependencies": {
+    "neo4j-driver": "^6.2.0",
     "node-firebird": "^1.1.9"
   }
 }

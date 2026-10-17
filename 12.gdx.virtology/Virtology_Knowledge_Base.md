@@ -203,11 +203,12 @@ project-authored judgment call independent of anything the source site states.
 - **Reads real scores, suggests a real virtue, never invents either.** The lowest-scoring
   indicators come from a live query against `7.multidimensional.database`
   (`DW_FACT_PSY_VARIABLE_RESULT` × `DW_DIM_VARIABLE` × `DW_DIM_SEPTENARY_LEVEL`); the suggested
-  virtue for each one comes from a fixed, hand-written map
-  (`scripts/virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP`, keyed by the variable's `.sav` column)
-  — never a model guess, never an LLM call at report-generation time. A variable with no entry
-  in that map is reported as **"no suggestion (review)"**, exactly the same "not zero, not
-  guessed, structurally absent" discipline `8.gdx.dashboards`'s heatmaps use for an empty cell.
+  virtue for each one comes from a fixed judgment call recorded in Firebird
+  (`GDX_VT_VARIABLE_VIRTUE_MAP` × `GDX_VT_VIRTUE`, `virtology_model_firebird25.sql`, keyed by
+  the variable's `.sav` column) — never a model guess, never an LLM call at report-generation
+  time. A variable with no row there is reported as **"no suggestion (review)"**, exactly the
+  same "not zero, not guessed, structurally absent" discipline `8.gdx.dashboards`'s heatmaps use
+  for an empty cell.
 - **Same methodological honesty as the septenary mapping.** Every generated report repeats,
   near the top, the same caveat `SPSS_Septenary_Constitution_Mapping.md` uses: "which virtue
   addresses this deficit" is a qualitative/interpretive correspondence, not a statistical or
@@ -245,10 +246,10 @@ The one unresolved row is a real, working example of the "never guesses" rule, n
 `Emotional Exhaustion` is the variable `Dashboards_DW_Explanation.md` (in `8.gdx.dashboards`)
 §11 documents being computed the same day from real raw item responses (`ef1`-`ef5`) that had
 never been aggregated before — it has no `.sav` column (it was never in the original `.sav` at
-all), so `virtue_knowledge.js`'s `VARIABLE_VIRTUE_MAP` — keyed by `.sav` column — has nothing to
-match it against yet. Adding an entry for it (keyed by its variable name instead, once
-`virtue_knowledge.js` supports that lookup path, or by extending the map's key convention) is
-future work, not something this scoping change was asked to fix.
+all), so `GDX_VT_VARIABLE_VIRTUE_MAP` — keyed by `SAV_COLUMN` — has nothing to match it against
+yet. Adding a row for it (keyed by its variable name instead, once the table supports that
+lookup path, or by extending the key convention) is future work, not something this scoping
+change was asked to fix.
 
 ### Files
 

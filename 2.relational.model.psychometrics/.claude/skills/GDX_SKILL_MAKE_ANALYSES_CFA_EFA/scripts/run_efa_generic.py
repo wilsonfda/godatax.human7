@@ -127,6 +127,61 @@ def main():
             f'generic, confirmation-agnostic EFA-only script.'
         )
 
+    # Cronbach's alpha only needs item-level variance across respondents (n>=2) -- a much weaker
+    # requirement than KMO/Bartlett/FactorAnalysis, which all need a non-singular n_items x n_items
+    # correlation matrix (n >= n_items + 1). Compute/report it even when the rest of this script has
+    # to refuse: an unstable estimate from a small sample is still real information, labeled as such
+    # (and SAMPLE_SIZE is written alongside it), not something to withhold.
+    alpha_full = cronbach_alpha(data) if n >= 2 else None
+
+    if n < n_items + 1:
+        msg = (
+            f'Instrument {id_instrument} ("{instrument_name}"): n={n} application(s) is not enough to fit '
+            f'an EFA with {n_items} observed item(s) -- a sample covariance matrix needs at least '
+            f'{n_items + 1} observations to be non-singular. Refusing rather than let FactorAnalysis/KMO '
+            f'silently return degenerate (NaN/zero-variance) results, or crash later on a shape mismatch '
+            f'when the rotation collapses to fewer columns than the requested {k} factor(s).'
+        )
+        if alpha_full is None:
+            raise SystemExit(f'{msg}\nCronbach alpha also unavailable (n={n} < 2, no variance to compute it from).')
+
+        print(msg)
+        print(
+            f'\nCronbach alpha (full {n_items}-item scale), n={n} -- SMALL-SAMPLE CAVEAT: far below the '
+            f'~{n_items + 1}+ respondents normally needed for a stable estimate, reported for visibility '
+            f'only, not as a validated reliability figure: {alpha_full:.4f}'
+        )
+
+        calculated_at = date.today().isoformat()
+        ref = (
+            f'Internal consistency, full {n_items}-item scale (no subscale split -- membership unconfirmed). '
+            f'SMALL-SAMPLE CAVEAT: n={n} is far below the ~{n_items + 1}+ respondents normally needed for a '
+            f'stable Cronbach alpha estimate -- not a validated reliability figure, do not treat as final.'
+        )[:500]
+        method = f'Cronbach alpha only (n={n} too small for EFA/CFA/KMO)'[:120]
+        alpha_sql = (
+            'INSERT INTO GDX_PSY_PSYCHOMETRIC_PROPERTY (ID_INSTRUMENT, ID_CONSTRUCT, TYPE, METHOD, "VALUE", SAMPLE_SIZE, REFERENCE, CALCULATED_AT) '
+            "VALUES ({}, {}, 'CRONBACH_ALPHA', '{}', {:.6f}, {}, '{}', '{}');".format(
+                id_instrument, id_construct, esc(method), alpha_full, n, esc(ref), calculated_at
+            )
+        )
+        slug = instrument_name.lower().replace(' ', '_').replace('/', '_')
+        slug = ''.join(c for c in slug if c.isalnum() or c == '_')[:40]
+        out_sql = os.path.join(args.out_dir, f'efa_instrument_{id_instrument}_{slug}_alpha_only.sql')
+        os.makedirs(os.path.dirname(out_sql), exist_ok=True)
+        with open(out_sql, 'w', encoding='utf-8') as f:
+            f.write(
+                '/* ============================================================================\n'
+                '   Data load - GDX_PSY_PSYCHOMETRIC_PROPERTY\n'
+                f'   Cronbach alpha ONLY (small sample, n={n}) - {esc(instrument_name)}\n'
+                f'   Instrument: ID_INSTRUMENT={id_instrument}.\n'
+                '   KMO/Bartlett/EFA/CFA all refused -- see run_efa_generic.py stdout for why.\n'
+                '   ============================================================================ */\n\n'
+                + alpha_sql + '\n'
+            )
+        print(f'Wrote {out_sql} (alpha only, n={n}).')
+        raise SystemExit(1)
+
     kmo_total, bartlett_chi2, bartlett_dof, bartlett_p = kmo_bartlett(data)
 
     fa = FactorAnalysis(n_components=k, rotation=None, random_state=0)
@@ -158,8 +213,6 @@ def main():
     row_ind, col_ind = linear_sum_assignment(-np.abs(corr_matrix))
     factor_for_var = {var_names[i]: loadings.columns[j] for i, j in zip(row_ind, col_ind)}
     match_corr = {var_names[i]: corr_matrix[i, j] for i, j in zip(row_ind, col_ind)}
-
-    alpha_full = cronbach_alpha(data)
 
     print(f'=== Instrument {id_instrument} ("{instrument_name}"): n={n}, {n_items} items, {k} named variable(s) ===')
     print('=== Sampling adequacy (whole instrument) ===')
