@@ -1,19 +1,31 @@
 ---
 name: GDX_SKILL_IDENTIFY_VIRTUES
-description: Identifies the 3 highest-scoring psychometric indicators of ONE study (via --study <slug>) in GDX_HUMAN (7.multidimensional.database) and points, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which ones are potentially already present as strengths in that population. Prints the result to the screen only -- writes no file. Use when the user asks which virtues a specific GDX_HUMAN study's participants already show potential for, based on their strongest psychometric scores.
+description: Identifies the 3 strongest psychometric indicators of ONE study (via --study <slug>) in GDX_HUMAN (7.multidimensional.database) -- polarity-aware, so a NEGATIVE-polarity variable's LOW score (not its high one) counts as the strength -- and points, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which ones are potentially already present as strengths in that population. Prints the result to the screen only -- writes no file. Use when the user asks which virtues a specific GDX_HUMAN study's participants already show potential for, based on their strongest psychometric scores.
 ---
 
 # GDX_SKILL_IDENTIFY_VIRTUES
 
 The mirror image of [`GDX_SKILL_LINK_SUGGESTIONS`](../GDX_SKILL_LINK_SUGGESTIONS/SKILL.md):
-instead of ranking the **lowest**-scoring psychometric indicators of a study
-to suggest a virtue as a *treatment target* for a deficit, this skill ranks
-the **3 highest**-scoring indicators and points to the virtue each one
-corresponds to as a **potential strength already present** in that study's
-population. Same 33-virtue catalog, same variable → virtue judgment call,
-opposite direction, opposite output: a report suggests a treatment target
-that gets written to a file; this skill's whole deliverable is what it
-prints to the screen.
+instead of ranking the **neediest** (usually lowest-scoring) psychometric
+indicators of a study to suggest a virtue as a *treatment target* for a
+deficit, this skill ranks the **3 strongest** (usually highest-scoring)
+indicators and points to the virtue each one corresponds to as a
+**potential strength already present** in that study's population. Same
+33-virtue catalog, same variable → virtue judgment call, opposite direction,
+opposite output: a report suggests a treatment target that gets written to
+a file; this skill's whole deliverable is what it prints to the screen.
+
+**Polarity-aware since 2026-10-18.** "Strongest" is not always "highest raw
+score": most variables are `POSITIVE` polarity (a high score is the
+strength), but a `NEGATIVE`-polarity one (e.g. Negative Emotions) has it
+backwards -- a *low* score is the strength. Which is which is recorded per
+variable in `GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY`
+(`12.gdx.virtology/variable_virtue_map_polarity_firebird25.sql`), set by
+`GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` when the correspondence is
+first recorded -- never guessed by this skill. A variable with no
+correspondence recorded yet has no polarity recorded either and defaults to
+`POSITIVE`. The console report's Polaridade column shows which reading
+applied to each row.
 
 ## Scoped to one study
 
@@ -32,10 +44,12 @@ separate console read; it never mixes two studies' scores into one ranking.
 `7.multidimensional.database`'s `DW_FACT_PSY_VARIABLE_RESULT` joined to
 `DW_DIM_VARIABLE`, `DW_DIM_SEPTENARY_LEVEL`, and `DW_DIM_PERSON` (for the
 `ID_STUDY` filter) — the exact same source `GDX_SKILL_LINK_SUGGESTIONS`
-reads, only sorted `DESC` instead of `ASC`. The virtue itself comes from
-`GDX_VT_VARIABLE_VIRTUE_MAP` joined to `GDX_VT_VIRTUE`
-(`12.gdx.virtology/virtology_model_firebird25.sql`), keyed by `SAV_COLUMN`
-and reading its `JUSTIFICATION_STRENGTH` column — the same table
+reads. Ranking is polarity-aware (see above), not a plain `DESC` sort. The
+virtue itself comes from `GDX_VT_VARIABLE_VIRTUE_MAP` joined to
+`GDX_VT_VIRTUE` (`12.gdx.virtology/virtology_model_firebird25.sql`), keyed
+by `SAV_COLUMN` and reading its `JUSTIFICATION_STRENGTH` and
+`SCALE_POLARITY` columns (the latter added by
+`variable_virtue_map_polarity_firebird25.sql`) — the same table
 `GDX_SKILL_LINK_SUGGESTIONS` reads, just a different justification column.
 This skill is **read-only**: it never writes to Firebird or Neo4j, and
 (unlike `GDX_SKILL_LINK_SUGGESTIONS`) it never writes a Markdown report
@@ -112,8 +126,12 @@ fully dead and can be deleted.
   only for `GDX_SKILL_LIST_ASSOCIATIONS`'s code-vs-database sync check (see
   "Keeping this in sync" above).
 - `scripts/identify_virtues.js` — reads the DW and
-  `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_VT_VIRTUE`, ranks the highest scores,
-  looks up potential virtues, prints the result (Node.js + `node-firebird`,
-  no native client library required)
+  `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_VT_VIRTUE`, ranks by strength
+  (polarity-aware, see `rankByStrength()`), looks up potential virtues,
+  prints the result (Node.js + `node-firebird`, no native client library
+  required)
 - `scripts/package.json`
+- `../../../variable_virtue_map_polarity_firebird25.sql` (i.e.
+  `12.gdx.virtology/variable_virtue_map_polarity_firebird25.sql`) — the
+  one-time migration adding `SCALE_POLARITY` this skill's ranking depends on
 - `.env.example` — connection variable template (no secrets)

@@ -1,0 +1,125 @@
+{
+  "_comment": "Study #3 -- Humility in Metaphysics. Comprehensive Intellectual Humility Scale (Krumrei-Mancuso & Rouse, 2016), 22 items, 4 subscales. English item text is the canonical/stored text (same convention as every other instrument in this catalog -- see SPSS_to_Firebird_Mapping.md Section 2); the Portuguese (Brazil) draft translation respondents will actually see lives in 12.gdx.virtology/Intellectual_Humility_Scale_PT_Adaptation.md, not in this intake. No cardiac-coherence component. Per GDX_H7ph_Plan_Study_Humility_in_Metaphysics.md Phase 1.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Humility in Metaphysics",
+    "objective": "Pilot-test a Portuguese (Brazil) draft adaptation of the Comprehensive Intellectual Humility Scale (Krumrei-Mancuso & Rouse, 2016) and explore its correspondence with the Septenary Constitution, Kundalini Chakras, Thomas Aquinas's Five Ways, and the Virtology virtue of Humility.",
+    "method": "Cross-sectional self-report questionnaire, single wave. 22-item, 4-subscale Likert instrument; no cardiac-coherence component.",
+    "start_date": null,
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Comprehensive Intellectual Humility Scale",
+      "version": "2016, PT-BR draft 2026",
+      "type": "LIKERT_SCALE",
+      "description": "Krumrei-Mancuso, E. J., & Rouse, S. V. (2016). The development and validation of the Comprehensive Intellectual Humility Scale. Journal of Personality Assessment, 98, 209-221. Portuguese (Brazil) draft adaptation, forward-translation only (not yet back-translated, committee-reviewed, or psychometrically re-validated) -- see 12.gdx.virtology/Intellectual_Humility_Scale_PT_Adaptation.md.",
+      "instructions": "Carefully read each statement and indicate the degree to which you agree each statement is true for you.",
+      "phenomenon_name": "Intellectual Humility",
+      "phenomenon_description": "Disposition to recognize the limits of one's own knowledge, remain non-defensive when one's beliefs are challenged, and give fair consideration to viewpoints different from one's own.",
+      "constructs": [
+        {
+          "name": "Intellectual Humility",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Disposition to recognize the limits of one's own knowledge, remain non-defensive when one's beliefs are challenged, and give fair consideration to viewpoints different from one's own.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Intellectual Humility",
+          "name": "Independence of Intellect and Ego (Intellectual Humility)",
+          "description": "Degree to which the person's sense of self-worth is independent of whether others agree with their important beliefs.",
+          "operational_definition": "Sum of 5 reverse-scored Likert items (16,17,18,21,22), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Independence of Intellect and Ego (score)",
+          "indicator_description": "Sum of the 5 reverse-scored items feeding this dimension.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 5,
+          "max_value": 25
+        },
+        {
+          "construct_name": "Intellectual Humility",
+          "name": "Openness to Revising One's Viewpoint (Intellectual Humility)",
+          "description": "Willingness to change an important belief or opinion in light of good reasons or new information.",
+          "operational_definition": "Sum of 5 Likert items (6-10), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Openness to Revising One's Viewpoint (score)",
+          "indicator_description": "Sum of the 5 items feeding this dimension.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 5,
+          "max_value": 25
+        },
+        {
+          "construct_name": "Intellectual Humility",
+          "name": "Respect for Others' Viewpoints (Intellectual Humility)",
+          "description": "Capacity to respect and acknowledge the merit of a viewpoint one disagrees with.",
+          "operational_definition": "Sum of 6 Likert items (11,13,14,15,19,20), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Respect for Others' Viewpoints (score)",
+          "indicator_description": "Sum of the 6 items feeding this dimension.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 6,
+          "max_value": 30
+        },
+        {
+          "construct_name": "Intellectual Humility",
+          "name": "Lack of Intellectual Overconfidence (Intellectual Humility)",
+          "description": "Degree to which the person does not overestimate the certainty or superiority of their own beliefs.",
+          "operational_definition": "Sum of 6 reverse-scored Likert items (1,2,3,4,5,12), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Lack of Intellectual Overconfidence (score)",
+          "indicator_description": "Sum of the 6 reverse-scored items feeding this dimension.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 6,
+          "max_value": 30
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "AGREE_5",
+          "alternatives": [
+            {"order": 1, "label": "Strongly disagree", "numeric_value": 1},
+            {"order": 2, "label": "Disagree", "numeric_value": 2},
+            {"order": 3, "label": "Neither agree nor disagree", "numeric_value": 3},
+            {"order": 4, "label": "Agree", "numeric_value": 4},
+            {"order": 5, "label": "Strongly agree", "numeric_value": 5}
+          ]
+        }
+      ],
+      "items": [
+        {"order": 1, "statement_text": "My ideas are usually better than other people's ideas.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Lack of Intellectual Overconfidence (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 2, "statement_text": "For the most part, others have more to learn from me than I have to learn from them.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Lack of Intellectual Overconfidence (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 3, "statement_text": "When I am really confident in a belief, there is very little chance that belief is wrong.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Lack of Intellectual Overconfidence (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 4, "statement_text": "I'd rather rely on my own knowledge about most topics than turn to others for expertise.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Lack of Intellectual Overconfidence (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 5, "statement_text": "On important topics, I am not likely to be swayed by the viewpoints of others.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Lack of Intellectual Overconfidence (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 6, "statement_text": "I have at times changed opinions that were important to me, when someone showed me I was wrong.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Openness to Revising One's Viewpoint (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 7, "statement_text": "I am willing to change my position on an important issue in the face of good reasons.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Openness to Revising One's Viewpoint (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 8, "statement_text": "I am open to revising my important beliefs in the face of new information.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Openness to Revising One's Viewpoint (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 9, "statement_text": "I am willing to change my opinions on the basis of compelling reason.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Openness to Revising One's Viewpoint (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 10, "statement_text": "I'm willing to change my mind once it's made up about an important topic.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Openness to Revising One's Viewpoint (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 11, "statement_text": "I respect that there are ways of making important decisions that are different from the way I make decisions.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Respect for Others' Viewpoints (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 12, "statement_text": "Listening to perspectives of others seldom changes my important opinions.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Lack of Intellectual Overconfidence (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 13, "statement_text": "I welcome different ways of thinking about important topics.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Respect for Others' Viewpoints (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 14, "statement_text": "I can have great respect for someone, even when we don't see eye-to-eye on important topics.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Respect for Others' Viewpoints (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 15, "statement_text": "Even when I disagree with others, I can recognize that they have sound points.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Respect for Others' Viewpoints (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 16, "statement_text": "When someone disagrees with ideas that are important to me, it feels as though I'm being attacked.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Independence of Intellect and Ego (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 17, "statement_text": "When someone contradicts my most important beliefs, it feels like a personal attack.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Independence of Intellect and Ego (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 18, "statement_text": "I tend to feel threatened when others disagree with me on topics that are close to my heart.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Independence of Intellect and Ego (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 19, "statement_text": "I can respect others, even if I disagree with them in important ways.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Respect for Others' Viewpoints (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 20, "statement_text": "I am willing to hear others out, even if I disagree with them.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Respect for Others' Viewpoints (Intellectual Humility)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 21, "statement_text": "When someone disagrees with ideas that are important to me, it makes me feel insignificant.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Independence of Intellect and Ego (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 22, "statement_text": "I feel small when others disagree with me on topics that are close to my heart.", "response_type": "LIKERT_5", "anchor_set": "AGREE_5", "required": 1, "weight": 1, "variable_name": "Independence of Intellect and Ego (Intellectual Humility)", "reversed": 1, "indicator_item_weight": 1}
+      ]
+    }
+  ]
+}

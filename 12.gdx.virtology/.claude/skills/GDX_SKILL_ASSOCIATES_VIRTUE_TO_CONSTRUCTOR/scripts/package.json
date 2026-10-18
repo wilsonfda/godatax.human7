@@ -1,0 +1,16 @@
+{
+  "name": "gdx-skill-associates-virtue-to-constructor",
+  "version": "1.0.0",
+  "description": "Associates ONE psychometric/metaphysical variable (GDX_PSY_VARIABLE) to ONE of the 33 Virtology virtues (GDX_VT_VIRTUE), writing/updating/confirming a row in GDX_VT_VARIABLE_VIRTUE_MAP.",
+  "main": "associate_virtue.js",
+  "scripts": {
+    "associate": "node associate_virtue.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}

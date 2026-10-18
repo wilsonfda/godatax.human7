@@ -83,6 +83,7 @@
  *
  * Usage:
  *   node make_dashboards.js --study <slug> [--chart <code>] [--out-dir <path>] [--sample] [--intake-dir <path>]
+ *   node make_dashboards.js --study <slug> --chart 10 [--out-dir <path>] [--dashboards-dir <path>] [--ml-dir <path>]
  *
  *   --study <slug>    REQUIRED. Same slug GDX_SKILL_NEW_STUDY used for
  *                      new_study_intake/<slug>/intake.json. Every chart that
@@ -93,12 +94,20 @@
  *                      slug, the study's title, and the generation timestamp
  *                      -- see buildFilename().
  *
- *   --chart <code>    optional. One of '00'-'08' (see the chart list above).
- *                      Generates ONLY that one chart -- e.g. --chart 00 writes
- *                      just dashboard_00_means_psychometric_responses.html,
- *                      loading only the data that chart needs. Omit to
- *                      generate all 9 charts, same as before this flag
- *                      existed.
+ *   --chart <code>    optional. One of '00'-'08' (see the chart list above) or '10' (the master
+ *                      panel). Generates ONLY that one chart -- e.g. --chart 00 writes just
+ *                      dashboard_00_means_psychometric_responses.html, loading only the data
+ *                      that chart needs. Omit to generate all 9 charts (00-08), same as before
+ *                      this flag existed -- '10' is never included in that default "all 9" run,
+ *                      only reachable by asking for it explicitly (see below).
+ *
+ *   --chart 10        Generates the master panel instead of a chart from CHART_REGISTRY --
+ *                      delegates to make_master_panel.js's generateMasterPanel() (same file
+ *                      make_master_panel.js writes when run directly). Needs charts 00-09
+ *                      already generated on disk to embed (--dashboards-dir, default --out-dir)
+ *                      and a Link_Prediction_<slug>_*.md report (--ml-dir, default
+ *                      10.gdx.machine.learning/) -- see that script's own usage comment. Not
+ *                      compatible with --sample (the master panel has no sample mode).
  *
  *   --sample   use embedded sample data instead of connecting to the
  *              database -- lets the chart-generation logic be verified
@@ -118,16 +127,27 @@ const {
   renderLineChart, renderMultiPanelLineChart, renderBarChart, renderHeatmap, renderChakraPortrait, renderSeptenaryConstitutionPortrait,
 } = require('./chart_lib');
 
+// The 9 charts this script itself generates when --chart is omitted. '10' (the master panel,
+// make_master_panel.js) is deliberately NOT in this list: omitting --chart still means "all 9",
+// not "all 9 plus the master panel" -- the master panel stays opt-in, only via --chart 10
+// explicitly (see "Chart '10' delegates to the master panel" in main() below).
 const CHART_CODES = ['00', '01', '02', '03', '04', '05', '06', '07', '08'];
+const VALID_CHART_ARGS = [...CHART_CODES, '10'];
 
 function parseArgs(argv) {
-  const args = { outDir: null, sample: false, study: null, intakeDir: null, chart: null };
+  const args = {
+    outDir: null, sample: false, study: null, intakeDir: null, chart: null,
+    // Only meaningful with --chart 10 -- forwarded as-is to make_master_panel.js's own args.
+    dashboardsDir: null, mlDir: null,
+  };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--out-dir') args.outDir = argv[++i];
     else if (argv[i] === '--sample') args.sample = true;
     else if (argv[i] === '--study') args.study = argv[++i];
     else if (argv[i] === '--intake-dir') args.intakeDir = argv[++i];
     else if (argv[i] === '--chart') args.chart = argv[++i];
+    else if (argv[i] === '--dashboards-dir') args.dashboardsDir = argv[++i];
+    else if (argv[i] === '--ml-dir') args.mlDir = argv[++i];
     else throw new Error(`Unknown argument: ${argv[i]}`);
   }
   if (!args.study) {
@@ -136,8 +156,15 @@ function parseArgs(argv) {
       'new_study_intake/<slug>/intake.json -- every chart is scoped to that one study.'
     );
   }
-  if (args.chart && !CHART_CODES.includes(args.chart)) {
-    throw new Error(`Unknown --chart "${args.chart}". Valid codes: ${CHART_CODES.join(', ')}.`);
+  if (args.chart && !VALID_CHART_ARGS.includes(args.chart)) {
+    throw new Error(`Unknown --chart "${args.chart}". Valid codes: ${VALID_CHART_ARGS.join(', ')}.`);
+  }
+  if (args.chart === '10' && args.sample) {
+    throw new Error(
+      '--chart 10 (master panel) has no --sample mode -- it always reads live Firebird, ' +
+      'Neo4j, and already-generated dashboard files for this study. Omit --sample, or pick a ' +
+      'different --chart.'
+    );
   }
   return args;
 }
@@ -777,8 +804,31 @@ const CHART_REGISTRY = {
   '08': { baseName: 'dashboard_08_septenary_constitution_gradient_portrait', load: loadSeptenaryConstitutionPortrait, sample: sampleSeptenaryConstitutionPortraitRows, build: buildSeptenaryConstitutionPortraitHtml },
 };
 
+// Chart '10' delegates to the master panel: it reads live Firebird AND Neo4j AND this
+// directory's already-generated dashboard/.md files -- a fundamentally different shape of work
+// than any entry in CHART_REGISTRY (one DB query -> one chart), so it is not forced into that
+// registry's {load, sample, build} shape. require()'d lazily (not at module load) so running
+// charts 00-08 never pays for loading neo4j-driver.
+async function runMasterPanelChart(args) {
+  const { generateMasterPanel } = require('./make_master_panel');
+  await generateMasterPanel({
+    study: args.study,
+    outDir: args.outDir,
+    dashboardsDir: args.dashboardsDir,
+    mlDir: args.mlDir,
+    intakeDir: args.intakeDir,
+  });
+}
+
 async function main() {
   const args = parseArgs(process.argv);
+
+  if (args.chart === '10') {
+    console.log(`Study slug "${args.study}". Chart: 10 (master panel) -- delegating to make_master_panel.js.`);
+    await runMasterPanelChart(args);
+    return;
+  }
+
   const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
   fs.mkdirSync(outDir, { recursive: true });
 

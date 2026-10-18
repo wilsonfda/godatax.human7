@@ -1,0 +1,769 @@
+{
+  "formId": "1oCeBivwf2TIWPQiPUjz_YhEF0yjacB7j3MvuoGMmv8Q",
+  "formEditUrl": "https://docs.google.com/forms/d/1oCeBivwf2TIWPQiPUjz_YhEF0yjacB7j3MvuoGMmv8Q/edit",
+  "formResponderUrl": "https://docs.google.com/forms/d/e/1FAIpQLScUnMrr0MvEb2jX4b27F1xUZwPjwwr8FpRCIpnJMwDQ3QgcVw/viewform",
+  "studyTitle": "Humility in Metaphysics",
+  "studySlug": "humildade-na-metafisica",
+  "studyId": 3,
+  "generatedAt": "2026-10-17T22:01:34.508Z",
+  "participantFieldMap": {
+    "69f5fa58": "fullName",
+    "178bd697": "externalId",
+    "5d865ca6": "birthDate",
+    "1d83c946": "gender",
+    "303b8d19": "educationLevel",
+    "5b56d698": "consent"
+  },
+  "itemMap": {
+    "5f33bac3": {
+      "ID_ITEM": 146,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 1,
+      "REQUIRED": 1
+    },
+    "2c1e732c": {
+      "ID_ITEM": 147,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 2,
+      "REQUIRED": 1
+    },
+    "2f9b6fae": {
+      "ID_ITEM": 148,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 3,
+      "REQUIRED": 1
+    },
+    "519fa7cd": {
+      "ID_ITEM": 149,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 4,
+      "REQUIRED": 1
+    },
+    "0d85d73f": {
+      "ID_ITEM": 150,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 5,
+      "REQUIRED": 1
+    },
+    "6ff9feba": {
+      "ID_ITEM": 151,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 6,
+      "REQUIRED": 1
+    },
+    "400f0bd2": {
+      "ID_ITEM": 152,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 7,
+      "REQUIRED": 1
+    },
+    "4e1593bc": {
+      "ID_ITEM": 153,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 8,
+      "REQUIRED": 1
+    },
+    "4ecffc54": {
+      "ID_ITEM": 154,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 9,
+      "REQUIRED": 1
+    },
+    "0a377766": {
+      "ID_ITEM": 155,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 10,
+      "REQUIRED": 1
+    },
+    "654dfde3": {
+      "ID_ITEM": 156,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 11,
+      "REQUIRED": 1
+    },
+    "20346b43": {
+      "ID_ITEM": 157,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 12,
+      "REQUIRED": 1
+    },
+    "70e39d01": {
+      "ID_ITEM": 158,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 13,
+      "REQUIRED": 1
+    },
+    "03daf69e": {
+      "ID_ITEM": 159,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 14,
+      "REQUIRED": 1
+    },
+    "6ed30873": {
+      "ID_ITEM": 160,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 15,
+      "REQUIRED": 1
+    },
+    "386dbdee": {
+      "ID_ITEM": 161,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 16,
+      "REQUIRED": 1
+    },
+    "249e0fbc": {
+      "ID_ITEM": 162,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 17,
+      "REQUIRED": 1
+    },
+    "126ba6db": {
+      "ID_ITEM": 163,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 18,
+      "REQUIRED": 1
+    },
+    "78454f31": {
+      "ID_ITEM": 164,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 19,
+      "REQUIRED": 1
+    },
+    "32f1f2f1": {
+      "ID_ITEM": 165,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 20,
+      "REQUIRED": 1
+    },
+    "684fc3b9": {
+      "ID_ITEM": 166,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 21,
+      "REQUIRED": 1
+    },
+    "3c5d1ae0": {
+      "ID_ITEM": 167,
+      "ID_INSTRUMENT": 13,
+      "INSTRUMENT_NAME": "Comprehensive Intellectual Humility Scale",
+      "ITEM_ORDER": 22,
+      "REQUIRED": 1
+    }
+  },
+  "alternativeMap": {
+    "5f33bac3": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 43,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 44,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 45,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 46,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 47,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "2c1e732c": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 48,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 49,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 50,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 51,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 52,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "2f9b6fae": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 53,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 54,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 55,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 56,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 57,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "519fa7cd": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 58,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 59,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 60,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 61,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 62,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "0d85d73f": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 63,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 64,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 65,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 66,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 67,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "6ff9feba": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 68,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 69,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 70,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 71,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 72,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "400f0bd2": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 73,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 74,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 75,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 76,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 77,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "4e1593bc": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 78,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 79,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 80,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 81,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 82,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "4ecffc54": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 83,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 84,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 85,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 86,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 87,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "0a377766": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 88,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 89,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 90,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 91,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 92,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "654dfde3": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 93,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 94,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 95,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 96,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 97,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "20346b43": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 98,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 99,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 100,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 101,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 102,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "70e39d01": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 103,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 104,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 105,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 106,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 107,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "03daf69e": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 108,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 109,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 110,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 111,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 112,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "6ed30873": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 113,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 114,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 115,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 116,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 117,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "386dbdee": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 118,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 119,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 120,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 121,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 122,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "249e0fbc": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 123,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 124,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 125,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 126,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 127,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "126ba6db": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 128,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 129,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 130,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 131,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 132,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "78454f31": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 133,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 134,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 135,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 136,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 137,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "32f1f2f1": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 138,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 139,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 140,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 141,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 142,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "684fc3b9": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 143,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 144,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 145,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 146,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 147,
+        "NUMERIC_VALUE": 5
+      }
+    ],
+    "3c5d1ae0": [
+      {
+        "choiceText": "Strongly disagree",
+        "ID_ALTERNATIVE": 148,
+        "NUMERIC_VALUE": 1
+      },
+      {
+        "choiceText": "Disagree",
+        "ID_ALTERNATIVE": 149,
+        "NUMERIC_VALUE": 2
+      },
+      {
+        "choiceText": "Neither agree nor disagree",
+        "ID_ALTERNATIVE": 150,
+        "NUMERIC_VALUE": 3
+      },
+      {
+        "choiceText": "Agree",
+        "ID_ALTERNATIVE": 151,
+        "NUMERIC_VALUE": 4
+      },
+      {
+        "choiceText": "Strongly agree",
+        "ID_ALTERNATIVE": 152,
+        "NUMERIC_VALUE": 5
+      }
+    ]
+  }
+}

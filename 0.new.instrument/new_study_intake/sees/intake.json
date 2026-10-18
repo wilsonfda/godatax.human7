@@ -1,0 +1,235 @@
+{
+  "_comment": "SEES (Subjective Exercise Experiences Scale) catalog onboarding. Source: McAuley, E., & Courneya, K. S. (1994). The Subjective Exercise Experiences Scale (SEES): Development and preliminary validation. Journal of Sport & Exercise Psychology, 16(2), 163-177, plus secondary validation literature (e.g. Frontiers in Psychology 2023 Cronbach's alpha report, Persian/other translation validation studies). 12 items, 3 subscales of 4 items each, 7-point response scale (1 = not at all, 7 = very much so), sum scoring per subscale (range 4-28 each). Item order and subscale assignment confirmed from the instrument's own published item list (epl.illinois.edu/sees; cross-checked against independent secondary source).",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Subjective Exercise Experiences Scale (SEES) - Instrument Onboarding",
+    "objective": "Register the SEES instrument -- its three subscales (Positive Well-Being, Psychological Distress, Fatigue) and its 12 items -- into the GDX_HUMAN psychometric catalog as reusable knowledge for future exercise-psychology studies.",
+    "method": "Desk research of the published instrument (McAuley & Courneya, 1994) and secondary validation literature; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Subjective Exercise Experiences Scale (SEES)",
+      "version": "1994",
+      "type": "LIKERT_SCALE",
+      "description": "McAuley, E., & Courneya, K. S. (1994). The Subjective Exercise Experiences Scale (SEES): Development and preliminary validation. Journal of Sport & Exercise Psychology, 16(2), 163-177.",
+      "instructions": "Listed below are a number of statements concerning feelings associated with exercise and physical activity. Please read each statement and then circle the number that best describes your current feeling, right now, at this moment, in response to the exercise you have just completed. There are no right or wrong answers. Do not spend too much time on any one statement.",
+      "phenomenon_name": "Subjective Exercise Experience",
+      "phenomenon_description": "The pattern of affective and psychological responses -- positive well-being, psychological distress, and fatigue -- that individuals report during or immediately after a bout of physical exercise.",
+      "constructs": [
+        {
+          "name": "Positive Well-Being (SEES)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Positive affective state experienced in relation to a bout of exercise, reflecting feelings of being positive, great, strong and terrific.",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Psychological Distress (SEES)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Negative affective/psychological state experienced in relation to a bout of exercise, reflecting feelings of being awful, crummy, discouraged and miserable.",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Fatigue (SEES)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Subjective sense of tiredness and depletion experienced in relation to a bout of exercise, reflecting feelings of being drained, exhausted, fatigued and tired.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Positive Well-Being (SEES)",
+          "name": "Positive Well-Being (SEES)",
+          "description": "Degree of positive affect reported by the respondent in relation to the exercise just performed.",
+          "operational_definition": "Sum of SEES items 1 (Great), 4 (Positive), 7 (Strong) and 10 (Terrific).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Positive Well-Being (SEES) (score)",
+          "indicator_description": "Sum of the 4 Positive Well-Being items, each rated 1-7.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 4,
+          "max_value": 28
+        },
+        {
+          "construct_name": "Psychological Distress (SEES)",
+          "name": "Psychological Distress (SEES)",
+          "description": "Degree of negative psychological affect reported by the respondent in relation to the exercise just performed.",
+          "operational_definition": "Sum of SEES items 2 (Awful), 5 (Crummy), 8 (Discouraged) and 11 (Miserable).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Psychological Distress (SEES) (score)",
+          "indicator_description": "Sum of the 4 Psychological Distress items, each rated 1-7.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 4,
+          "max_value": 28
+        },
+        {
+          "construct_name": "Fatigue (SEES)",
+          "name": "Fatigue (SEES)",
+          "description": "Degree of subjective fatigue reported by the respondent in relation to the exercise just performed.",
+          "operational_definition": "Sum of SEES items 3 (Drained), 6 (Exhausted), 9 (Fatigued) and 12 (Tired).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Fatigue (SEES) (score)",
+          "indicator_description": "Sum of the 4 Fatigue items, each rated 1-7.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 4,
+          "max_value": 28
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "SEES_7",
+          "alternatives": [
+            {"order": 1, "label": "Not at all", "numeric_value": 1},
+            {"order": 2, "label": "2", "numeric_value": 2},
+            {"order": 3, "label": "3", "numeric_value": 3},
+            {"order": 4, "label": "4", "numeric_value": 4},
+            {"order": 5, "label": "5", "numeric_value": 5},
+            {"order": 6, "label": "6", "numeric_value": 6},
+            {"order": 7, "label": "Very much so", "numeric_value": 7}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "Great",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Positive Well-Being (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 2,
+          "statement_text": "Awful",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Psychological Distress (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 3,
+          "statement_text": "Drained",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Fatigue (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 4,
+          "statement_text": "Positive",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Positive Well-Being (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 5,
+          "statement_text": "Crummy",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Psychological Distress (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 6,
+          "statement_text": "Exhausted",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Fatigue (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 7,
+          "statement_text": "Strong",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Positive Well-Being (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 8,
+          "statement_text": "Discouraged",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Psychological Distress (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 9,
+          "statement_text": "Fatigued",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Fatigue (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 10,
+          "statement_text": "Terrific",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Positive Well-Being (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 11,
+          "statement_text": "Miserable",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Psychological Distress (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 12,
+          "statement_text": "Tired",
+          "response_type": "LIKERT_7",
+          "anchor_set": "SEES_7",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Fatigue (SEES)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

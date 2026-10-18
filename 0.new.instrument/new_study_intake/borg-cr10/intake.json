@@ -1,0 +1,84 @@
+{
+  "_comment": "Borg CR10 (Category-Ratio 10) Scale catalog onboarding. Source: Borg, G. (1982). A category scale with ratio properties for intermodal and interindividual comparisons. In H.-G. Geissler & P. Petzold (Eds.), Psychophysical judgment and the process of perception (pp. 25-34). Berlin: VEB Deutscher Verlag der Wissenschaften; scale table per Borg, G. (1998). Borg's Perceived Exertion and Pain Scales. Champaign, IL: Human Kinetics. The scale table (rows 0, 0.3, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 11 and verbal anchors) was read directly from an official clinical reproduction of Borg's own table (heartonline.org.au, same source already used for the Borg RPE 6-20 registration), not reconstructed from memory. This is Borg's category-RATIO scale (deliberately non-linear spacing -- a psychophysical power-law design, distinct from the linear 6-20 RPE category scale already catalogued). The printed scale's final row is a symbolic, open-ended 'Absolute maximum / Highest possible' mark (no fixed number, for ratings that exceed the anchored maximum of 10) -- it is documented here in the instrument description rather than fabricated as a numeric alternative, since the original scale intentionally leaves it unbounded. Reuses the existing 'Perceived Exertion' phenomenon (added for Borg RPE 6-20) since both instruments measure the same underlying construct on different response scales; registered as its own distinct construct/variable (mirroring how SEES/FS/PACES each got a separate construct under 'Subjective Exercise Experience') because it is numerically and administratively a different instrument from the 6-20 scale.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Borg CR10 Scale - Instrument Onboarding",
+    "objective": "Register the Borg Category-Ratio 10 (CR10) instrument and its perceived-exertion dimension into the GDX_HUMAN psychometric catalog as reusable knowledge for future exercise-intensity and training-monitoring studies.",
+    "method": "Desk research of the published instrument (Borg, 1982, 1998) and official scale materials; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Borg CR10 Scale",
+      "version": "1982/1998",
+      "type": "SINGLE_ITEM",
+      "description": "Borg, G. (1982). A category scale with ratio properties for intermodal and interindividual comparisons. In H.-G. Geissler & P. Petzold (Eds.), Psychophysical judgment and the process of perception (pp. 25-34). Berlin: VEB Deutscher Verlag der Wissenschaften. Scale table: Borg, G. (1998). Borg's Perceived Exertion and Pain Scales. Champaign, IL: Human Kinetics. Deliberately non-linear (ratio) spacing of numeric anchors: 0, 0.3, 0.5, 0.7, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 11; the printed scale also carries an unbounded, un-numbered 'Absolute maximum / Highest possible' mark above 11 for exceptionally supra-maximal ratings, not represented here as a fixed number.",
+      "instructions": "Use this scale to rate how strenuous and tiring the exercise or effort feels to you right now. The numbers do not increase in equal steps: a small increase near the bottom of the scale represents a small change in effort, while the same numeric increase near the top represents a much larger change. It is your own feeling of exertion that matters -- do not underestimate it, but do not overestimate it either. Look at the scale and the descriptions, then choose the number (or a position between two numbers) that best matches how hard you are working right now. If your effort feels even harder than 10 ('Extremely strong / Maximal'), you may give an even higher rating.",
+      "phenomenon_name": "Perceived Exertion",
+      "phenomenon_description": "An individual's subjective perception of how hard their body is working during physical exercise, integrating cues from the cardiovascular, respiratory, and musculoskeletal systems.",
+      "constructs": [
+        {
+          "name": "Perceived Exertion (Borg CR10)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "The subjective intensity of effort, strain, discomfort and fatigue experienced during physical exercise, rated on Borg's category-ratio scale with power-law (non-linear) numeric spacing.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Perceived Exertion (Borg CR10)",
+          "name": "Perceived Exertion (Borg CR10)",
+          "description": "Momentary self-reported intensity of physical exertion during exercise, rated on a ratio scale.",
+          "operational_definition": "Single-item response to the Borg CR10 scale, from 0 (nothing at all) to 10 (extremely strong / maximal), with intermediate half-point anchors below 3 and whole-number anchors from 3 to 10; the scale is technically open-ended above 10 for rare supra-maximal ratings.",
+          "measurement_level": "RATIO",
+          "indicator_name": "Perceived Exertion (Borg CR10) (score)",
+          "indicator_description": "Raw score of the single Borg CR10 item, nominally 0 to 10 (the printed scale allows ratings above 10 in rare cases of supra-maximal effort, via an unbounded, un-numbered top mark).",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "SCALE_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 10
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "CR10",
+          "alternatives": [
+            {"order": 1, "label": "Nothing at all", "numeric_value": 0},
+            {"order": 2, "label": "0.3", "numeric_value": 0.3},
+            {"order": 3, "label": "Extremely weak / Just noticeable", "numeric_value": 0.5},
+            {"order": 4, "label": "0.7", "numeric_value": 0.7},
+            {"order": 5, "label": "Very weak", "numeric_value": 1},
+            {"order": 6, "label": "1.5", "numeric_value": 1.5},
+            {"order": 7, "label": "Weak / Light", "numeric_value": 2},
+            {"order": 8, "label": "2.5", "numeric_value": 2.5},
+            {"order": 9, "label": "Moderate", "numeric_value": 3},
+            {"order": 10, "label": "4", "numeric_value": 4},
+            {"order": 11, "label": "Strong / Heavy", "numeric_value": 5},
+            {"order": 12, "label": "6", "numeric_value": 6},
+            {"order": 13, "label": "Very strong", "numeric_value": 7},
+            {"order": 14, "label": "8", "numeric_value": 8},
+            {"order": 15, "label": "9", "numeric_value": 9},
+            {"order": 16, "label": "Extremely strong / Maximal", "numeric_value": 10},
+            {"order": 17, "label": "11", "numeric_value": 11}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "How strenuous and tiring does the exercise feel to you right now?",
+          "response_type": "CR10",
+          "anchor_set": "CR10",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Perceived Exertion (Borg CR10)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

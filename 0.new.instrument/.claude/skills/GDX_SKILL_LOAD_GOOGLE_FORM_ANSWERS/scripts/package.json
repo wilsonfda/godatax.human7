@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-load-google-form-answers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Google Forms API reader + DB writer for the GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS skill: pulls a study's Google Form responses and resolves each one through google_form_map.json into GDX_PSY_PERSON / GDX_PSY_STUDY_PARTICIPANT / GDX_PSY_APPLICATION / GDX_PSY_ITEM_RESPONSE.",
+  "main": "load_google_form_answers.js",
+  "scripts": {
+    "load": "node load_google_form_answers.js"
+  },
+  "dependencies": {
+    "node-firebird": "^2.16.0",
+    "googleapis": "^144.0.0"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "_comment": "PACES (Physical Activity Enjoyment Scale) catalog onboarding. Source: Kendzierski, D., & DeCarlo, K. J. (1991). Physical Activity Enjoyment Scale: Two validation studies. Journal of Sport & Exercise Psychology, 13(1), 50-64. Original 18-item bipolar/semantic-differential scale, each item a pair of opposite statements anchored by a 7-point numeric scale (1-7); respondent circles the number between the two poles that best matches how they feel about the physical activity right now. 11 items are reverse-scored for the final sum (range 18-126): items 1,4,5,7,9,10,11,13,14,16,17. Item wording, order and the reverse-scored item list were cross-checked against two independent secondary sources reproducing the full original English scale (consistent with each other and internally self-consistent with the polarity of each stated pole pair).",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Physical Activity Enjoyment Scale (PACES) - Instrument Onboarding",
+    "objective": "Register the PACES instrument and its physical-activity-enjoyment dimension into the GDX_HUMAN psychometric catalog as reusable knowledge for future exercise-psychology studies.",
+    "method": "Desk research of the published instrument (Kendzierski & DeCarlo, 1991) and secondary validation literature; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Physical Activity Enjoyment Scale (PACES)",
+      "version": "1991",
+      "type": "SEMANTIC_DIFFERENTIAL",
+      "description": "Kendzierski, D., & DeCarlo, K. J. (1991). Physical Activity Enjoyment Scale: Two validation studies. Journal of Sport & Exercise Psychology, 13(1), 50-64.",
+      "instructions": "Please rate how you feel at the moment about the physical activity you have been doing. For each pair of statements below, circle the number from 1 to 7 that best represents how you feel right now, with each end of the scale (1 and 7) corresponding to the statement shown at that end.",
+      "phenomenon_name": "Subjective Exercise Experience",
+      "phenomenon_description": "The pattern of affective and psychological responses -- positive well-being, psychological distress, and fatigue -- that individuals report during or immediately after a bout of physical exercise.",
+      "constructs": [
+        {
+          "name": "Physical Activity Enjoyment (PACES)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "The degree of pleasure and positive affect that an individual derives from engaging in a specific bout of physical activity or exercise.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Physical Activity Enjoyment (PACES)",
+          "name": "Physical Activity Enjoyment (PACES)",
+          "description": "Overall enjoyment reported by the respondent in relation to the physical activity/exercise just performed or being performed.",
+          "operational_definition": "Sum of the 18 PACES items (each rated 1-7), after reverse-scoring items 1, 4, 5, 7, 9, 10, 11, 13, 14, 16 and 17.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Physical Activity Enjoyment (PACES) (score)",
+          "indicator_description": "Sum of the 18 PACES items, each rated 1-7, with the 11 reverse-scored items inverted before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 18,
+          "max_value": 126
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "PACES_7",
+          "alternatives": [
+            {"order": 1, "label": "1", "numeric_value": 1},
+            {"order": 2, "label": "2", "numeric_value": 2},
+            {"order": 3, "label": "3", "numeric_value": 3},
+            {"order": 4, "label": "4", "numeric_value": 4},
+            {"order": 5, "label": "5", "numeric_value": 5},
+            {"order": 6, "label": "6", "numeric_value": 6},
+            {"order": 7, "label": "7", "numeric_value": 7}
+          ]
+        }
+      ],
+      "items": [
+        {"order": 1, "statement_text": "I enjoy it / I hate it", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 2, "statement_text": "I feel bored / I feel interested", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 3, "statement_text": "I dislike it / I like it", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 4, "statement_text": "I find it pleasurable / I find it unpleasurable", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 5, "statement_text": "I am very absorbed in this activity / I am not at all absorbed in this activity", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 6, "statement_text": "It's no fun at all / It's a lot of fun", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 7, "statement_text": "I find it energizing / I find it tiring", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 8, "statement_text": "It makes me depressed / It makes me happy", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 9, "statement_text": "It's very pleasant / It's very unpleasant", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 10, "statement_text": "I feel good physically while doing it / I feel bad physically while doing it", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 11, "statement_text": "It's very invigorating / It's not at all invigorating", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 12, "statement_text": "I am very frustrated by it / I am not at all frustrated by it", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 13, "statement_text": "It's very gratifying / It's not at all gratifying", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 14, "statement_text": "It's very exhilarating / It's not at all exhilarating", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 15, "statement_text": "It's not at all stimulating / It's very stimulating", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 16, "statement_text": "It gives me a strong sense of accomplishment / It does not give me any sense of accomplishment", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 17, "statement_text": "It's very refreshing / It's not at all refreshing", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 18, "statement_text": "I felt as though I would rather be doing something else / I felt as though there was nothing else I would rather be doing", "response_type": "SEMANTIC_DIFFERENTIAL_7", "anchor_set": "PACES_7", "required": 1, "weight": 1, "variable_name": "Physical Activity Enjoyment (PACES)", "reversed": 0, "indicator_item_weight": 1}
+      ]
+    }
+  ]
+}

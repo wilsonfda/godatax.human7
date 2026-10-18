@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Master Panel: Humility in Metaphysics</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 20px 20px 12px;
+    border: 1px solid var(--grid); overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 2px 8px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 4px 2px 10px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 8px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Master Panel: Humility in Metaphysics</h1>
+  <p class="subtitle">Full retrospective + every dashboard panel (00-09) for study "Humility in Metaphysics" (slug <code>humildade-na-metafisica</code>) -- assembled by <code>GDX_SKILL_MAKE_DASHBOARD_VIRTUE_RESPONDENT</code>'s companion script (Phase 7c). Each section is labeled with the skill(s) responsible for producing it; nothing here was recomputed -- it reads what those skills already wrote.</p>
+  <div class="chart-card">
+    <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show table</button></div>
+    
+    <h2 style="font-size:16px;margin:0 0 16px;">Part 1 -- Pipeline Retrospective (Phases 1-9)</h2>
+    
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 1-2: Design + Registration</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_NEW_STUDY + GDX_SKILL_RECORD_NEW_STUDY</p>
+      
+      <p style="font-size:13px;"><strong>Humility in Metaphysics</strong> -- Pilot-test a Portuguese (Brazil) draft adaptation of the Comprehensive Intellectual Humility Scale (Krumrei-Mancuso &amp; Rouse, 2016) and explore its correspondence with the Septenary Constitution, Kundalini Chakras, Thomas Aquinas's Five Ways, and the Virtology virtue of Humility.</p>
+      <table class="data-table visible"><thead><tr><th>Variable</th><th>Construct</th><th>Septenary level</th></tr></thead>
+        <tbody><tr><td>Independence of Intellect and Ego (Intellectual Humility)</td><td>Intellectual Humility</td><td>Astral Body</td></tr><tr><td>Openness to Revising One's Viewpoint (Intellectual Humility)</td><td>Intellectual Humility</td><td>Higher Mental Body</td></tr><tr><td>Respect for Others' Viewpoints (Intellectual Humility)</td><td>Intellectual Humility</td><td>Buddhic Body</td></tr><tr><td>Lack of Intellectual Overconfidence (Intellectual Humility)</td><td>Intellectual Humility</td><td>Lower Mental Body</td></tr></tbody></table>
+    </div>
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 3: Data Collection</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_EXPORT_NEW_STUDY + GDX_SKILL_LOAD_NEW_STUDY_ANSWERS</p>
+      
+      <p style="font-size:13px;">4 participant(s), 4 consented, 88 item response(s) total.</p>
+    </div>
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 4: Factor Analysis + Internal Consistency</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_ANALYSES_CFA_EFA</p>
+      <p style="color:var(--muted);font-size:13px;">No <code>GDX_PSY_PSYCHOMETRIC_PROPERTY</code> row exists yet for this instrument -- EFA/CFA/KMO all refused (n too small, see <code>GDX_SKILL_MAKE_ANALYSES_CFA_EFA</code>'s own output). An alpha-only figure (small-sample caveat) was computed and written to <code>output/*_alpha_only.sql</code> but not yet loaded into this table.</p>
+    </div>
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 5: Metaphysical + Virtue Associations</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS + GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR</p>
+      <table class="data-table visible"><thead><tr><th>Target</th><th>Rows for this study's 4 variables</th></tr></thead>
+    <tbody>
+      <tr><td>Septenary Constitution</td><td>4</td></tr>
+      <tr><td>Kundalini Chakra</td><td>4</td></tr>
+      <tr><td>Five Ways of Aquinas</td><td>2</td></tr>
+      <tr><td>Virtology virtue</td><td>4</td></tr>
+    </tbody></table>
+    </div>
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 6: Data Warehouse Load</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_LOAD_NEW_STUDY_DW</p>
+      <table class="data-table visible"><thead><tr><th>DW table</th><th>Rows (this study)</th></tr></thead>
+    <tbody>
+      <tr><td>DW_DIM_PERSON</td><td>4</td></tr>
+      <tr><td>DW_FACT_PSY_ITEM_RESPONSE</td><td>88</td></tr>
+      <tr><td>DW_FACT_PSY_VARIABLE_RESULT</td><td>16</td></tr>
+    </tbody></table>
+    </div>
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 8: Knowledge Graph Export (Neo4j)</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_GODATAX_HUMAN7_BY_SPU</p>
+      <table class="data-table visible"><thead><tr><th>Neo4j node/relationship</th><th>Count</th></tr></thead>
+        <tbody>
+          <tr><td>:GDX_PSY_PERSON nodes (this study's participants)</td><td>4</td></tr>
+          <tr><td>:GDX_PSY_VARIABLE nodes (this study's 4 variables)</td><td>4</td></tr>
+          <tr><td>FK_GDX_PSY_CHAKRA_VM_VARIABLE (touching those variables)</td><td>4</td></tr><tr><td>FK_GDX_PSY_INDICATOR_VARIABLE (touching those variables)</td><td>4</td></tr><tr><td>FK_GDX_PSY_SLPM_VARIABLE (touching those variables)</td><td>4</td></tr><tr><td>FK_GDX_PSY_VARIABLE_CONSTRUCT (touching those variables)</td><td>4</td></tr><tr><td>FK_GDX_PSY_VR_VARIABLE (touching those variables)</td><td>16</td></tr><tr><td>FK_GDX_TA_WSM_VARIABLE (touching those variables)</td><td>2</td></tr><tr><td>FK_GDX_VT_VVM_VARIABLE (touching those variables)</td><td>4</td></tr><tr><td>MAPS_TO_LEVEL (touching those variables)</td><td>4</td></tr><tr><td>MAPS_TO_VIRTUE (touching those variables)</td><td>4</td></tr>
+        </tbody></table>
+    </div>
+    <div style="margin-bottom:28px;">
+      <h3 style="font-size:15px;margin:0 0 2px;">Phase 9: Link-Prediction Suggestions</h3>
+      <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_GODATAX_HUMAN7_LINK_PRED</p>
+      <p style="font-size:13px;"><strong>level</strong>: AUCPR test=0.7778, validation avg=0.7500.<br><strong>virtue</strong>: AUCPR test=0.7500, validation avg=0.7500.</p>
+       <p style="font-size:13px;color:var(--ink-secondary);">None of this study's own variables appear in this report's ranked suggestion lists -- expected, not a gap: the link-prediction model only ranks suggestions for variables that still lack a mapping, and Phase 5 already gave all 4 of this study's variables a confirmed virtue mapping before this report was generated (see the AUCPR-only summary above, and Phase 5's own table).</p>
+       <p style="font-size:12px;color:var(--muted);">Full report: <code>Link_Prediction_humildade-na-metafisica_20261015_234956.md</code> in <code>10.gdx.machine.learning/</code>.</p>
+    </div>
+    <h2 style="font-size:16px;margin:28px 0 16px;">Part 2 -- All Dashboards</h2>
+    
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 00: Means: Psychometric Responses</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_ANALYSES_CFA_EFA + GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_00_means_psychometric_responses__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div><div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 01: Physiological Response (cardiac coherence)</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <p style="font-size:13px;color:var(--muted);">Not generated for this study (no data, or not yet run).</p>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 02: Score by Septenary Level</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS + GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_02_score_by_septenary_level__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 03: Instrument x Septenary Level</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS + GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_03_instrument_by_level_heatmap__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div><div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 04: Instrument x Cardiac Coherence</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_LOAD_CC_MAPS_DB + GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <p style="font-size:13px;color:var(--muted);">Not generated for this study (no data, or not yet run).</p>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 05: Instrument x Kundalini Chakra</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS + GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_05_instrument_by_kundalini_chakra_heatmap__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 06: Instrument x Five Ways of Aquinas</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS + GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_06_instrument_by_five_ways_heatmap__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 07: Chakra Gradient Portrait</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_07_chakra_gradient_portrait__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 08: Septenary Constitution Gradient Portrait</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARS_DW</p>
+        <iframe src="dashboard_08_septenary_constitution_gradient_portrait__humildade-na-metafisica__humility-in-metaphysics__20261015-233658.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 09 (1/5): Virtue Respondent Profile (per participant)</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARD_VIRTUE_RESPONDENT (new, Phase 7b)</p>
+        <iframe src="dashboard_09_virtue_respondent_profile__humildade-na-metafisica__humility-in-metaphysics__participant-2__20261016-001928.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 09 (2/5): Virtue Respondent Profile (per participant)</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARD_VIRTUE_RESPONDENT (new, Phase 7b)</p>
+        <iframe src="dashboard_09_virtue_respondent_profile__humildade-na-metafisica__humility-in-metaphysics__participant-3__20261016-001928.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 09 (3/5): Virtue Respondent Profile (per participant)</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARD_VIRTUE_RESPONDENT (new, Phase 7b)</p>
+        <iframe src="dashboard_09_virtue_respondent_profile__humildade-na-metafisica__humility-in-metaphysics__participant-4__20261016-001928.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 09 (4/5): Virtue Respondent Profile (per participant)</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARD_VIRTUE_RESPONDENT (new, Phase 7b)</p>
+        <iframe src="dashboard_09_virtue_respondent_profile__humildade-na-metafisica__humility-in-metaphysics__wilson-f-d-de-andrade__20261016-001928.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+      <div style="margin-bottom:28px;">
+        <h3 style="font-size:15px;margin:0 0 2px;">Panel 09 (5/5): Virtue Respondent Profile (per participant)</h3>
+        <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">GDX_SKILL_MAKE_DASHBOARD_VIRTUE_RESPONDENT (new, Phase 7b)</p>
+        <iframe src="dashboard_09_virtue_respondent_profile__humildade-na-metafisica__humility-in-metaphysics__wilson-f-d-de-andrade__20261016-001933.html" style="width:100%;height:600px;border:1px solid var(--grid);border-radius:8px;" loading="lazy"></iframe>
+      </div>
+  
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    // querySelectorAll (not querySelector): a multi-panel chart (e.g. dashboard_00)
+    // has more than one .chart-svg sharing one .data-table -- toggling must hide/show
+    // every panel together. A single-panel chart (every other chart here) still has
+    // exactly one of each, so this is backward compatible.
+    const svgEls = document.querySelectorAll('.chart-svg');
+    const tableEls = document.querySelectorAll('.data-table');
+    const showingTable = tableEls.length ? !tableEls[0].classList.contains('visible') : false;
+    svgEls.forEach(function (el) { el.classList.toggle('hidden-by-table', showingTable); });
+    tableEls.forEach(function (el) { el.classList.toggle('visible', showingTable); });
+    this.textContent = showingTable ? 'Show chart' : 'Show table';
+  });
+  
+</script>
+</body>
+</html>

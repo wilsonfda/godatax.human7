@@ -1,0 +1,78 @@
+{
+  "_comment": "Feeling Scale (FS) catalog onboarding. Source: Hardy, C. J., & Rejeski, W. J. (1989). Not what, but how one feels: The measurement of affect during exercise. Journal of Sport & Exercise Psychology, 11(3), 304-317, plus secondary validation/review literature (e.g. PMC10653427 systematic review on FS/FAS use in resistance training; ACSM guidance citing FS for monitoring affective valence during exercise). Single-item, 11-point bipolar scale from -5 (Very bad) to +5 (Very good), 0 = Neutral; only odd integers and 0 are verbally anchored, even non-zero integers (-4,-2,2,4) are numeric-only. Standard administration prompt: 'How do you feel right now?'. Reuses the existing 'Subjective Exercise Experience' phenomenon already in the catalog (added for SEES) rather than creating a near-duplicate, since FS measures a momentary affective response to exercise that falls within that same phenomenon.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Feeling Scale (FS) - Instrument Onboarding",
+    "objective": "Register the Feeling Scale (FS) instrument and its single affective-valence dimension into the GDX_HUMAN psychometric catalog as reusable knowledge for future exercise-psychology studies.",
+    "method": "Desk research of the published instrument (Hardy & Rejeski, 1989) and secondary validation/review literature; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Feeling Scale (FS)",
+      "version": "1989",
+      "type": "SINGLE_ITEM",
+      "description": "Hardy, C. J., & Rejeski, W. J. (1989). Not what, but how one feels: The measurement of affect during exercise. Journal of Sport & Exercise Psychology, 11(3), 304-317.",
+      "instructions": "Respond to the single question below by circling the number that best describes how you feel right now, at this moment. There are no right or wrong answers; respond as honestly and spontaneously as possible. This item is typically repeated at regular intervals during and/or immediately after exercise.",
+      "phenomenon_name": "Subjective Exercise Experience",
+      "phenomenon_description": "The pattern of affective and psychological responses -- positive well-being, psychological distress, and fatigue -- that individuals report during or immediately after a bout of physical exercise.",
+      "constructs": [
+        {
+          "name": "Affective Valence (Feeling Scale)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Core affective valence (pleasure versus displeasure) experienced by an individual at a given moment during or immediately after physical exercise, per the circumplex model of affect.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Affective Valence (Feeling Scale)",
+          "name": "Affective Valence (FS)",
+          "description": "Momentary self-reported feeling of pleasure versus displeasure in response to exercise.",
+          "operational_definition": "Single-item response to 'How do you feel right now?' on an 11-point bipolar scale from -5 (Very bad) to +5 (Very good), 0 = Neutral.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Affective Valence (FS) (score)",
+          "indicator_description": "Raw score of the single Feeling Scale item, from -5 to +5.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "SCALE_POINT",
+          "direction": "POSITIVE",
+          "min_value": -5,
+          "max_value": 5
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "FS_11",
+          "alternatives": [
+            {"order": 1, "label": "Very bad", "numeric_value": -5},
+            {"order": 2, "label": "-4", "numeric_value": -4},
+            {"order": 3, "label": "Bad", "numeric_value": -3},
+            {"order": 4, "label": "-2", "numeric_value": -2},
+            {"order": 5, "label": "Fairly bad", "numeric_value": -1},
+            {"order": 6, "label": "Neutral", "numeric_value": 0},
+            {"order": 7, "label": "Fairly good", "numeric_value": 1},
+            {"order": 8, "label": "2", "numeric_value": 2},
+            {"order": 9, "label": "Good", "numeric_value": 3},
+            {"order": 10, "label": "4", "numeric_value": 4},
+            {"order": 11, "label": "Very good", "numeric_value": 5}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "How do you feel right now?",
+          "response_type": "BIPOLAR_11",
+          "anchor_set": "FS_11",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Affective Valence (FS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

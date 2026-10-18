@@ -1,17 +1,29 @@
 ---
 name: GDX_SKILL_LINK_SUGGESTIONS
-description: Ranks the lowest-scoring psychometric indicators of ONE study (via --study <slug>) in GDX_HUMAN (7.multidimensional.database) and suggests, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which one addresses each one as a treatment suggestion. Writes a timestamped Markdown report to 12.gdx.virtology/. Use when the user asks for virtue/treatment suggestions based on a specific GDX_HUMAN study's psychometric data.
+description: Ranks the neediest psychometric indicators of ONE study (via --study <slug>) in GDX_HUMAN (7.multidimensional.database) -- polarity-aware, so a NEGATIVE-polarity variable's HIGH score (not its low one) counts as the deficit -- and suggests, from the 33 Virtology virtues (12.gdx.virtology/Virtology_Knowledge_Base.md), which one addresses each one as a treatment suggestion. Writes a timestamped Markdown report to 12.gdx.virtology/. Use when the user asks for virtue/treatment suggestions based on a specific GDX_HUMAN study's psychometric data.
 ---
 
 # GDX_SKILL_LINK_SUGGESTIONS
 
 Reads the real, live average score of every psychometric variable that has a
-septenary-level mapping, **for one study**, ranks them from lowest to
-highest (the lowest scores are read as the neediest indicators), and for
-each one suggests one of the **33 Virtology virtues**
+septenary-level mapping, **for one study**, ranks them by how much of a
+deficit each one represents (the neediest indicators first), and for each
+one suggests one of the **33 Virtology virtues**
 (`Virtology_Knowledge_Base.md`) as a treatment target, with a short
 justification. Output is a single timestamped Markdown file in
 `12.gdx.virtology/`.
+
+**Polarity-aware since 2026-10-18.** "Neediest" is not always "lowest raw
+score": most variables are `POSITIVE` polarity (a low score is the
+deficit), but a `NEGATIVE`-polarity one (e.g. Negative Emotions) has it
+backwards -- a *high* score is the deficit. Which is which is recorded per
+variable in `GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY`
+(`12.gdx.virtology/variable_virtue_map_polarity_firebird25.sql`), set by
+`GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` when the correspondence is
+first recorded -- never guessed by this skill. A variable with no
+correspondence recorded yet has no polarity recorded either and defaults to
+`POSITIVE`. The report's Polarity column shows which reading applied to
+each row.
 
 ## Scoped to one study
 
@@ -33,7 +45,9 @@ separate report; it never mixes two studies' scores into one ranking.
 already consumed by `8.gdx.dashboards`. The virtue suggestion itself comes
 from `GDX_VT_VARIABLE_VIRTUE_MAP` joined to `GDX_VT_VIRTUE`
 (`12.gdx.virtology/virtology_model_firebird25.sql`), keyed by
-`SAV_COLUMN` and reading its `JUSTIFICATION_DEFICIT` column. This skill is
+`SAV_COLUMN` and reading its `JUSTIFICATION_DEFICIT` and `SCALE_POLARITY`
+columns (the latter added by
+`variable_virtue_map_polarity_firebird25.sql`). This skill is
 **read-only**: it never writes to Firebird or Neo4j.
 
 **2026-10-15:** this used to read a hand-written `scripts/virtue_knowledge.js`
@@ -82,14 +96,16 @@ analyses accumulates naturally in the folder, one thread per study).
 ## Extending it
 
 To add a suggestion for a variable the report currently lists as "no
-suggestion", insert a row into `GDX_VT_VARIABLE_VIRTUE_MAP` (Firebird) with
-`SAV_COLUMN` (the exact `.sav` column name), `ID_VIRTUE` (FK to
-`GDX_VT_VIRTUE`), `RECORDED_BEHAVIOR` (what the variable measures), and
-`JUSTIFICATION_DEFICIT`/`JUSTIFICATION_STRENGTH` (why that virtue addresses
-it, in each framing) — then re-run the skill. There is no dedicated
-conversational skill for this yet (planned: `GDX_SKILL_ASSOCIATE_VIRTUE`,
-mirroring `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`'s `--dry-run`/`--confirm`
-pattern); until then this is a manual `INSERT`.
+suggestion", record the correspondence with
+`GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` (`--behavior`,
+`--justification-deficit`, `--justification-strength`, `--scale-polarity`,
+`--confirmed-by`, `--institution`) — or, equivalently, insert a row into
+`GDX_VT_VARIABLE_VIRTUE_MAP` (Firebird) directly with `SAV_COLUMN` (the exact
+`.sav` column name), `ID_VIRTUE` (FK to `GDX_VT_VIRTUE`), `RECORDED_BEHAVIOR`
+(what the variable measures), `JUSTIFICATION_DEFICIT`/`JUSTIFICATION_STRENGTH`
+(why that virtue addresses it, in each framing), and `SCALE_POLARITY`
+(`POSITIVE` unless a high score on this variable is actually undesirable) —
+then re-run this skill.
 
 ## Files in this skill
 
@@ -98,8 +114,12 @@ pattern); until then this is a manual `INSERT`.
   still reads both copies of this file (here and in
   `GDX_SKILL_IDENTIFY_VIRTUES`) to catch drift between them.
 - `scripts/generate_suggestions.js` — reads the DW and
-  `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_VT_VIRTUE`, ranks, looks up suggestions,
-  writes the timestamped report (Node.js + `node-firebird`, no native
-  client library required)
+  `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_VT_VIRTUE`, ranks by deficit
+  (polarity-aware, see `rankByDeficit()`), looks up suggestions, writes the
+  timestamped report (Node.js + `node-firebird`, no native client library
+  required)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)
+- `../../../variable_virtue_map_polarity_firebird25.sql` (i.e.
+  `12.gdx.virtology/variable_virtue_map_polarity_firebird25.sql`) — the
+  one-time migration adding `SCALE_POLARITY` this skill's ranking depends on

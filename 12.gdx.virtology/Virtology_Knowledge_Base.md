@@ -251,9 +251,135 @@ yet. Adding a row for it (keyed by its variable name instead, once the table sup
 lookup path, or by extending the key convention) is future work, not something this scoping
 change was asked to fix.
 
+### 2026-10-18: polarity-aware ranking — `SCALE_POLARITY`
+
+Before this date, both this skill and its mirror (`GDX_SKILL_IDENTIFY_VIRTUES`) assumed every
+variable shares the same direction: a low raw score is always the deficit, a high one is always
+the strength. That assumption is wrong for a **negative-polarity** variable -- the clearest
+example already flagged in `Framework_Associations_*.md` (Section 4) is `EmocNeg` (Negative
+Emotions): a *high* score there is not a strength, it is the deficit, and a *low* score is the
+already-present strength -- the opposite reading from every other, positive-polarity variable in
+the table.
+
+`GDX_VT_VARIABLE_VIRTUE_MAP` now carries a `SCALE_POLARITY` column
+(`variable_virtue_map_polarity_firebird25.sql`, `NOT NULL`, default `POSITIVE`), set once per
+variable by `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` when its correspondence is first
+recorded -- the same never-invent-the-judgment-call discipline already applied to
+`RECORDED_BEHAVIOR` and both justification columns. `EmocNeg`'s existing row was backfilled to
+`NEGATIVE`; every other existing row kept the `POSITIVE` default (confirmed correct for all of
+them). Both `generate_suggestions.js` and `identify_virtues.js` now fetch every indicator
+unordered and rank it by a polarity-adjusted need/strength score (`rankByDeficit()` /
+`rankByStrength()`) instead of a plain `ASC`/`DESC` sort on the raw average -- so a
+negative-polarity variable's high score is read as its deficit, and its low score as its
+strength, automatically. Both reports now print a **Polarity** column per row, and both header
+caveats explain the mechanism instead of just warning the reader to check it manually.
+
+A variable with no row in `GDX_VT_VARIABLE_VIRTUE_MAP` yet has no recorded polarity either and
+defaults to `POSITIVE` for ranking purposes -- never guessed as `NEGATIVE` from the variable's
+name. (`EmocNeg` itself still never appears in either report's ranking for `ID_STUDY=1`, but for
+an unrelated, pre-existing reason: its `DW_DIM_VARIABLE.ID_SEPTENARY_LEVEL` is `NULL`, and both
+skills' queries inner-join to `DW_DIM_SEPTENARY_LEVEL` -- the same exclusion `Emotional
+Exhaustion` hits above, not something this polarity change introduced or was asked to fix.)
+
+#### Every row reviewed individually against its own literature, not left on the default
+
+The `POSITIVE` default above means every pre-existing row *landed* on the right value when the
+column was added, but that is not the same as each one being a **deliberate** judgment call --
+the whole point of requiring `--scale-polarity` on every future insert. So each of the then-21
+rows was individually re-examined against the instrument it comes from (not just its `SAV_COLUMN`
+name) and re-asserted explicitly through `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR --update
+--scale-polarity`, rather than left standing on an inherited schema default:
+
+| Variable | Instrument | What it measures (`RECORDED_BEHAVIOR`) | Polarity | Why |
+|---|---|---|---|---|
+| Vigor (`ENGAGvigor`) | Student Engagement Scale (UWES) | Disposition and energy to invest effort in studying | POSITIVE | UWES Vigor items are stated in the positive direction (e.g. "I feel strong and vigorous"); higher = more engagement resource. |
+| Positive Emotions (`EmocPos`) | Positivity Ratio Scale | Repertoire of positive emotions (joy, interest, hope) | POSITIVE | The positive half of Fredrickson's broaden-and-build positivity ratio by definition -- higher is the explicit goal of the construct. |
+| Negative Emotions (`EmocNeg`) | Positivity Ratio Scale | Repertoire of negative emotions (sadness, fear, anger) | **NEGATIVE** | The negative half of the same ratio -- a high score here is more negative affect, the deficit, not a resource (flagged already in `Framework_Associations_*.md` §4). |
+| Satisfaction With Life (`SATISFVIDA`) | Satisfaction With Life Scale (Diener) | Global affective evaluation of one's own life | POSITIVE | SWLS's five items are all stated positively and summed directly (no reverse-coding) -- higher is the scale's own definition of more satisfied. |
+| Job Satisfaction (`SATISFTRAB`) | Job Satisfaction Scale | Pleasure/displeasure with the occupational activity | POSITIVE | Same convention as life satisfaction, applied to the occupational domain. |
+| Personal Satisfaction (`SatPes`) | Personal Satisfaction (Diener, 1995) | Subjective contentment with oneself | POSITIVE | Self-directed affect, same satisfaction-scale convention -- higher is more content. |
+| Control (`HARDcontrole`) | Hardiness (Kobasa) | Belief in being able to influence everyday events | POSITIVE | Hardiness's Control subscale is one of its three named resilience resources (with Commitment and Challenge) -- higher is explicitly the resource, not the deficit. |
+| Perceived Control of Life (`CtrlVi`) | Perceived Control of Life (Inglehart, 1998) | Practical sense of mastery over one's own routine | POSITIVE | Same construct family as Hardiness/Control -- mastery is the resource. |
+| Control (`ACcontrole`) | Career Adapt-Abilities Scale (Savickas) | Practical planning and decision-making about one's career | POSITIVE | CAAS's four dimensions (Concern, Control, Curiosity, Confidence) are all positively-worded adaptability resources by design -- none are reverse-scored. |
+| Commitment (`HARDcompromis`) | Hardiness (Kobasa) | Engagement with values and life purpose (not just the task) | POSITIVE | Hardiness's Commitment subscale -- the second of its three named resources. |
+| Dedication (`ENGAGdedicac`) | Student Engagement Scale (UWES) | Enthusiasm, pride, and meaning attributed to the student role | POSITIVE | UWES Dedication, stated positively like Vigor. |
+| Confidence (`ACconfianc`) | Career Adapt-Abilities Scale (Savickas) | Self-efficacy projected onto the professional future | POSITIVE | CAAS Confidence -- same positively-worded-resource convention as Control/Curiosity/Concern above. |
+| Curiosity (`ACcuriosid`) | Career Adapt-Abilities Scale (Savickas) | Exploring alternatives, openness to possibilities | POSITIVE | CAAS Curiosity -- same convention. |
+| Absorption (`ENGAGabsorc`) | Student Engagement Scale (UWES) | Flow state, losing track of time while studying | POSITIVE | UWES Absorption, third of its three positively-stated dimensions. |
+| Challenge (`HARDdesafio`) | Hardiness (Kobasa) | Ability to draw meaning and growth from adversity | POSITIVE | Hardiness's Challenge subscale -- the third of its three named resources. |
+| Concern (`ACpreocup`) | Career Adapt-Abilities Scale (Savickas) | Future orientation with a sense of existential continuity | POSITIVE | CAAS Concern -- same convention as the other three CAAS dimensions. |
+| Personal Fulfillment (`RealizPess`) | Undocumented Organizational Block (hypothesis) | Sense of ultimate fulfillment, purpose achieved | POSITIVE | Named and worded as an achievement of fulfillment -- higher is unambiguously more of the thing itself, not its absence. |
+| Independence of Intellect and Ego (`HIindepEgo`) | Comprehensive Intellectual Humility Scale (Krumrei-Mancuso & Rouse, 2016) | Affective reaction of ego-threat/attack when one's own ideas are challenged | POSITIVE | The *items* describe the ego-threat reaction, but every one is reverse-scored before being summed (confirmed in `8.gdx.dashboards`'s dashboard 09 item table -- e.g. "it feels as though I'm being attacked" is `Reversed=Yes`); the stored `RAW_SCORE` this skill reads is therefore already in the "independence/humility" direction -- high = *less* ego-reactivity, the subscale's own positive pole. |
+| Openness to Revising One's Viewpoint (`HIabertura`) | Comprehensive Intellectual Humility Scale | Willingness to revise important beliefs in light of new reasons | POSITIVE | Stated and scored in the positive direction directly -- higher is more openness. |
+| Respect for Others' Viewpoints (`HIrespeito`) | Comprehensive Intellectual Humility Scale | Intuitive recognition of validity in the viewpoint of someone who disagrees | POSITIVE | Stated and scored in the positive direction directly -- higher is more respect. |
+| Lack of Intellectual Overconfidence (`HInaoconfi`) | Comprehensive Intellectual Humility Scale | Degree to which the person recognizes the limits of their own knowledge and turns to others | POSITIVE | Same reverse-scoring situation as `HIindepEgo`: the subscale's own name already names the positive pole ("lack of" overconfidence), and its items are reverse-scored before summing -- high = more humility, not more overconfidence. |
+
+Two of the 21 (`HIindepEgo`, `HInaoconfi`) are the only ones worth a second look before trusting
+`SCALE_POLARITY = POSITIVE` at face value: their `RECORDED_BEHAVIOR` text describes the
+*underlying, negatively-framed* psychological tendency the raw items probe (ego-threat,
+overconfidence), not the direction the final subscale score ends up pointing after the
+Comprehensive Intellectual Humility Scale's own reverse-coding is applied. `SCALE_POLARITY`
+always describes the stored `RAW_SCORE`'s direction in the DW (what the two ranking skills
+actually read), never the raw, pre-reversal item content -- the two can differ, as they do here,
+and only the former is what this column is for.
+
 ### Files
 
 - `.claude/skills/GDX_SKILL_LINK_SUGGESTIONS/` — the skill itself (`SKILL.md` for flags and
   the full scoping/output-filename convention).
 - `Link_Suggestions_<slug>_<timestamp>.md` — one report per run, accumulating in this
   folder (never overwritten — see `SKILL.md`).
+
+## 10. How virtues are suggested from the lowest scores
+
+After a study's data reaches the GoDataX Human 7 data warehouse, every psychometric variable
+carries a real average score — computed strictly from that study's own participants, never
+blended with another sample's. The first step in suggesting a virtue is simple and deliberately
+mechanical: sort those averages from lowest to highest. The reading behind that ordering is
+equally simple — the indicator with the lowest score is, within that population, the one
+expressing the most acute need at that moment. This is not a diagnosis; it is a statistical
+snapshot of where the group stands today, furthest from what the instrument sets out to measure.
+
+The second step is where the system stops being pure statistics and becomes interpretation. For
+each of these low-scoring indicators, the framework consults a fixed catalog of correspondences
+between psychometric variable and virtue — the 33 trainable virtues described by Eduardo
+Casarotto's Virtology, each understood not as a moral judgment but as a configuration of neural
+networks that can be built through repetition until it operates without effort. This
+correspondence is not calculated, not inferred by an algorithm, and not guessed: it is an
+interpretive judgment call, recorded once by a human being who decides, for that specific
+variable, which of the 33 virtues addresses the deficit it describes — and why. Once made, that
+decision is permanently recorded (who confirmed it, from which institution, at what confidence
+level) and holds for any future study that measures the same variable.
+
+A real example illustrates the mechanism. In one of the studies already processed, the
+lowest-scoring indicator was "Vigor" (disposition and energy to invest effort) — and the
+correspondence recorded for that variable pointed to the virtue **Perseverança** (Perseverance):
+the reading is that low vigor is depletion of sustained energy, and Perseverance is exactly the
+practice of maintaining effort despite wear — a direct antidote, not a palliative. The second
+lowest indicator, "Absorption" (the flow state of losing track of time in an activity), pointed
+to **Tudo Somos Um** (We Are All One): the literature describes absorption as a dissolution of
+the boundary between subject and object, and that is precisely the existential dimension named
+by the virtue of unity/interconnection. Further down the list, "Challenge" — the ability to draw
+meaning and growth from adversity — pointed to **Busca do Melhoramento** (Pursuit of
+Improvement): here the correspondence is almost a deliberate tautology, because facing
+difficulty as an opportunity for growth is, literally, that virtue's own definition.
+
+Each row of this mapping carries two justification sentences, not one — one read through the
+lens of deficit ("a low score here calls for this virtue as a treatment target") and a mirrored
+one read through the lens of strength ("a high score here already signals that this same virtue
+is present"). It is the same conceptual correspondence viewed from both ends: what separates "a
+point to work on" from "a resource already present" is not the virtue — it is only which end of
+the distribution that particular indicator sits at. A group scoring low on Vigor receives
+Perseverança as a suggestion to work on; a group scoring high on that same variable would read
+that same Perseverança as a strength already present.
+
+It is essential to mark this tool's limits with the same methodological honesty applied to every
+other layer of the framework: the low score is a real number, drawn from the database; the
+virtue suggested in response to it is a qualitative, interpretive correspondence, not a
+statistical finding, and certainly not a clinical prescription. When a variable has no recorded
+correspondence yet, the system never invents one — it appears explicitly as "no suggestion
+(review)," an invitation for someone to make that interpretive judgment call deliberately,
+rather than for the system to guess it on its own. And there is one more easily-forgotten
+caveat: not every variable carries the same sense of polarity — for a negative-pole indicator,
+such as "negative emotions," a high score is not a strength at all, it is the opposite; what
+counts as deficit or resource always depends on what that specific variable is measuring.

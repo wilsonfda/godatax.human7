@@ -1,6 +1,6 @@
 ---
 name: GDX_SKILL_MAKE_DASHBOARS_DW
-description: Generates 9 self-contained HTML charts (a small-multiples response-vs-factor-analysis line chart, multi-dimension line, bar, 4 heatmaps, a chakra gradient portrait, and a Septenary Constitution gradient portrait) from the GDX_HUMAN data warehouse (7.multidimensional.database) plus, for chart 0 only, the psychometric-properties catalog (2.relational.model.psychometrics), scoped to one study passed in via --study <slug>, each an interesting cross-perspective read on the data described in GoDataX_Human_7_DW.md. Pass --chart <code> to generate just one chart instead of all 9. Use when the user asks for dashboards, charts, or visualizations of a specific GDX_HUMAN study.
+description: Generates 9 self-contained HTML charts (a small-multiples response-vs-factor-analysis line chart, multi-dimension line, bar, 4 heatmaps, a chakra gradient portrait, and a Septenary Constitution gradient portrait) from the GDX_HUMAN data warehouse (7.multidimensional.database) plus, for chart 0 only, the psychometric-properties catalog (2.relational.model.psychometrics), scoped to one study passed in via --study <slug>, each an interesting cross-perspective read on the data described in GoDataX_Human_7_DW.md. Pass --chart <code> to generate just one chart instead of all 9; --chart 10 generates the combined master panel (dashboard_10_master_panel) instead, delegating to make_master_panel.js. Use when the user asks for dashboards, charts, or visualizations of a specific GDX_HUMAN study.
 ---
 
 # GDX_SKILL_MAKE_DASHBOARS_DW
@@ -51,6 +51,7 @@ node make_dashboards.js --sample --study <slug>            # sanity check: embed
 # copy ../.env.example to ../.env and fill in GDX_HUMAN_FB_PASSWORD, or export the vars directly
 node make_dashboards.js --study <slug>                     # real run against the live DW, scoped to that one study, all 9 charts
 node make_dashboards.js --study <slug> --chart 00           # real run, ONLY chart 0 (means: responses vs. EFA/CFA) -- skips the other 8 queries entirely
+node make_dashboards.js --study <slug> --chart 10            # real run, ONLY the master panel (see "Master panel" below) -- not available with --sample
 ```
 
 `--study <slug>` is **required** — the same slug `GDX_SKILL_NEW_STUDY` used for
@@ -61,9 +62,13 @@ must already exist and its `study.title` must already be a row in `GDX_PSY_STUDY
 skill errors out with a clear message otherwise. In `--sample` mode, a missing `intake.json` is not
 an error: the filename just falls back to a generic "Sample Study" title.
 
-`--chart <code>` is **optional**, one of `00`–`08` (the `#` column above). Passing it generates only
-that one chart's file, and only issues that chart's own queries (no wasted round-trips against the
-other 8). Omit it to generate all 9, exactly as before this flag existed.
+`--chart <code>` is **optional**, one of `00`–`08` (the `#` column above) or `10` (the master
+panel, see below). Passing `00`–`08` generates only that one chart's file, and only issues that
+chart's own queries (no wasted round-trips against the other 8). Passing `10` delegates entirely
+to `make_master_panel.js`'s `generateMasterPanel()` instead -- this script never opens its own
+Firebird connection for that case. Omit `--chart` to generate all 9 charts (`00`–`08`), exactly as
+before this flag existed -- `10` is **never** included in that default run; it only runs when
+asked for explicitly, since it depends on charts `00`–`09` already existing on disk to embed.
 
 Output defaults to `8.gdx.dashboards/` (pass `--out-dir <path>` to change it), with filenames shaped
 `dashboard_0N_<chart>__<study-slug>__<study-title-slug>__<YYYYMMDD-HHMMSS>.html` — see "Output
@@ -120,7 +125,7 @@ one implicit transaction per blob and resolves all of them via `Promise.all`. Th
 `resolveItemStatements()`) — reliable across every repeated run, where `blobAsText: true` was not.
 Keep this pattern for any future query here that touches a BLOB column across more than one row.
 
-## Master panel (`make_master_panel.js`)
+## Master panel — chart `10` (`make_master_panel.js`)
 
 Combines every dashboard (00–09) into one page, plus a phase-by-phase retrospective of the whole
 onboarding pipeline for one study — registration (Phase 1–2), data collection (Phase 3), factor
@@ -130,20 +135,40 @@ latest suggestions (Phase 9, read from its most recent `Link_Prediction_<slug>_*
 section labeled with the skill(s) responsible for it. Read-only: never writes to Firebird or Neo4j,
 and never re-runs any of the skills it reports on.
 
+Output filename: `dashboard_10_master_panel__<slug>__<study-title-slug>__<timestamp>.html` — same
+convention as every other chart (see "Output filenames" above), now that it is reachable as
+chart `10`.
+
+Two equivalent ways to run it:
+
 ```
+# via this skill's single entry point, same flag every other chart uses
+node make_dashboards.js --study <slug> --chart 10 [--out-dir <dir>] [--dashboards-dir <dir>] [--ml-dir <dir>]
+
+# directly -- unchanged, still works exactly as before this flag existed
 node make_master_panel.js --study <slug> [--out-dir <dir>] [--dashboards-dir <dir>] [--ml-dir <dir>]
 ```
+
+`--chart 10` doesn't duplicate any of `make_master_panel.js`'s logic: `make_dashboards.js`
+`require()`s it and calls its exported `generateMasterPanel(args)` directly (lazily, only when
+chart `10` is actually requested, so running charts `00`–`08` never pays for loading
+`neo4j-driver`) — one implementation, two ways to reach it. `--sample` is not supported for
+chart `10` either way: the master panel always reads live Firebird, Neo4j, and whatever
+dashboard/report files already exist on disk for this study, so a sample run has nothing
+meaningful to assemble.
 
 Needs `neo4j-driver` (installed alongside `node-firebird` in this skill's `package.json`) and the
 same `NEO4J_*` variables as `9.knowledge.graph`'s/`10.gdx.machine.learning`'s own `.env` (see
 `.env.example`) — Phase 8's section reports "not queried" rather than failing the whole page if
-they're missing. Output filename: `dashboard_master_panel__<slug>__<timestamp>.html`.
+they're missing (see "Output filename" above for the current `dashboard_10_master_panel__...` pattern).
 
 ## Files in this skill
 
 - `scripts/chart_lib.js` — the 5 renderers (`renderLineChart`, `renderBarChart`, `renderHeatmap`, `renderChakraPortrait`, `renderSeptenaryConstitutionPortrait`) plus the shared self-contained HTML page shell and the reference palette (dataviz skill default — swap the hex values here to retheme); also exports `pageShell`/`esc`/`niceTicks` directly for panel 09 and the master panel, which build custom (non-chart) page bodies
 - `scripts/make_dashboards.js` — connects (or `--sample`), runs the 8 queries, shapes the data, writes the 8 `.html` files
 - `scripts/make_dashboard_09_respondent.js` — per-respondent profile (see above)
-- `scripts/make_master_panel.js` — combined master panel (see above)
+- `scripts/make_master_panel.js` — combined master panel, chart `10` (see above); exports
+  `generateMasterPanel()`, called both by its own CLI entry point and by `make_dashboards.js`'s
+  `--chart 10`
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)

@@ -1,0 +1,14 @@
+{
+  "name": "gdx-skill-generate-google-form",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader + Google Forms API writer for the GDX_SKILL_GENERATE_GOOGLE_FORM skill: reads a study's instruments/items/alternatives from Firebird and creates a real Google Form, writing google_form_map.json so GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS can resolve responses back to exact database ids.",
+  "main": "generate_google_form.js",
+  "scripts": {
+    "generate": "node generate_google_form.js"
+  },
+  "dependencies": {
+    "node-firebird": "^2.16.0",
+    "googleapis": "^144.0.0"
+  }
+}

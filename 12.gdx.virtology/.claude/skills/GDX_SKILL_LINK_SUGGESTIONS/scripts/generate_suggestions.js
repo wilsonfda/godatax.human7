@@ -4,12 +4,18 @@
  *
  * Reads the real average score of every psychometric variable that has a
  * septenary-level mapping (7.multidimensional.database's
- * DW_FACT_PSY_VARIABLE_RESULT / DW_DIM_VARIABLE), ranks them ascending (the
- * lowest scores are read as the neediest indicators), and for each one looks
- * up a suggested virtue -- out of the 33 catalogued in
+ * DW_FACT_PSY_VARIABLE_RESULT / DW_DIM_VARIABLE), ranks them by how much of a
+ * deficit each one represents (the neediest indicators first), and for each
+ * one looks up a suggested virtue -- out of the 33 catalogued in
  * 12.gdx.virtology/Virtology_Knowledge_Base.md -- from GDX_VT_VARIABLE_VIRTUE_MAP
  * joined to GDX_VT_VIRTUE in Firebird (12.gdx.virtology/virtology_model_firebird25.sql),
  * reading the JUSTIFICATION_DEFICIT column (this skill's deficit/antidote framing).
+ *
+ * 2026-10-18: "neediest" is no longer always "lowest raw score". Most
+ * variables are POSITIVE polarity (low score = deficit), but a NEGATIVE one
+ * (e.g. Negative Emotions) has it backwards -- a HIGH score is the deficit.
+ * GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY (variable_virtue_map_polarity_firebird25.sql)
+ * records this per variable; rankByDeficit() reads it and ranks accordingly.
  *
  * 2026-10-15: switched from requiring scripts/virtue_knowledge.js (a
  * code-only, hand-written JS map) to this live DB read -- the table is now
@@ -121,15 +127,17 @@ const SAMPLE_ROWS = [
 // Synthetic virtue-map data for --sample (no DB connection), covering exactly
 // the SAV_COLUMNs used in SAMPLE_ROWS above -- values mirror the real rows in
 // GDX_VT_VARIABLE_VIRTUE_MAP (virtology_model_firebird25.sql) as of 2026-10-15.
+// All POSITIVE polarity -- none of SAMPLE_ROWS is a negative-pole variable
+// (see polarityOf()/rankByDeficit() below for how a NEGATIVE row would rank).
 const SAMPLE_VIRTUE_MAP = {
-  ENGAGabsorc: { behavior: 'Flow state, losing track of time while studying', virtuePt: 'Tudo Somos Um', virtueEn: 'We Are All One', virtueOrder: 15, justification: 'The literature describes absorption/flow as a dissolution of the subject-object boundary -- resonating directly with this virtue\'s theme of unity/interconnection' },
-  HARDdesafio: { behavior: 'Ability to draw meaning and growth from adversity', virtuePt: 'Busca do Melhoramento', virtueEn: 'Pursuit of Improvement', virtueOrder: 28, justification: 'It is literally the virtue\'s definition: facing difficulty as an opportunity for growth, echoing Frankl (purpose), cited by Virtology itself' },
-  ENGAGvigor: { behavior: 'Disposition and energy to invest effort in studying', virtuePt: 'Perseverança', virtueEn: 'Perseverance', virtueOrder: 10, justification: 'Low vigor is depletion of sustained energy -- Perseverance is the practice of maintaining effort despite wear, a direct antidote for the drop in disposition' },
-  EmocPos: { behavior: 'Repertoire of positive emotions (joy, interest, hope)', virtuePt: 'Gratidão', virtueEn: 'Gratitude', virtueOrder: 18, justification: 'It is the instrument\'s own theoretical basis (Positivity Ratio / Fredrickson, broaden-and-build): gratitude is the most documented lever for raising positive emotion' },
-  ACpreocup: { behavior: 'Future orientation with a sense of existential continuity', virtuePt: 'Eternidade', virtueEn: 'Eternity', virtueOrder: 4, justification: '"Concern" in Savickas\'s sense is an integrated temporal outlook -- the virtue that explicitly deals with a perspective beyond the immediate is the closest match' },
-  SATISFVIDA: { behavior: 'Global affective evaluation of one\'s own life', virtuePt: 'Aceitação', virtueEn: 'Acceptance', virtueOrder: 9, justification: 'Satisfaction with life as a whole depends on accepting life as it is today, not just changing circumstances -- Acceptance attacks the root of the negative global judgment' },
-  ACcuriosid: { behavior: 'Exploring alternatives, openness to possibilities', virtuePt: 'Flexibilidade', virtueEn: 'Flexibility', virtueOrder: 30, justification: 'Low curiosity is, in practice, rigidity in the face of the unknown -- Flexibility is the direct antidote' },
-  HARDcontrole: { behavior: 'Belief in being able to influence everyday events', virtuePt: 'Responsabilidade', virtueEn: 'Responsibility', virtueOrder: 33, justification: 'Low perceived control improves by training the active assumption of responsibility over what is actually within the person\'s reach' },
+  ENGAGabsorc: { behavior: 'Flow state, losing track of time while studying', virtuePt: 'Tudo Somos Um', virtueEn: 'We Are All One', virtueOrder: 15, justification: 'The literature describes absorption/flow as a dissolution of the subject-object boundary -- resonating directly with this virtue\'s theme of unity/interconnection', polarity: 'POSITIVE' },
+  HARDdesafio: { behavior: 'Ability to draw meaning and growth from adversity', virtuePt: 'Busca do Melhoramento', virtueEn: 'Pursuit of Improvement', virtueOrder: 28, justification: 'It is literally the virtue\'s definition: facing difficulty as an opportunity for growth, echoing Frankl (purpose), cited by Virtology itself', polarity: 'POSITIVE' },
+  ENGAGvigor: { behavior: 'Disposition and energy to invest effort in studying', virtuePt: 'Perseverança', virtueEn: 'Perseverance', virtueOrder: 10, justification: 'Low vigor is depletion of sustained energy -- Perseverance is the practice of maintaining effort despite wear, a direct antidote for the drop in disposition', polarity: 'POSITIVE' },
+  EmocPos: { behavior: 'Repertoire of positive emotions (joy, interest, hope)', virtuePt: 'Gratidão', virtueEn: 'Gratitude', virtueOrder: 18, justification: 'It is the instrument\'s own theoretical basis (Positivity Ratio / Fredrickson, broaden-and-build): gratitude is the most documented lever for raising positive emotion', polarity: 'POSITIVE' },
+  ACpreocup: { behavior: 'Future orientation with a sense of existential continuity', virtuePt: 'Eternidade', virtueEn: 'Eternity', virtueOrder: 4, justification: '"Concern" in Savickas\'s sense is an integrated temporal outlook -- the virtue that explicitly deals with a perspective beyond the immediate is the closest match', polarity: 'POSITIVE' },
+  SATISFVIDA: { behavior: 'Global affective evaluation of one\'s own life', virtuePt: 'Aceitação', virtueEn: 'Acceptance', virtueOrder: 9, justification: 'Satisfaction with life as a whole depends on accepting life as it is today, not just changing circumstances -- Acceptance attacks the root of the negative global judgment', polarity: 'POSITIVE' },
+  ACcuriosid: { behavior: 'Exploring alternatives, openness to possibilities', virtuePt: 'Flexibilidade', virtueEn: 'Flexibility', virtueOrder: 30, justification: 'Low curiosity is, in practice, rigidity in the face of the unknown -- Flexibility is the direct antidote', polarity: 'POSITIVE' },
+  HARDcontrole: { behavior: 'Belief in being able to influence everyday events', virtuePt: 'Responsabilidade', virtueEn: 'Responsibility', virtueOrder: 33, justification: 'Low perceived control improves by training the active assumption of responsibility over what is actually within the person\'s reach', polarity: 'POSITIVE' },
 };
 
 /** Reads the variable<->virtue correspondence live from GDX_VT_VARIABLE_VIRTUE_MAP
@@ -137,11 +145,13 @@ const SAMPLE_VIRTUE_MAP = {
  * for virtue_knowledge.js's VARIABLE_VIRTUE_MAP. Returns a plain object,
  * same shape as SAMPLE_VIRTUE_MAP above, reading JUSTIFICATION_DEFICIT (this
  * skill's deficit/antidote framing -- GDX_SKILL_IDENTIFY_VIRTUES reads
- * JUSTIFICATION_STRENGTH instead). */
+ * JUSTIFICATION_STRENGTH instead). Also carries SCALE_POLARITY (added by
+ * variable_virtue_map_polarity_firebird25.sql) -- see rankByDeficit() for how
+ * it changes which end of the score range counts as the deficit. */
 async function fetchVirtueMap(fbDb) {
   const rows = await fbQuery(fbDb, `
     SELECT M.SAV_COLUMN AS SAV_COLUMN, M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR,
-           M.JUSTIFICATION_DEFICIT AS JUSTIFICATION_DEFICIT,
+           M.JUSTIFICATION_DEFICIT AS JUSTIFICATION_DEFICIT, M.SCALE_POLARITY AS SCALE_POLARITY,
            V.NAME_PT AS VIRTUE_NAME_PT, V.NAME_EN AS VIRTUE_NAME_EN, V.ORDER_NUM AS VIRTUE_ORDER_NUM
     FROM GDX_VT_VARIABLE_VIRTUE_MAP M
     JOIN GDX_VT_VIRTUE V ON V.ID_VIRTUE = M.ID_VIRTUE`);
@@ -153,13 +163,27 @@ async function fetchVirtueMap(fbDb) {
       virtueEn: r.VIRTUE_NAME_EN,
       virtueOrder: r.VIRTUE_ORDER_NUM,
       justification: r.JUSTIFICATION_DEFICIT,
+      polarity: r.SCALE_POLARITY,
     };
   }
   return map;
 }
 
-async function fetchLowestIndicators(fbDb, top, studyId) {
-  const rows = await fbQuery(fbDb, `
+/** A variable with no row in virtueMap yet has no recorded polarity either --
+ * defaults to POSITIVE (the common case, and the ranking this skill always
+ * used before SCALE_POLARITY existed), since there is no judgment call to
+ * read it from. Never guessed as NEGATIVE. */
+function polarityOf(virtueMap, savCol) {
+  const knowledge = virtueMap[savCol];
+  return knowledge && knowledge.polarity === 'NEGATIVE' ? 'NEGATIVE' : 'POSITIVE';
+}
+
+/** Fetches every variable's average score for the study, unordered -- ranking
+ * now happens in rankByDeficit() below, once each row's polarity is known,
+ * not here in SQL (a plain ASC sort would silently treat a negative-pole
+ * variable's HIGH score, its actual deficit, as its best score). */
+async function fetchAllIndicators(fbDb, studyId) {
+  return fbQuery(fbDb, `
     SELECT V.SAV_COLUMN AS SAV_COLUMN, V.NAME AS VARIABLE_NAME, L.NAME AS LEVEL_NAME,
            AVG(FR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
     FROM DW_FACT_PSY_VARIABLE_RESULT FR
@@ -167,9 +191,24 @@ async function fetchLowestIndicators(fbDb, top, studyId) {
     JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
     JOIN DW_DIM_PERSON P ON P.ID_PERSON = FR.ID_PERSON
     WHERE FR.RAW_SCORE IS NOT NULL AND P.ID_STUDY = ?
-    GROUP BY V.SAV_COLUMN, V.NAME, L.NAME
-    ORDER BY AVG_SCORE ASC`, [studyId]);
-  return rows.slice(0, top);
+    GROUP BY V.SAV_COLUMN, V.NAME, L.NAME`, [studyId]);
+}
+
+/** Ranks every row by how much of a deficit it represents, then returns the
+ * neediest `top`. For a POSITIVE-polarity variable a LOW raw score is the
+ * deficit (unchanged from before this column existed); for a NEGATIVE one a
+ * HIGH raw score is the deficit -- so its need score is the raw score
+ * negated, putting it in the same ascending order as every POSITIVE row. */
+function rankByDeficit(rows, virtueMap, top) {
+  const ranked = rows.map((row) => {
+    const savCol = (row.SAV_COLUMN || '').trim();
+    const polarity = polarityOf(virtueMap, savCol);
+    const avgScore = Number(row.AVG_SCORE);
+    const needScore = polarity === 'NEGATIVE' ? -avgScore : avgScore;
+    return { ...row, POLARITY: polarity, NEED_SCORE: needScore };
+  });
+  ranked.sort((a, b) => a.NEED_SCORE - b.NEED_SCORE);
+  return ranked.slice(0, top);
 }
 
 function buildReport(rows, virtueMap, meta) {
@@ -187,26 +226,36 @@ function buildReport(rows, virtueMap, meta) {
   lines.push('> `SPSS_Septenary_Constitution_Mapping.md` — "which virtue counters this deficit" is a');
   lines.push('> conceptual judgment call (`GDX_VT_VARIABLE_VIRTUE_MAP.JUSTIFICATION_DEFICIT`), not a');
   lines.push('> statistical or clinical finding.');
+  lines.push('>');
+  lines.push('> **Polarity-aware ranking.** Not every variable shares the same direction: for a');
+  lines.push('> NEGATIVE-polarity indicator (`GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY`, e.g. Negative');
+  lines.push('> Emotions), a HIGH score is the deficit, not a low one -- the opposite of every');
+  lines.push('> POSITIVE-polarity indicator. The ranking below already accounts for this per row (see the');
+  lines.push('> Polarity column), so "lowest" here means *neediest*, not always *smallest number*. A');
+  lines.push('> variable with no recorded correspondence yet has no recorded polarity either and defaults');
+  lines.push('> to POSITIVE -- never guessed as NEGATIVE.');
   lines.push('');
-  lines.push(`## The ${rows.length} lowest psychometric indicators`);
+  lines.push(`## The ${rows.length} neediest psychometric indicators`);
   lines.push('');
-  lines.push('| Indicator (level) | Real score | What it measures | Suggested virtue | Why |');
-  lines.push('|---|---|---|---|---|');
+  lines.push('| Indicator (level) | Real score | Polarity | What it measures | Suggested virtue | Why |');
+  lines.push('|---|---|---|---|---|---|');
 
   for (const row of rows) {
     const savCol = (row.SAV_COLUMN || '').trim();
     const varName = (row.VARIABLE_NAME || savCol).trim();
     const levelName = (row.LEVEL_NAME || '').trim();
     const score = Number(row.AVG_SCORE).toFixed(2);
+    const polarity = row.POLARITY || polarityOf(virtueMap, savCol);
+    const polarityCell = polarity === 'NEGATIVE' ? 'negative (high = deficit)' : 'positive (low = deficit)';
     const knowledge = virtueMap[savCol];
 
     if (!knowledge) {
       unresolved.push(savCol || varName);
-      lines.push(`| ${varName} (${levelName}) | ${score} | — | **no suggestion (review)** | \`${savCol}\` is not in \`GDX_VT_VARIABLE_VIRTUE_MAP\` — add a row and run again |`);
+      lines.push(`| ${varName} (${levelName}) | ${score} | ${polarityCell} | — | **no suggestion (review)** | \`${savCol}\` is not in \`GDX_VT_VARIABLE_VIRTUE_MAP\` — add a row and run again |`);
       continue;
     }
 
-    lines.push(`| ${varName} (${levelName}) | ${score} | ${knowledge.behavior} | **${knowledge.virtuePt}** (${knowledge.virtueEn}, #${knowledge.virtueOrder}) | ${knowledge.justification} |`);
+    lines.push(`| ${varName} (${levelName}) | ${score} | ${polarityCell} | ${knowledge.behavior} | **${knowledge.virtuePt}** (${knowledge.virtueEn}, #${knowledge.virtueOrder}) | ${knowledge.justification} |`);
   }
 
   lines.push('');
@@ -219,9 +268,10 @@ function buildReport(rows, virtueMap, meta) {
 
   lines.push('## Caveats');
   lines.push('');
-  lines.push('1. The low score here is real DW data, but the virtue suggested as "treatment" is a conceptual correspondence, not a clinical prescription — the same methodological honesty standard as `SPSS_Septenary_Constitution_Mapping.md`.');
+  lines.push('1. The low (or, for a negative-polarity row, high) score here is real DW data, but the virtue suggested as "treatment" is a conceptual correspondence, not a clinical prescription — the same methodological honesty standard as `SPSS_Septenary_Constitution_Mapping.md`.');
   lines.push(`2. Sample restricted to a single study (**${meta.studyTitle}**, N=${meta.maxN ?? '?'} participants) — do not generalize the scores as normative beyond this population.`);
   lines.push('3. This report is a snapshot of the moment it ran; re-run the skill after any update to `godatax_human_dw_etl_firebird25.sql` to reflect new data.');
+  lines.push('4. Polarity (`SCALE_POLARITY`) is a recorded judgment call, not inferred from the variable\'s name or distribution — a newly-mapped variable defaults to POSITIVE until whoever records its `GDX_VT_VARIABLE_VIRTUE_MAP` row (`GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR`) sets it explicitly.');
 
   return lines.join('\n') + '\n';
 }
@@ -259,8 +309,8 @@ async function main() {
 
   if (args.sample) {
     console.log('[SAMPLE] using embedded synthetic data -- no Firebird connection.');
-    rows = SAMPLE_ROWS.slice(0, args.top);
     virtueMap = SAMPLE_VIRTUE_MAP;
+    rows = rankByDeficit(SAMPLE_ROWS, virtueMap, args.top);
   } else {
     const fbOptions = {
       host: requireEnv('GDX_HUMAN_FB_HOST'),
@@ -277,8 +327,9 @@ async function main() {
     try {
       studyId = await resolveStudyId(fbDb, studyTitle, args.study);
       console.log(`Resolved study "${studyTitle}" (slug "${args.study}") -> ID_STUDY=${studyId}.`);
-      rows = await fetchLowestIndicators(fbDb, args.top, studyId);
       virtueMap = await fetchVirtueMap(fbDb);
+      const allRows = await fetchAllIndicators(fbDb, studyId);
+      rows = rankByDeficit(allRows, virtueMap, args.top);
     } finally {
       fbDb.detach();
     }

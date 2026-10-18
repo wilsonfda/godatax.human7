@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 980px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 20px; max-width: 720px; line-height: 1.5; }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 20px 20px 12px;
+    border: 1px solid var(--grid); overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 2px 8px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 4px 2px 10px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 8px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  .panel-heading { fill: var(--ink-secondary); font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings</h1>
+  <p class="subtitle">Pure-psychometric perspective (cardiac coherence deliberately excluded): one instrument per x-axis position, two panels on separate y-scales. The top panel's <code>RAW_SCORE</code> (mostly 1-5 Likert, but not a uniform scale across instruments -- e.g. Positivity Ratio Scale runs 0-4) is a fundamentally different quantity from the bottom panel's factor loadings (-1 to 1, from <code>GDX_PSY_PSYCHOMETRIC_PROPERTY</code>), so each gets its own panel rather than one shared axis (the dual-axis anti-pattern) or an arbitrary indexed baseline (there is no natural "instrument zero" the way chart 1 has a BASELINE phase). None of this study's instrument(s) has any EFA/CFA row yet -- every bottom-panel point is absent, not zero.</p>
+  <div class="chart-card">
+    <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show table</button></div>
+    
+    <svg class="chart-svg" viewBox="0 0 940 714" role="img" aria-label="Psychometric Instruments: Response Scores vs. Factor-Analysis Loadings">
+      
+      <text class="panel-heading" x="64" y="4">Response score -- mean RAW_SCORE from actual participant answers (each instrument's own scale)</text>
+      <line class="grid-line" x1="64" x2="916" y1="240" y2="240"/>
+      <text class="axis-label" x="56" y="244" text-anchor="end">21</text>
+<line class="grid-line" x1="64" x2="916" y1="196" y2="196"/>
+      <text class="axis-label" x="56" y="200" text-anchor="end">21.5</text>
+<line class="grid-line" x1="64" x2="916" y1="152" y2="152"/>
+      <text class="axis-label" x="56" y="156" text-anchor="end">22</text>
+<line class="grid-line" x1="64" x2="916" y1="108" y2="108"/>
+      <text class="axis-label" x="56" y="112" text-anchor="end">22.5</text>
+<line class="grid-line" x1="64" x2="916" y1="64" y2="64"/>
+      <text class="axis-label" x="56" y="68" text-anchor="end">23</text>
+<line class="grid-line" x1="64" x2="916" y1="20" y2="20"/>
+      <text class="axis-label" x="56" y="24" text-anchor="end">23.5</text>
+      <line class="baseline" x1="64" x2="916" y1="240" y2="240"/>
+      
+<circle class="pt" cx="64" cy="124.72000000000011" r="4" fill="#2a78d6" stroke="var(--surface)" stroke-width="1.5"
+           data-tip="<strong>Response score</strong><br>Comprehensive Intellectual Humility Scale: 22.31"></circle>
+      <text class="axis-label" x="64" y="260"
+        text-anchor="end" transform="rotate(-32 64 260)">Comprehensive Intellectual Humility Scale</text>
+      <text class="axis-label" x="18" y="30" transform="rotate(-90 18 30)" text-anchor="end">Average raw score</text>
+      <text class="panel-heading" x="64" y="366">Factor-analysis loadings -- mean |loading| across items (-1 to 1 scale, a different quantity from the panel above)</text>
+      <line class="grid-line" x1="64" x2="916" y1="602" y2="602"/>
+      <text class="axis-label" x="56" y="606" text-anchor="end">0</text>
+<line class="grid-line" x1="64" x2="916" y1="382" y2="382"/>
+      <text class="axis-label" x="56" y="386" text-anchor="end">1</text>
+      <line class="baseline" x1="64" x2="916" y1="602" y2="602"/>
+      
+
+
+
+      <text class="axis-label" x="64" y="622"
+        text-anchor="end" transform="rotate(-32 64 622)">Comprehensive Intellectual Humility Scale</text>
+      <text class="axis-label" x="18" y="392" transform="rotate(-90 18 392)" text-anchor="end">Average |factor loading|</text>
+    </svg>
+    <div class="legend"><div class="legend-item"><span class="legend-swatch" style="background:#eb6834"></span>EFA (exploratory)</div><div class="legend-item"><span class="legend-swatch" style="background:#1baf7a"></span>CFA (confirmatory)</div></div>
+    <table class="data-table"><thead><tr><th>Instrument</th><th>Response score</th><th>Response N</th><th>EFA loading (avg |value|)</th><th>CFA loading (avg |value|)</th></tr></thead>
+      <tbody><tr><td>Comprehensive Intellectual Humility Scale</td><td>22.31</td><td>16</td><td>—</td><td>—</td></tr></tbody></table>
+  </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    // querySelectorAll (not querySelector): a multi-panel chart (e.g. dashboard_00)
+    // has more than one .chart-svg sharing one .data-table -- toggling must hide/show
+    // every panel together. A single-panel chart (every other chart here) still has
+    // exactly one of each, so this is backward compatible.
+    const svgEls = document.querySelectorAll('.chart-svg');
+    const tableEls = document.querySelectorAll('.data-table');
+    const showingTable = tableEls.length ? !tableEls[0].classList.contains('visible') : false;
+    svgEls.forEach(function (el) { el.classList.toggle('hidden-by-table', showingTable); });
+    tableEls.forEach(function (el) { el.classList.toggle('visible', showingTable); });
+    this.textContent = showingTable ? 'Show chart' : 'Show table';
+  });
+  
+    document.querySelectorAll('.pt').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });
+</script>
+</body>
+</html>

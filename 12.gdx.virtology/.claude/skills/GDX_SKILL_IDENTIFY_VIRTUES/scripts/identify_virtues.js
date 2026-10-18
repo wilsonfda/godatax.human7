@@ -5,12 +5,20 @@
  * The mirror image of GDX_SKILL_LINK_SUGGESTIONS: reads the real average
  * score of every psychometric variable that has a septenary-level mapping
  * (7.multidimensional.database's DW_FACT_PSY_VARIABLE_RESULT /
- * DW_DIM_VARIABLE), ranks them descending (the highest scores are read as
- * potential strengths already present), and for each one looks up a
+ * DW_DIM_VARIABLE), ranks them by how much of a strength each one
+ * represents (the strongest indicators first), and for each one looks up a
  * corresponding virtue -- out of the 33 catalogued in
  * 12.gdx.virtology/Virtology_Knowledge_Base.md -- from GDX_VT_VARIABLE_VIRTUE_MAP
  * joined to GDX_VT_VIRTUE in Firebird (12.gdx.virtology/virtology_model_firebird25.sql),
  * reading the JUSTIFICATION_STRENGTH column (this skill's strength/already-present framing).
+ *
+ * 2026-10-18: "strongest" is no longer always "highest raw score". Most
+ * variables are POSITIVE polarity (high score = strength), but a NEGATIVE
+ * one (e.g. Negative Emotions) has it backwards -- a LOW score is the
+ * strength. GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY
+ * (variable_virtue_map_polarity_firebird25.sql) records this per variable;
+ * rankByStrength() reads it and ranks accordingly -- the same mechanism
+ * GDX_SKILL_LINK_SUGGESTIONS uses for the opposite (deficit) framing.
  *
  * 2026-10-15: switched from requiring scripts/virtue_knowledge.js (a
  * code-only, hand-written JS map) to this live DB read -- the table is now
@@ -116,12 +124,14 @@ const SAMPLE_ROWS = [
 // Synthetic virtue-map data for --sample (no DB connection), covering exactly
 // the SAV_COLUMNs used in SAMPLE_ROWS above -- values mirror the real rows in
 // GDX_VT_VARIABLE_VIRTUE_MAP (virtology_model_firebird25.sql) as of 2026-10-15.
+// All POSITIVE polarity -- none of SAMPLE_ROWS is a negative-pole variable
+// (see polarityOf()/rankByStrength() below for how a NEGATIVE row would rank).
 const SAMPLE_VIRTUE_MAP = {
-  RealizPess: { behavior: 'Sense of ultimate fulfillment, purpose achieved', virtuePt: 'Individuação', virtueEn: 'Individuation', virtueOrder: 2, justification: 'An already-high sense of personal fulfillment is the direct psychological correlate of an Individuation process already underway -- the Self already on its way to integration' },
-  ENGAGdedicac: { behavior: 'Enthusiasm, pride, and meaning attributed to the student role', virtuePt: 'Fé', virtueEn: 'Faith', virtueOrder: 14, justification: 'Enthusiasm and meaning already attributed to the student role show an investment of identity sustained by something beyond the immediate outcome -- the already-active core of Faith' },
-  ACconfianc: { behavior: 'Self-efficacy projected onto the professional future', virtuePt: 'Otimismo', virtueEn: 'Optimism', virtueOrder: 11, justification: 'High confidence in one\'s own professional future is, by definition, an already-sustained positive expectation -- Optimism in exercise' },
-  SATISFVIDA: { behavior: 'Global affective evaluation of one\'s own life', virtuePt: 'Aceitação', virtueEn: 'Acceptance', virtueOrder: 9, justification: 'High life satisfaction is the affective portrait of already accepting life as it is -- a sign that Acceptance is already present and sustaining that positive global evaluation' },
-  HARDcompromis: { behavior: 'Engagement with values and life purpose (not just the task)', virtuePt: 'Fé', virtueEn: 'Faith', virtueOrder: 14, justification: 'High engagement with values and life purpose indicates a Faith already sustaining that long-term commitment' },
+  RealizPess: { behavior: 'Sense of ultimate fulfillment, purpose achieved', virtuePt: 'Individuação', virtueEn: 'Individuation', virtueOrder: 2, justification: 'An already-high sense of personal fulfillment is the direct psychological correlate of an Individuation process already underway -- the Self already on its way to integration', polarity: 'POSITIVE' },
+  ENGAGdedicac: { behavior: 'Enthusiasm, pride, and meaning attributed to the student role', virtuePt: 'Fé', virtueEn: 'Faith', virtueOrder: 14, justification: 'Enthusiasm and meaning already attributed to the student role show an investment of identity sustained by something beyond the immediate outcome -- the already-active core of Faith', polarity: 'POSITIVE' },
+  ACconfianc: { behavior: 'Self-efficacy projected onto the professional future', virtuePt: 'Otimismo', virtueEn: 'Optimism', virtueOrder: 11, justification: 'High confidence in one\'s own professional future is, by definition, an already-sustained positive expectation -- Optimism in exercise', polarity: 'POSITIVE' },
+  SATISFVIDA: { behavior: 'Global affective evaluation of one\'s own life', virtuePt: 'Aceitação', virtueEn: 'Acceptance', virtueOrder: 9, justification: 'High life satisfaction is the affective portrait of already accepting life as it is -- a sign that Acceptance is already present and sustaining that positive global evaluation', polarity: 'POSITIVE' },
+  HARDcompromis: { behavior: 'Engagement with values and life purpose (not just the task)', virtuePt: 'Fé', virtueEn: 'Faith', virtueOrder: 14, justification: 'High engagement with values and life purpose indicates a Faith already sustaining that long-term commitment', polarity: 'POSITIVE' },
 };
 
 /** Reads the variable<->virtue correspondence live from GDX_VT_VARIABLE_VIRTUE_MAP
@@ -129,11 +139,13 @@ const SAMPLE_VIRTUE_MAP = {
  * for virtue_knowledge.js's VARIABLE_VIRTUE_MAP. Returns a plain object,
  * same shape as SAMPLE_VIRTUE_MAP above, reading JUSTIFICATION_STRENGTH
  * (this skill's strength/already-present framing -- GDX_SKILL_LINK_SUGGESTIONS
- * reads JUSTIFICATION_DEFICIT instead). */
+ * reads JUSTIFICATION_DEFICIT instead). Also carries SCALE_POLARITY (added by
+ * variable_virtue_map_polarity_firebird25.sql) -- see rankByStrength() for
+ * how it changes which end of the score range counts as the strength. */
 async function fetchVirtueMap(fbDb) {
   const rows = await fbQuery(fbDb, `
     SELECT M.SAV_COLUMN AS SAV_COLUMN, M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR,
-           M.JUSTIFICATION_STRENGTH AS JUSTIFICATION_STRENGTH,
+           M.JUSTIFICATION_STRENGTH AS JUSTIFICATION_STRENGTH, M.SCALE_POLARITY AS SCALE_POLARITY,
            V.NAME_PT AS VIRTUE_NAME_PT, V.NAME_EN AS VIRTUE_NAME_EN, V.ORDER_NUM AS VIRTUE_ORDER_NUM
     FROM GDX_VT_VARIABLE_VIRTUE_MAP M
     JOIN GDX_VT_VIRTUE V ON V.ID_VIRTUE = M.ID_VIRTUE`);
@@ -145,13 +157,28 @@ async function fetchVirtueMap(fbDb) {
       virtueEn: r.VIRTUE_NAME_EN,
       virtueOrder: r.VIRTUE_ORDER_NUM,
       justification: r.JUSTIFICATION_STRENGTH,
+      polarity: r.SCALE_POLARITY,
     };
   }
   return map;
 }
 
-async function fetchHighestIndicators(fbDb, top, studyId) {
-  const rows = await fbQuery(fbDb, `
+/** A variable with no row in virtueMap yet has no recorded polarity either --
+ * defaults to POSITIVE (the common case, and the ranking this skill always
+ * used before SCALE_POLARITY existed), since there is no judgment call to
+ * read it from. Never guessed as NEGATIVE. Identical to the sibling helper
+ * in GDX_SKILL_LINK_SUGGESTIONS/scripts/generate_suggestions.js. */
+function polarityOf(virtueMap, savCol) {
+  const knowledge = virtueMap[savCol];
+  return knowledge && knowledge.polarity === 'NEGATIVE' ? 'NEGATIVE' : 'POSITIVE';
+}
+
+/** Fetches every variable's average score for the study, unordered -- ranking
+ * now happens in rankByStrength() below, once each row's polarity is known,
+ * not here in SQL (a plain DESC sort would silently treat a negative-pole
+ * variable's HIGH score, its actual deficit, as its biggest strength). */
+async function fetchAllIndicators(fbDb, studyId) {
+  return fbQuery(fbDb, `
     SELECT V.SAV_COLUMN AS SAV_COLUMN, V.NAME AS VARIABLE_NAME, L.NAME AS LEVEL_NAME,
            AVG(FR.RAW_SCORE) AS AVG_SCORE, COUNT(*) AS N
     FROM DW_FACT_PSY_VARIABLE_RESULT FR
@@ -159,9 +186,24 @@ async function fetchHighestIndicators(fbDb, top, studyId) {
     JOIN DW_DIM_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = V.ID_SEPTENARY_LEVEL
     JOIN DW_DIM_PERSON P ON P.ID_PERSON = FR.ID_PERSON
     WHERE FR.RAW_SCORE IS NOT NULL AND P.ID_STUDY = ?
-    GROUP BY V.SAV_COLUMN, V.NAME, L.NAME
-    ORDER BY AVG_SCORE DESC`, [studyId]);
-  return rows.slice(0, top);
+    GROUP BY V.SAV_COLUMN, V.NAME, L.NAME`, [studyId]);
+}
+
+/** Ranks every row by how much of a strength it represents, then returns the
+ * strongest `top`. For a POSITIVE-polarity variable a HIGH raw score is the
+ * strength (unchanged from before this column existed); for a NEGATIVE one a
+ * LOW raw score is the strength -- so its strength score is the raw score
+ * negated, putting it in the same descending order as every POSITIVE row. */
+function rankByStrength(rows, virtueMap, top) {
+  const ranked = rows.map((row) => {
+    const savCol = (row.SAV_COLUMN || '').trim();
+    const polarity = polarityOf(virtueMap, savCol);
+    const avgScore = Number(row.AVG_SCORE);
+    const strengthScore = polarity === 'NEGATIVE' ? -avgScore : avgScore;
+    return { ...row, POLARITY: polarity, STRENGTH_SCORE: strengthScore };
+  });
+  ranked.sort((a, b) => b.STRENGTH_SCORE - a.STRENGTH_SCORE);
+  return ranked.slice(0, top);
 }
 
 function buildReport(rows, virtueMap, meta) {
@@ -182,30 +224,35 @@ function buildReport(rows, virtueMap, meta) {
   lines.push('> (`GDX_VT_VARIABLE_VIRTUE_MAP.JUSTIFICATION_STRENGTH`), não um achado estatístico ou');
   lines.push('> clínico. Este comando não escreve nenhum arquivo: o resultado é só o que aparece na tela.');
   lines.push('>');
-  lines.push('> Este comando não avalia, por variável, se "score alto" é desejável (ex.: uma');
-  lines.push('> variável de polo negativo, como emoções negativas, teria score alto lido como');
-  lines.push('> ruim, não como força) — confira o campo "O que mede" de cada linha antes de');
-  lines.push('> tratar automaticamente um score alto como algo positivo.');
+  lines.push('> **Ranking consciente de polaridade.** Nem toda variável tem a mesma direção: para um');
+  lines.push('> indicador de polaridade NEGATIVA (`GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY`, ex.: Emoções');
+  lines.push('> Negativas), um score BAIXO é a força, não um score alto -- o oposto de todo indicador de');
+  lines.push('> polaridade POSITIVA. O ranking abaixo já leva isso em conta por linha (veja a coluna');
+  lines.push('> Polaridade), então "mais alto" aqui significa *mais força*, não sempre *maior número*. Uma');
+  lines.push('> variável sem correspondência registrada ainda não tem polaridade registrada e assume');
+  lines.push('> POSITIVA por padrão -- nunca adivinhada como NEGATIVA.');
   lines.push('');
-  lines.push(`## As ${rows.length} virtudes em potencial (indicadores mais altos)`);
+  lines.push(`## As ${rows.length} virtudes em potencial (indicadores mais fortes)`);
   lines.push('');
-  lines.push('| Indicador (nível) | Score real | O que mede | Virtude em potencial | Por quê |');
-  lines.push('|---|---|---|---|---|');
+  lines.push('| Indicador (nível) | Score real | Polaridade | O que mede | Virtude em potencial | Por quê |');
+  lines.push('|---|---|---|---|---|---|');
 
   for (const row of rows) {
     const savCol = (row.SAV_COLUMN || '').trim();
     const varName = (row.VARIABLE_NAME || savCol).trim();
     const levelName = (row.LEVEL_NAME || '').trim();
     const score = Number(row.AVG_SCORE).toFixed(2);
+    const polarity = row.POLARITY || polarityOf(virtueMap, savCol);
+    const polarityCell = polarity === 'NEGATIVE' ? 'negativa (baixo = força)' : 'positiva (alto = força)';
     const knowledge = virtueMap[savCol];
 
     if (!knowledge) {
       unresolved.push(savCol || varName);
-      lines.push(`| ${varName} (${levelName}) | ${score} | — | **sem virtude identificada (revisar)** | \`${savCol}\` não está em \`GDX_VT_VARIABLE_VIRTUE_MAP\` — adicione uma linha e rode de novo |`);
+      lines.push(`| ${varName} (${levelName}) | ${score} | ${polarityCell} | — | **sem virtude identificada (revisar)** | \`${savCol}\` não está em \`GDX_VT_VARIABLE_VIRTUE_MAP\` — adicione uma linha e rode de novo |`);
       continue;
     }
 
-    lines.push(`| ${varName} (${levelName}) | ${score} | ${knowledge.behavior} | **${knowledge.virtuePt}** (${knowledge.virtueEn}, #${knowledge.virtueOrder}) | ${knowledge.justification} |`);
+    lines.push(`| ${varName} (${levelName}) | ${score} | ${polarityCell} | ${knowledge.behavior} | **${knowledge.virtuePt}** (${knowledge.virtueEn}, #${knowledge.virtueOrder}) | ${knowledge.justification} |`);
   }
 
   lines.push('');
@@ -218,10 +265,10 @@ function buildReport(rows, virtueMap, meta) {
 
   lines.push('## Ressalvas');
   lines.push('');
-  lines.push('1. Score alto aqui é um dado real do DW, mas a virtude apontada como "potencial" é uma correspondência conceitual, não uma prescrição clínica — mesmo padrão de honestidade metodológica de `SPSS_Septenary_Constitution_Mapping.md` e `GDX_SKILL_LINK_SUGGESTIONS`.');
+  lines.push('1. Score alto (ou, numa linha de polaridade negativa, baixo) aqui é um dado real do DW, mas a virtude apontada como "potencial" é uma correspondência conceitual, não uma prescrição clínica — mesmo padrão de honestidade metodológica de `SPSS_Septenary_Constitution_Mapping.md` e `GDX_SKILL_LINK_SUGGESTIONS`.');
   lines.push(`2. Amostra restrita a um único estudo (**${meta.studyTitle}**, N=${meta.maxN ?? '?'} participantes) — não generalizar os scores como normativos além dessa população.`);
   lines.push('3. Este comando é só leitura de tela: nenhum arquivo é gravado. Redirecione o stdout você mesmo (`> arquivo.md`) se precisar de um registro.');
-  lines.push('4. Direção da escala não é avaliada por variável — para indicadores de polo negativo, "score alto" pode significar o oposto de uma força (ver nota acima).');
+  lines.push('4. Polaridade (`SCALE_POLARITY`) é um julgamento registrado, não inferido do nome ou da distribuição da variável — uma variável recém-mapeada assume POSITIVA até que quem registra sua linha em `GDX_VT_VARIABLE_VIRTUE_MAP` (`GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR`) a defina explicitamente.');
 
   return lines.join('\n') + '\n';
 }
@@ -254,8 +301,8 @@ async function main() {
 
   if (args.sample) {
     console.log('[SAMPLE] using embedded synthetic data -- no Firebird connection.');
-    rows = SAMPLE_ROWS.slice(0, args.top);
     virtueMap = SAMPLE_VIRTUE_MAP;
+    rows = rankByStrength(SAMPLE_ROWS, virtueMap, args.top);
   } else {
     const fbOptions = {
       host: requireEnv('GDX_HUMAN_FB_HOST'),
@@ -272,8 +319,9 @@ async function main() {
     try {
       studyId = await resolveStudyId(fbDb, studyTitle, args.study);
       console.log(`Resolved study "${studyTitle}" (slug "${args.study}") -> ID_STUDY=${studyId}.`);
-      rows = await fetchHighestIndicators(fbDb, args.top, studyId);
       virtueMap = await fetchVirtueMap(fbDb);
+      const allRows = await fetchAllIndicators(fbDb, studyId);
+      rows = rankByStrength(allRows, virtueMap, args.top);
     } finally {
       fbDb.detach();
     }

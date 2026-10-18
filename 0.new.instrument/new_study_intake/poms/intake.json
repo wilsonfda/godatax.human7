@@ -1,0 +1,158 @@
+{
+  "_comment": "POMS (Profile of Mood States) catalog onboarding. Source: McNair, D. M., Lorr, M., & Droppleman, L. F. (1971). Manual for the Profile of Mood States. San Diego, CA: Educational and Industrial Testing Service. Original 65-item, 6-factor instrument; 58 of the 65 items are scored into the six factors below (Tension-Anxiety 9, Depression-Dejection 15, Anger-Hostility 12, Vigor-Activity 8, Fatigue-Inertia 7, Confusion-Bewilderment 7 = 58), the remaining 7 items are unscored filler/buffer adjectives with no factor assignment -- they are intentionally NOT registered here, since the GDX_PSY schema requires every catalogued item to feed a variable, and inventing a placeholder construct for literally-unscored filler words would misrepresent the instrument. Item wording and factor/reverse-scoring assignment were read directly from an independent scale-scoring reference (brianmac.co.uk coaching-science resource) that reproduces the official McNair et al. scoring key; the resulting item counts (9/15/12/8/7/7=58, +7 unscored) match the widely documented POMS factor structure. Within-factor item ORDER here is grouped by factor for catalog clarity; the original manual interleaves items from different factors in a fixed non-grouped sequence, but that exact published order could not be independently verified from open sources, so grouped-by-factor order is used instead (sum-based factor scoring is unaffected by item presentation order). Response scale (0 Not at all .. 4 Extremely) and the two reverse-scored items (Relaxed within Tension-Anxiety, Efficient within Confusion-Bewilderment) are well-documented and cross-confirmed. The instrument also yields a well-known derived Total Mood Disturbance (TMD) score (sum of the five negative factors minus Vigor-Activity, plus a constant); TMD is NOT modelled as a separate GDX_PSY_CONSTRUCT here because it is a cross-indicator composite with no schema mechanism to compute an indicator from other indicators (the same modelling choice already made for SEES's three independent subscales) -- it is documented here for context only.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Profile of Mood States (POMS) - Instrument Onboarding",
+    "objective": "Register the POMS instrument and its six mood-state dimensions into the GDX_HUMAN psychometric catalog as reusable knowledge for future mood/affect studies.",
+    "method": "Desk research of the published instrument (McNair, Lorr & Droppleman, 1971) and an independent scoring-key reference; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Profile of Mood States (POMS)",
+      "version": "1971",
+      "type": "LIKERT_SCALE",
+      "description": "McNair, D. M., Lorr, M., & Droppleman, L. F. (1971). Manual for the Profile of Mood States. San Diego, CA: Educational and Industrial Testing Service. Yields a well-known derived Total Mood Disturbance (TMD) score (sum of Tension-Anxiety, Depression-Dejection, Anger-Hostility, Fatigue-Inertia and Confusion-Bewilderment, minus Vigor-Activity, plus a constant to avoid negative totals) -- not modelled as its own catalog construct here since it is computed from the other six indicators rather than from raw items.",
+      "instructions": "Below is a list of words that describe feelings people have. Please read each word carefully, then indicate how much that feeling describes how you have been feeling during the past week, including today, by choosing the response that applies, from 'Not at all' to 'Extremely'. Researchers commonly adapt the time frame (e.g. 'right now', 'today', or 'during the past week including today') depending on whether a state or trait-like mood assessment is intended.",
+      "phenomenon_name": "Mood State",
+      "phenomenon_description": "The pattern of transient, situationally influenced affective/mood states, both positive and negative, that an individual experiences over a specified recent period (e.g. the past week, or the present moment).",
+      "constructs": [
+        {"name": "Tension-Anxiety (POMS)", "domain": "PSYCHOMETRIC_NEW", "definition": "Heightened musculoskeletal tension and subjective feelings of apprehension, nervousness and anxiety.", "weight_in_instrument": 1},
+        {"name": "Depression-Dejection (POMS)", "domain": "PSYCHOMETRIC_NEW", "definition": "A mood of personal inadequacy, sadness, hopelessness and emotional depression, often accompanied by guilt.", "weight_in_instrument": 1},
+        {"name": "Anger-Hostility (POMS)", "domain": "PSYCHOMETRIC_NEW", "definition": "A mood of anger, antipathy and hostility toward other people and the environment.", "weight_in_instrument": 1},
+        {"name": "Vigor-Activity (POMS)", "domain": "PSYCHOMETRIC_NEW", "definition": "A mood of vigorousness, high energy and liveliness.", "weight_in_instrument": 1},
+        {"name": "Fatigue-Inertia (POMS)", "domain": "PSYCHOMETRIC_NEW", "definition": "A mood of weariness, inertia and low energy.", "weight_in_instrument": 1},
+        {"name": "Confusion-Bewilderment (POMS)", "domain": "PSYCHOMETRIC_NEW", "definition": "A mood of bewilderment and cognitive inefficiency, marked by muddled or uncertain thinking.", "weight_in_instrument": 1}
+      ],
+      "variables": [
+        {
+          "construct_name": "Tension-Anxiety (POMS)", "name": "Tension-Anxiety (POMS)",
+          "description": "Overall level of tension and anxiety reported over the assessment period.",
+          "operational_definition": "Sum of the 9 Tension-Anxiety items (each rated 0-4), with 'Relaxed' reverse-scored.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Tension-Anxiety (POMS) (score)", "indicator_description": "Sum of the 9 Tension-Anxiety items, 'Relaxed' reverse-scored.",
+          "indicator_type": "COMPOSITE_SUM", "measurement_unit": "LIKERT_POINT", "direction": "POSITIVE", "min_value": 0, "max_value": 36
+        },
+        {
+          "construct_name": "Depression-Dejection (POMS)", "name": "Depression-Dejection (POMS)",
+          "description": "Overall level of depression and dejection reported over the assessment period.",
+          "operational_definition": "Sum of the 15 Depression-Dejection items (each rated 0-4).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Depression-Dejection (POMS) (score)", "indicator_description": "Sum of the 15 Depression-Dejection items.",
+          "indicator_type": "COMPOSITE_SUM", "measurement_unit": "LIKERT_POINT", "direction": "POSITIVE", "min_value": 0, "max_value": 60
+        },
+        {
+          "construct_name": "Anger-Hostility (POMS)", "name": "Anger-Hostility (POMS)",
+          "description": "Overall level of anger and hostility reported over the assessment period.",
+          "operational_definition": "Sum of the 12 Anger-Hostility items (each rated 0-4).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Anger-Hostility (POMS) (score)", "indicator_description": "Sum of the 12 Anger-Hostility items.",
+          "indicator_type": "COMPOSITE_SUM", "measurement_unit": "LIKERT_POINT", "direction": "POSITIVE", "min_value": 0, "max_value": 48
+        },
+        {
+          "construct_name": "Vigor-Activity (POMS)", "name": "Vigor-Activity (POMS)",
+          "description": "Overall level of vigor and energy reported over the assessment period.",
+          "operational_definition": "Sum of the 8 Vigor-Activity items (each rated 0-4).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Vigor-Activity (POMS) (score)", "indicator_description": "Sum of the 8 Vigor-Activity items.",
+          "indicator_type": "COMPOSITE_SUM", "measurement_unit": "LIKERT_POINT", "direction": "POSITIVE", "min_value": 0, "max_value": 32
+        },
+        {
+          "construct_name": "Fatigue-Inertia (POMS)", "name": "Fatigue-Inertia (POMS)",
+          "description": "Overall level of fatigue and inertia reported over the assessment period.",
+          "operational_definition": "Sum of the 7 Fatigue-Inertia items (each rated 0-4).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Fatigue-Inertia (POMS) (score)", "indicator_description": "Sum of the 7 Fatigue-Inertia items.",
+          "indicator_type": "COMPOSITE_SUM", "measurement_unit": "LIKERT_POINT", "direction": "POSITIVE", "min_value": 0, "max_value": 28
+        },
+        {
+          "construct_name": "Confusion-Bewilderment (POMS)", "name": "Confusion-Bewilderment (POMS)",
+          "description": "Overall level of confusion and bewilderment reported over the assessment period.",
+          "operational_definition": "Sum of the 7 Confusion-Bewilderment items (each rated 0-4), with 'Efficient' reverse-scored.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Confusion-Bewilderment (POMS) (score)", "indicator_description": "Sum of the 7 Confusion-Bewilderment items, 'Efficient' reverse-scored.",
+          "indicator_type": "COMPOSITE_SUM", "measurement_unit": "LIKERT_POINT", "direction": "POSITIVE", "min_value": 0, "max_value": 28
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "POMS_5",
+          "alternatives": [
+            {"order": 1, "label": "Not at all", "numeric_value": 0},
+            {"order": 2, "label": "A little", "numeric_value": 1},
+            {"order": 3, "label": "Moderately", "numeric_value": 2},
+            {"order": 4, "label": "Quite a bit", "numeric_value": 3},
+            {"order": 5, "label": "Extremely", "numeric_value": 4}
+          ]
+        }
+      ],
+      "items": [
+        {"order": 1, "statement_text": "Tense", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 2, "statement_text": "Shaky", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 3, "statement_text": "On edge", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 4, "statement_text": "Panicky", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 5, "statement_text": "Relaxed", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 6, "statement_text": "Uneasy", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 7, "statement_text": "Restless", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 8, "statement_text": "Nervous", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 9, "statement_text": "Anxious", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Tension-Anxiety (POMS)", "reversed": 0, "indicator_item_weight": 1},
+
+        {"order": 10, "statement_text": "Unhappy", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 11, "statement_text": "Sorry for things done", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 12, "statement_text": "Sad", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 13, "statement_text": "Blue", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 14, "statement_text": "Hopeless", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 15, "statement_text": "Unworthy", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 16, "statement_text": "Discouraged", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 17, "statement_text": "Lonely", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 18, "statement_text": "Miserable", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 19, "statement_text": "Gloomy", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 20, "statement_text": "Desperate", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 21, "statement_text": "Helpless", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 22, "statement_text": "Worthless", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 23, "statement_text": "Terrified", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 24, "statement_text": "Guilty", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Depression-Dejection (POMS)", "reversed": 0, "indicator_item_weight": 1},
+
+        {"order": 25, "statement_text": "Angry", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 26, "statement_text": "Peeved", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 27, "statement_text": "Grouchy", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 28, "statement_text": "Spiteful", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 29, "statement_text": "Annoyed", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 30, "statement_text": "Resentful", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 31, "statement_text": "Bitter", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 32, "statement_text": "Ready to fight", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 33, "statement_text": "Rebellious", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 34, "statement_text": "Deceived", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 35, "statement_text": "Furious", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 36, "statement_text": "Bad tempered", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Anger-Hostility (POMS)", "reversed": 0, "indicator_item_weight": 1},
+
+        {"order": 37, "statement_text": "Lively", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 38, "statement_text": "Active", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 39, "statement_text": "Energetic", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 40, "statement_text": "Cheerful", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 41, "statement_text": "Alert", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 42, "statement_text": "Full of pep", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 43, "statement_text": "Carefree", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 44, "statement_text": "Vigorous", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Vigor-Activity (POMS)", "reversed": 0, "indicator_item_weight": 1},
+
+        {"order": 45, "statement_text": "Worn out", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 46, "statement_text": "Listless", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 47, "statement_text": "Fatigued", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 48, "statement_text": "Exhausted", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 49, "statement_text": "Sluggish", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 50, "statement_text": "Weary", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 51, "statement_text": "Bushed", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Fatigue-Inertia (POMS)", "reversed": 0, "indicator_item_weight": 1},
+
+        {"order": 52, "statement_text": "Confused", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 53, "statement_text": "Unable to concentrate", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 54, "statement_text": "Muddled", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 55, "statement_text": "Bewildered", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 56, "statement_text": "Efficient", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 57, "statement_text": "Forgetful", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 58, "statement_text": "Uncertain about things", "response_type": "LIKERT_0_4", "anchor_set": "POMS_5", "required": 1, "weight": 1, "variable_name": "Confusion-Bewilderment (POMS)", "reversed": 0, "indicator_item_weight": 1}
+      ]
+    }
+  ]
+}

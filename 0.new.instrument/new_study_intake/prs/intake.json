@@ -1,0 +1,78 @@
+{
+  "_comment": "PRS (Perceived Recovery Status Scale) catalog onboarding. Source: Laurent, C. M., Green, J. M., Bishop, P. A., Sjokvist, J., Schumacker, R. E., Richardson, M. T., & Curtner-Smith, M. (2011). A practical approach to monitoring recovery: Development of a Perceived Recovery Status scale. Journal of Strength and Conditioning Research, 25(3), 620-628, plus secondary validation literature (e.g. Sportsmith review of PRS validity, 2022; multiple IJSPP/JSCR studies administering PRS 24-72h after exercise). Single-item, 0-10 scale with verbal anchors confirmed at 0 ('very poorly recovered / extremely tired'), 5 ('moderately recovered') and 10 ('very well recovered / highly energetic') -- these three anchor points are explicitly and consistently reported across independent secondary sources; intermediate points (1-4, 6-9) are numeric-only, matching how the scale is reproduced in the literature. Unlike SEES/FS/PACES, this instrument is not scored as an in-exercise affective response -- it is a recovery/readiness self-assessment, typically taken before a session or in the hours after one -- so it is catalogued under its own phenomenon rather than reusing 'Subjective Exercise Experience'. The administration instructions below are a faithful paraphrase of the documented procedure (respondents are given standardized instructions explaining the anchors before rating), not a verbatim quote, since the exact instruction wording could not be confirmed from openly accessible sources.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Perceived Recovery Status Scale (PRS) - Instrument Onboarding",
+    "objective": "Register the PRS instrument and its perceived-recovery dimension into the GDX_HUMAN psychometric catalog as reusable knowledge for future exercise/training-recovery studies.",
+    "method": "Desk research of the published instrument (Laurent et al., 2011) and secondary validation literature; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Perceived Recovery Status Scale (PRS)",
+      "version": "2011",
+      "type": "SINGLE_ITEM",
+      "description": "Laurent, C. M., Green, J. M., Bishop, P. A., Sjokvist, J., Schumacker, R. E., Richardson, M. T., & Curtner-Smith, M. (2011). A practical approach to monitoring recovery: Development of a Perceived Recovery Status scale. Journal of Strength and Conditioning Research, 25(3), 620-628.",
+      "instructions": "Respondents are given standardized instructions explaining the numerical and verbal anchors of the scale before rating. Using the 0-10 scale below, rate how recovered you currently feel from your most recent exercise or training session, taking into account how physically and mentally ready you feel to perform again. The scale can be administered before a session (to gauge readiness) or in the hours following one (e.g. 24 hours later, to gauge recovery).",
+      "phenomenon_name": "Perceived Training Recovery",
+      "phenomenon_description": "An individual's subjective, holistic self-assessment of how physically and mentally recovered they feel from preceding physical exertion or training, used as a practical marker of fatigue and readiness to train or compete.",
+      "constructs": [
+        {
+          "name": "Perceived Recovery Status (PRS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "An athlete's or exerciser's subjective self-assessment of their overall recovery from prior training or competition, reflecting fatigue and readiness to perform.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Perceived Recovery Status (PRS)",
+          "name": "Perceived Recovery Status (PRS)",
+          "description": "Momentary self-reported level of recovery from prior exercise/training.",
+          "operational_definition": "Single-item response to the PRS scale, from 0 (very poorly recovered / extremely tired) to 10 (very well recovered / highly energetic), with 5 anchored as moderately recovered.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Perceived Recovery Status (PRS) (score)",
+          "indicator_description": "Raw score of the single PRS item, from 0 to 10.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "SCALE_POINT",
+          "direction": "POSITIVE",
+          "min_value": 0,
+          "max_value": 10
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "PRS_11",
+          "alternatives": [
+            {"order": 1, "label": "Very poorly recovered / Extremely tired", "numeric_value": 0},
+            {"order": 2, "label": "1", "numeric_value": 1},
+            {"order": 3, "label": "2", "numeric_value": 2},
+            {"order": 4, "label": "3", "numeric_value": 3},
+            {"order": 5, "label": "4", "numeric_value": 4},
+            {"order": 6, "label": "Moderately recovered", "numeric_value": 5},
+            {"order": 7, "label": "6", "numeric_value": 6},
+            {"order": 8, "label": "7", "numeric_value": 7},
+            {"order": 9, "label": "8", "numeric_value": 8},
+            {"order": 10, "label": "9", "numeric_value": 9},
+            {"order": 11, "label": "Very well recovered / Highly energetic", "numeric_value": 10}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "Please rate your current perceived recovery status from your most recent exercise or training session.",
+          "response_type": "PRS_11",
+          "anchor_set": "PRS_11",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Perceived Recovery Status (PRS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

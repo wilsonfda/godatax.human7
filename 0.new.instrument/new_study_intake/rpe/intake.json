@@ -1,0 +1,82 @@
+{
+  "_comment": "RPE (Borg Rating of Perceived Exertion, 6-20 Category Scale) catalog onboarding. Source: Borg, G. A. V. (1982). Psychophysical bases of perceived exertion. Medicine & Science in Sports & Exercise, 14(5), 377-381; scale table per Borg, G. (1998). Borg's Perceived Exertion and Pain Scales. Champaign, IL: Human Kinetics. This is the original/classic 6-20 category RPE scale (intentionally starting at 6, not 0, so that score x 10 approximates exercise heart rate in bpm), distinct from Borg's later 0-10 Category-Ratio (CR10) scale. Anchor labels (7 'Very, very light' ... 19 'Very, very hard', with 6/8/10/12/14/16/18/20 numeric-only) were read directly from an official reproduction of the scale table (heartonline.org.au clinical resource, citing Borg 1998) -- verified, not reconstructed from memory. The item instruction text is adapted closely from the currently licensed 'Borg RPE Scale(R)' administration paragraph (c) Gunnar Borg, 1970, 1998, 2017, which was also read directly from its official PDF template, trimmed to the core administration guidance (dropping the sport-specific training-zone tips, which are coaching advice rather than instrument instructions).",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Rating of Perceived Exertion Scale (Borg RPE 6-20) - Instrument Onboarding",
+    "objective": "Register the Borg RPE 6-20 instrument and its perceived-exertion dimension into the GDX_HUMAN psychometric catalog as reusable knowledge for future exercise-intensity and training-monitoring studies.",
+    "method": "Desk research of the published instrument (Borg, 1982, 1998) and official scale materials; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-17",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Rating of Perceived Exertion Scale (Borg RPE 6-20)",
+      "version": "1982/1998",
+      "type": "SINGLE_ITEM",
+      "description": "Borg, G. A. V. (1982). Psychophysical bases of perceived exertion. Medicine & Science in Sports & Exercise, 14(5), 377-381. Scale table: Borg, G. (1998). Borg's Perceived Exertion and Pain Scales. Champaign, IL: Human Kinetics.",
+      "instructions": "Use this scale to tell how strenuous and tiring the exercise feels to you right now. The exertion is mainly felt as fatigue in your muscles and as breathlessness, or possibly aches. It is your own feeling of exertion that is important -- do not underestimate it, but do not overestimate it either. Look at the scale and the descriptions below, then choose the number that best describes your level of exertion.",
+      "phenomenon_name": "Perceived Exertion",
+      "phenomenon_description": "An individual's subjective perception of how hard their body is working during physical exercise, integrating cues from the cardiovascular, respiratory, and musculoskeletal systems.",
+      "constructs": [
+        {
+          "name": "Perceived Exertion (Borg RPE)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "The subjective intensity of effort, strain, discomfort and fatigue experienced during physical exercise, integrating peripheral (muscular) and central (cardiorespiratory) sensory cues.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Perceived Exertion (Borg RPE)",
+          "name": "Perceived Exertion (Borg RPE)",
+          "description": "Momentary self-reported intensity of physical exertion during exercise.",
+          "operational_definition": "Single-item response to the Borg RPE 6-20 scale; by design, the chosen value multiplied by 10 approximates concurrent exercise heart rate in beats per minute.",
+          "measurement_level": "ORDINAL",
+          "indicator_name": "Perceived Exertion (Borg RPE) (score)",
+          "indicator_description": "Raw score of the single Borg RPE item, from 6 to 20.",
+          "indicator_type": "SINGLE_ITEM_SCORE",
+          "measurement_unit": "SCALE_POINT",
+          "direction": "POSITIVE",
+          "min_value": 6,
+          "max_value": 20
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "RPE_6_20",
+          "alternatives": [
+            {"order": 1, "label": "6", "numeric_value": 6},
+            {"order": 2, "label": "Very, very light", "numeric_value": 7},
+            {"order": 3, "label": "8", "numeric_value": 8},
+            {"order": 4, "label": "Very light", "numeric_value": 9},
+            {"order": 5, "label": "10", "numeric_value": 10},
+            {"order": 6, "label": "Fairly light", "numeric_value": 11},
+            {"order": 7, "label": "12", "numeric_value": 12},
+            {"order": 8, "label": "Somewhat hard", "numeric_value": 13},
+            {"order": 9, "label": "14", "numeric_value": 14},
+            {"order": 10, "label": "Hard", "numeric_value": 15},
+            {"order": 11, "label": "16", "numeric_value": 16},
+            {"order": 12, "label": "Very hard", "numeric_value": 17},
+            {"order": 13, "label": "18", "numeric_value": 18},
+            {"order": 14, "label": "Very, very hard", "numeric_value": 19},
+            {"order": 15, "label": "20", "numeric_value": 20}
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "How strenuous and tiring does the exercise feel to you right now?",
+          "response_type": "RPE_6_20",
+          "anchor_set": "RPE_6_20",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Perceived Exertion (Borg RPE)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}
