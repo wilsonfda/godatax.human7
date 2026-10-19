@@ -1,0 +1,101 @@
+{
+  "_comment": "IPIP (International Personality Item Pool, Goldberg, L. R., 1999, http://ipip.ori.org) catalog onboarding, requested as 'IPIP - Autoconhecimento / Autonomia' with the correlated constructs left for selection, since IPIP has no scale literally named 'Autoconhecimento' (Self-Knowledge) or 'Autonomia' (Autonomy). Two public-domain 'Single Construct' IPIP scoring keys were selected as the closest correlates, verified against the live site (ipip.ori.org/newSingleConstructsKey.htm, fetched 2026-10-18): (1) Self-Esteem (IPIP alternative to Rosenberg, 1965; Alpha=.84; 10 items, 5 positively keyed + 5 reverse-scored) for Autoconhecimento; (2) Locus of Control: Internality (IPIP alternative to Levenson, 1981 IPC; Alpha=.71; 10 items, 6 positively keyed + 4 reverse-scored) for Autonomia -- the IPIP subscale measuring belief that one's own outcomes are self-determined rather than externally controlled. Both scales use IPIP's standard 5-point accuracy response format and standard administration instructions (verified public-domain wording, ipip.ori.org). Catalog registration only -- no participant data collected or associated with this record, same pattern as the other 'Instrument Onboarding' studies already in this catalog (SEES, FS, PACES, PRS, RPE, Borg CR10, POMS). Checked against check_catalog.js (2026-10-18): no existing phenomenon/construct named Self-Esteem, Locus of Control, Self-Knowledge or Autonomy -- no collision.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "IPIP Self-Esteem and Locus of Control Scales - Instrument Onboarding",
+    "objective": "Register the IPIP public-domain scales selected as the closest correlates of Self-Knowledge (Autoconhecimento) and Autonomy (Autonomia) -- Self-Esteem and Locus of Control: Internality -- into the GDX_HUMAN psychometric catalog, as reusable knowledge for future studies and as candidate correlates of the Virtology virtue of Individuation (Individuacao).",
+    "method": "Desk research of the public-domain International Personality Item Pool (Goldberg, 1999, ipip.ori.org), 'Single Construct Scoring Keys' page; catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-18",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "International Personality Item Pool (IPIP) - Self-Esteem and Locus of Control Scales",
+      "version": "1999",
+      "type": "LIKERT_SCALE",
+      "description": "Goldberg, L. R. (1999). International Personality Item Pool. http://ipip.ori.org. Public-domain item pool; items free to copy, translate, and use without permission or fee. This onboarding bundles two 'Single Construct' scoring keys from the pool: the IPIP alternative to Rosenberg's (1965) Self-Esteem Scale, and the Internality subscale of the IPIP alternative to Levenson's (1981) Locus of Control (IPC) scales -- selected as the constructs most correlated with Self-Knowledge (Autoconhecimento) and Autonomy (Autonomia) respectively, per explicit request, since IPIP catalogs no scale literally named either.",
+      "instructions": "Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. Read each statement and select the response that most accurately describes you.",
+      "phenomenon_name": "Self-Knowledge and Autonomy (Autoconhecimento e Autonomia)",
+      "phenomenon_description": "Disposition to know and accurately evaluate oneself (self-knowledge) and to attribute one's own outcomes to one's own ability and effort rather than luck, chance, or powerful others (autonomy/internal locus of control).",
+      "constructs": [
+        {
+          "name": "Self-Esteem (IPIP)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Global, stable self-regard and self-knowledge of one's own strengths and worth. Selected as the IPIP construct most correlated with Self-Knowledge (Autoconhecimento). IPIP public-domain alternative to Rosenberg's (1965) Self-Esteem Scale.",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Locus of Control: Internality (IPIP)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Belief that one's own life outcomes are determined by one's own ability and effort rather than luck, chance, or powerful others. Selected as the IPIP construct most correlated with Autonomy (Autonomia). IPIP public-domain alternative to the Internality subscale of Levenson's (1981) Locus of Control (IPC) scales.",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Self-Esteem (IPIP)",
+          "name": "Self-Esteem (IPIP)",
+          "description": "Degree of positive, stable self-regard and accurate self-knowledge of one's own strengths and worth.",
+          "operational_definition": "Sum of 10 Likert items (5 positively keyed, 5 negatively keyed/reverse-scored), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Self-Esteem (IPIP) (score)",
+          "indicator_description": "Sum of the 10 items feeding this dimension, 5 reverse-scored before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 10,
+          "max_value": 50
+        },
+        {
+          "construct_name": "Locus of Control: Internality (IPIP)",
+          "name": "Locus of Control: Internality (IPIP)",
+          "description": "Degree to which the person attributes their life outcomes to their own ability and effort rather than luck, chance, or external direction.",
+          "operational_definition": "Sum of 10 Likert items (6 positively keyed, 4 negatively keyed/reverse-scored), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Locus of Control: Internality (IPIP) (score)",
+          "indicator_description": "Sum of the 10 items feeding this dimension, 4 reverse-scored before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 10,
+          "max_value": 50
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "ACCURACY_5",
+          "alternatives": [
+            {"order": 1, "label": "Very Inaccurate", "numeric_value": 1},
+            {"order": 2, "label": "Moderately Inaccurate", "numeric_value": 2},
+            {"order": 3, "label": "Neither Inaccurate nor Accurate", "numeric_value": 3},
+            {"order": 4, "label": "Moderately Accurate", "numeric_value": 4},
+            {"order": 5, "label": "Very Accurate", "numeric_value": 5}
+          ]
+        }
+      ],
+      "items": [
+        {"order": 1, "statement_text": "Feel comfortable with myself.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 2, "statement_text": "Just know that I will be a success.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 3, "statement_text": "Seldom feel blue.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 4, "statement_text": "Like to take responsibility for making decisions.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 5, "statement_text": "Know my strengths.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 6, "statement_text": "Dislike myself.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 7, "statement_text": "Am less capable than most people.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 8, "statement_text": "Feel that my life lacks direction.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 9, "statement_text": "Question my ability to do my work properly.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 10, "statement_text": "Feel that I'm unable to deal with things.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Self-Esteem (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 11, "statement_text": "Believe that my success depends on ability rather than luck.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 12, "statement_text": "Believe that events in my life are determined only by me.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 13, "statement_text": "Just know that I will be a success.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 14, "statement_text": "Believe that by working hard a person can achieve anything.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 15, "statement_text": "Feel comfortable with myself.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 16, "statement_text": "Always know why I do things.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 17, "statement_text": "See difficulties everywhere.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 18, "statement_text": "Believe that unfortunate events occur because of bad luck.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 19, "statement_text": "Can't stand on my own.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 20, "statement_text": "Feel that my life lacks direction.", "response_type": "LIKERT_5", "anchor_set": "ACCURACY_5", "required": 1, "weight": 1, "variable_name": "Locus of Control: Internality (IPIP)", "reversed": 1, "indicator_item_weight": 1}
+      ]
+    }
+  ]
+}

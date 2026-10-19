@@ -1,0 +1,581 @@
+{
+  "_comment": "IPIP public-domain HEXACO-PI (Gentleness, Patience, Flexibility -- Agreeableness facets, Lee & Ashton, 2004/2006) and NEO-PI-R (Dutifulness -- Conscientiousness facet C3, Costa & McCrae, 1992) facet scales (ipip.ori.org/newHEXACO_PI_key.htm, ipip.ori.org/newNEOKey.htm, fetched 2026-10-19). Selected, as a refinement beyond the literal instrument the spreadsheet (12.gdx.virtology/GoDataX_H7ph_33_Virtudes_Instrumentos_Psicometricos.xlsx) suggests, because each facet is a direct, literal, public-domain match for its virtue -- Gentleness for 'Brandura' (the spreadsheet's own suggestion was the vaguer 'IPIP - Agreeableness/Politeness'), Patience for 'Paciencia' (spreadsheet suggested the vaguer VIA 'Self-Regulation'), Flexibility for 'Flexibilidade' (spreadsheet suggested VIA 'Judgment/Open-Mindedness', a weaker conceptual fit than this literal facet), and Dutifulness for 'Responsabilidade' (matches the spreadsheet's own suggestion, 'IPIP - Conscientiousness/Dutifulness', exactly). Catalog registration only -- no participant data collected or associated with this record.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "IPIP HEXACO/NEO Personality Facet Scales - Instrument Onboarding",
+    "objective": "Register four IPIP public-domain personality facet scales (Gentleness, Patience, Flexibility, Dutifulness) selected as direct correlates of four Virtology virtues, per GoDataX_H7ph_33_Virtudes_Instrumentos_Psicometricos.xlsx.",
+    "method": "Desk research of the public-domain International Personality Item Pool (ipip.ori.org); catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-19",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "IPIP HEXACO-PI / NEO-PI-R Facet Scales (Gentleness, Patience, Flexibility, Dutifulness)",
+      "version": "2006",
+      "type": "LIKERT_SCALE",
+      "description": "Goldberg, L. R., et al. International Personality Item Pool (http://ipip.ori.org). Public-domain alternative items for four personality facets: Gentleness, Patience and Flexibility (HEXACO-PI Agreeableness facets, Lee & Ashton) and Dutifulness (NEO-PI-R Conscientiousness facet C3, Costa & McCrae, 1992).",
+      "instructions": "Describe yourself as you generally are now, not as you wish to be in the future. Describe yourself as you honestly see yourself, in relation to other people you know of the same sex as you are, and roughly your same age. Read each statement and select the response that most accurately describes you.",
+      "phenomenon_name": "Interpersonal Temperament and Dutifulness Facets",
+      "phenomenon_description": "Dispositional facets governing how a person reacts to others' faults and mistakes (gentleness, patience, flexibility) and how faithfully a person adheres to promises, rules and moral obligations (dutifulness).",
+      "constructs": [
+        {
+          "name": "Gentleness (IPIP-HEXACO)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Mild, forgiving temperament; willingness to accept other people's faults and not judge them harshly; reluctance to be critical or confrontational. (HEXACO Agreeableness facet.)",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Patience (IPIP-HEXACO)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Tendency to remain calm rather than to feel and express anger, even when provoked. (HEXACO Agreeableness facet.)",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Flexibility (IPIP-HEXACO)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Willingness to compromise and cooperate with others; tolerance of others' mistakes, opinions, and idiosyncrasies. (HEXACO Agreeableness facet.)",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Dutifulness (IPIP-NEO)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Adherence to ethical principles and moral obligations; keeping promises, following rules, honoring commitments and one's conscience. (NEO-PI-R Conscientiousness facet (C3).)",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Gentleness (IPIP-HEXACO)",
+          "name": "Gentleness (IPIP-HEXACO)",
+          "description": "Mild, forgiving temperament; willingness to accept other people's faults and not judge them harshly; reluctance to be critical or confrontational.",
+          "operational_definition": "Sum of 10 Likert items (4 positively keyed, 6 negatively keyed/reverse-scored), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Gentleness (IPIP-HEXACO) (score)",
+          "indicator_description": "Sum of the 10 items feeding this dimension, 6 reverse-scored before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 10,
+          "max_value": 50
+        },
+        {
+          "construct_name": "Patience (IPIP-HEXACO)",
+          "name": "Patience (IPIP-HEXACO)",
+          "description": "Tendency to remain calm rather than to feel and express anger, even when provoked.",
+          "operational_definition": "Sum of 10 Likert items (5 positively keyed, 5 negatively keyed/reverse-scored), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Patience (IPIP-HEXACO) (score)",
+          "indicator_description": "Sum of the 10 items feeding this dimension, 5 reverse-scored before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 10,
+          "max_value": 50
+        },
+        {
+          "construct_name": "Flexibility (IPIP-HEXACO)",
+          "name": "Flexibility (IPIP-HEXACO)",
+          "description": "Willingness to compromise and cooperate with others; tolerance of others' mistakes, opinions, and idiosyncrasies.",
+          "operational_definition": "Sum of 10 Likert items (2 positively keyed, 8 negatively keyed/reverse-scored), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Flexibility (IPIP-HEXACO) (score)",
+          "indicator_description": "Sum of the 10 items feeding this dimension, 8 reverse-scored before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 10,
+          "max_value": 50
+        },
+        {
+          "construct_name": "Dutifulness (IPIP-NEO)",
+          "name": "Dutifulness (IPIP-NEO)",
+          "description": "Adherence to ethical principles and moral obligations; keeping promises, following rules, honoring commitments and one's conscience.",
+          "operational_definition": "Sum of 10 Likert items (5 positively keyed, 5 negatively keyed/reverse-scored), 1-5 scale each.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Dutifulness (IPIP-NEO) (score)",
+          "indicator_description": "Sum of the 10 items feeding this dimension, 5 reverse-scored before summing.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 10,
+          "max_value": 50
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "ACCURACY_5",
+          "alternatives": [
+            {
+              "order": 1,
+              "label": "Very Inaccurate",
+              "numeric_value": 1
+            },
+            {
+              "order": 2,
+              "label": "Moderately Inaccurate",
+              "numeric_value": 2
+            },
+            {
+              "order": 3,
+              "label": "Neither Inaccurate nor Accurate",
+              "numeric_value": 3
+            },
+            {
+              "order": 4,
+              "label": "Moderately Accurate",
+              "numeric_value": 4
+            },
+            {
+              "order": 5,
+              "label": "Very Accurate",
+              "numeric_value": 5
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "Rarely complain.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 2,
+          "statement_text": "Take things as they come.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 3,
+          "statement_text": "Accept people as they are.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 4,
+          "statement_text": "Have a good word for everyone.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 5,
+          "statement_text": "Become frustrated and angry with people when they don't live up to my expectations.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 6,
+          "statement_text": "Am quick to judge others.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 7,
+          "statement_text": "Find fault with everything.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 8,
+          "statement_text": "Speak ill of others.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 9,
+          "statement_text": "Have a sharp tongue.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 10,
+          "statement_text": "Criticize others' shortcomings.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Gentleness (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 11,
+          "statement_text": "Find that it takes a lot to make me feel angry at someone.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 12,
+          "statement_text": "Rarely feel angry with people.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 13,
+          "statement_text": "Am usually a patient person.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 14,
+          "statement_text": "Rarely get irritated.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 15,
+          "statement_text": "Seldom get mad.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 16,
+          "statement_text": "Am easily annoyed.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 17,
+          "statement_text": "Get angry easily.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 18,
+          "statement_text": "Get irritated easily.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 19,
+          "statement_text": "Lose my temper.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 20,
+          "statement_text": "Get upset easily.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Patience (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 21,
+          "statement_text": "Adjust easily.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 22,
+          "statement_text": "Am good at taking advice.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 23,
+          "statement_text": "When interacting with a group of people, am often bothered by at least one of them.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 24,
+          "statement_text": "React strongly to criticism.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 25,
+          "statement_text": "Get upset if others change the way that I have arranged things.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 26,
+          "statement_text": "Am hard to convince.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 27,
+          "statement_text": "Am annoyed by others' mistakes.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 28,
+          "statement_text": "Can't stand being contradicted.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 29,
+          "statement_text": "Am hard to satisfy.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 30,
+          "statement_text": "Am hard to reason with.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Flexibility (IPIP-HEXACO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 31,
+          "statement_text": "Try to follow the rules.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 32,
+          "statement_text": "Keep my promises.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 33,
+          "statement_text": "Pay my bills on time.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 34,
+          "statement_text": "Tell the truth.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 35,
+          "statement_text": "Listen to my conscience.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 36,
+          "statement_text": "Break rules.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 37,
+          "statement_text": "Break my promises.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 38,
+          "statement_text": "Get others to do my duties.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 39,
+          "statement_text": "Do the opposite of what is asked.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 40,
+          "statement_text": "Misrepresent the facts.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "ACCURACY_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Dutifulness (IPIP-NEO)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}

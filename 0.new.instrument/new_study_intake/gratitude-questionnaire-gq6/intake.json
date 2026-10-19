@@ -1,0 +1,69 @@
+{
+  "_comment": "Gratitude Questionnaire-Six Item Form (GQ-6), McCullough, M. E., Emmons, R. A., & Tsang, J. (2002). The grateful disposition: A conceptual and empirical topography. Journal of Personality and Social Psychology, 82, 112-127. Items and scoring key taken verbatim from the author's own distributed scoring PDF (https://pages.ucsd.edu/~memccullough/gratitude/GQ-6-scoring-interp.pdf, fetched 2026-10-19), which states: 'The scale was published in a scientific journal for use in the public domain. You do not need to contact any of the authors for permission to use these scales in non-commercial research.' Registered per 12.gdx.virtology/GoDataX_H7ph_33_Virtudes_Instrumentos_Psicometricos.xlsx, which lists GQ-6 as the primary suggested instrument for the virtue 'Gratidao' (alongside VIA/IPIP-VIA Gratitude, not registered separately here to avoid a redundant second 'gratitude' construct). Catalog registration only -- no participant data collected or associated with this record.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Gratitude Questionnaire-Six Item Form (GQ-6) - Instrument Onboarding",
+    "objective": "Register the GQ-6 (McCullough, Emmons & Tsang, 2002) as the source instrument for the Virtology virtue Gratidao, per GoDataX_H7ph_33_Virtudes_Instrumentos_Psicometricos.xlsx.",
+    "method": "Official scale text and scoring key (McCullough, Emmons & Tsang, 2002); catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-19",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Gratitude Questionnaire-Six Item Form (GQ-6)",
+      "version": "2002",
+      "type": "LIKERT_SCALE",
+      "description": "McCullough, M. E., Emmons, R. A., & Tsang, J. (2002). The grateful disposition: A conceptual and empirical topography. Journal of Personality and Social Psychology, 82, 112-127. Published in a scientific journal for public-domain, non-commercial research use.",
+      "instructions": "Using the scale below as a guide, write a number beside each statement to indicate how much you agree with it: 1 = strongly disagree, 2 = disagree, 3 = slightly disagree, 4 = neutral, 5 = slightly agree, 6 = agree, 7 = strongly agree.",
+      "phenomenon_name": "Dispositional Gratitude",
+      "phenomenon_description": "Individual differences in the tendency to notice and appreciate the positive in life, and to feel thankful for the contributions of others and of life circumstances to one's own well-being (McCullough, Emmons & Tsang, 2002).",
+      "constructs": [
+        {
+          "name": "Gratitude (GQ-6)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Disposition to experience gratitude across a wide range of situations, people, and time -- the intensity, frequency, span, and density of gratitude as a trait (McCullough, Emmons & Tsang, 2002).",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Gratitude (GQ-6)",
+          "name": "Gratitude (GQ-6)",
+          "description": "Dispositional tendency to notice and appreciate the positive in life and feel thankful for it.",
+          "operational_definition": "Sum of 6 Likert items (4 positively keyed, 2 negatively keyed/reverse-scored), 1-7 scale each. Official scoring range 6-42.",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Gratitude (GQ-6) (score)",
+          "indicator_description": "Sum of the 6 items, 2 reverse-scored before summing, per the official GQ-6 scoring key.",
+          "indicator_type": "COMPOSITE_SUM",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 6,
+          "max_value": 42
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "AGREE_7",
+          "alternatives": [
+            {"order": 1, "label": "Strongly disagree", "numeric_value": 1},
+            {"order": 2, "label": "Disagree", "numeric_value": 2},
+            {"order": 3, "label": "Slightly disagree", "numeric_value": 3},
+            {"order": 4, "label": "Neutral", "numeric_value": 4},
+            {"order": 5, "label": "Slightly agree", "numeric_value": 5},
+            {"order": 6, "label": "Agree", "numeric_value": 6},
+            {"order": 7, "label": "Strongly agree", "numeric_value": 7}
+          ]
+        }
+      ],
+      "items": [
+        {"order": 1, "statement_text": "I have so much in life to be thankful for.", "response_type": "LIKERT_7", "anchor_set": "AGREE_7", "required": 1, "weight": 1, "variable_name": "Gratitude (GQ-6)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 2, "statement_text": "If I had to list everything that I felt grateful for, it would be a very long list.", "response_type": "LIKERT_7", "anchor_set": "AGREE_7", "required": 1, "weight": 1, "variable_name": "Gratitude (GQ-6)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 3, "statement_text": "When I look at the world, I don't see much to be grateful for.", "response_type": "LIKERT_7", "anchor_set": "AGREE_7", "required": 1, "weight": 1, "variable_name": "Gratitude (GQ-6)", "reversed": 1, "indicator_item_weight": 1},
+        {"order": 4, "statement_text": "I am grateful to a wide variety of people.", "response_type": "LIKERT_7", "anchor_set": "AGREE_7", "required": 1, "weight": 1, "variable_name": "Gratitude (GQ-6)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 5, "statement_text": "As I get older I find myself more able to appreciate the people, events, and situations that have been part of my life history.", "response_type": "LIKERT_7", "anchor_set": "AGREE_7", "required": 1, "weight": 1, "variable_name": "Gratitude (GQ-6)", "reversed": 0, "indicator_item_weight": 1},
+        {"order": 6, "statement_text": "Long amounts of time can go by before I feel grateful to something or someone.", "response_type": "LIKERT_7", "anchor_set": "AGREE_7", "required": 1, "weight": 1, "variable_name": "Gratitude (GQ-6)", "reversed": 1, "indicator_item_weight": 1}
+      ]
+    }
+  ]
+}

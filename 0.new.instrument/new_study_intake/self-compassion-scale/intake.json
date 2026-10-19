@@ -1,0 +1,467 @@
+{
+  "_comment": "Self-Compassion Scale (SCS), Neff, K. D. (2003). Development and validation of a scale to measure self-compassion. Self and Identity, 2, 223-250. Full 26-item long form plus the official 6-subscale scoring key, taken verbatim from the author's own distributed scale PDF (self-compassion.org/wp-content/uploads/2021/03/SCS-information.pdf, fetched 2026-10-19), which grants explicit permission ('Dr. Kristin Neff grants permission to use the Self-Compassion Scale (Neff, 2003) for any purpose whatsoever, including research...'). Registered per 12.gdx.virtology/GoDataX_H7ph_33_Virtudes_Instrumentos_Psicometricos.xlsx, which suggests SCS for 'Aceitacao' (Mindfulness/Common Humanity), 'Tudo Somos Um' (Common Humanity), 'Nao Julgamento' (Mindfulness/Self-Judgment) and 'Desapego' (IPIP-Modesty; SCS-Mindfulness). The full validated 6-subscale instrument is loaded faithfully (all 26 items, all 6 subscales) even though only 3 subscales (Mindfulness, Common Humanity, Self-Judgment) end up associated to a virtue -- Self-Kindness, Isolation and Over-Identification are cataloged but not virtue-mapped in this batch. IMPORTANT scoring note: per the official key, subscale scores are the MEAN of their items (not the sum), and Self-Judgment, Isolation and Over-Identification are the SCALE's own negative-pole subscales (GDX_PSY_INDICATOR.DIRECTION stays POSITIVE here since a high raw score literally means 'more of the construct as named', e.g. more self-judgment -- the SCALE_POLARITY column in GDX_VT_VARIABLE_VIRTUE_MAP is what will flag these as undesirable when associated to a virtue, same convention already used for the existing 'Negative Emotions' row in that table). Catalog registration only -- no participant data collected or associated with this record.",
+  "study": {
+    "study_type": "PSYCHOMETRIC",
+    "title": "Self-Compassion Scale (SCS) - Instrument Onboarding",
+    "objective": "Register the full Self-Compassion Scale (Neff, 2003), all 6 subscales, as the source instrument for the Virtology virtues Aceitacao, Tudo Somos Um, Nao Julgamento and Desapego, per GoDataX_H7ph_33_Virtudes_Instrumentos_Psicometricos.xlsx.",
+    "method": "Official scale text and scoring key, self-compassion.org (Neff, 2003); catalog registration only, no primary data collection associated with this record.",
+    "start_date": "2026-10-19",
+    "end_date": null,
+    "status": "PLANNED"
+  },
+  "instruments": [
+    {
+      "name": "Self-Compassion Scale (SCS)",
+      "version": "2003",
+      "type": "LIKERT_SCALE",
+      "description": "Neff, K. D. (2003). Development and validation of a scale to measure self-compassion. Self and Identity, 2, 223-250. Full 26-item long form, 6 subscales (Self-Kindness, Self-Judgment, Common Humanity, Isolation, Mindfulness, Over-Identification). Free to use for any purpose per the author's own distributed permission letter.",
+      "instructions": "HOW I TYPICALLY ACT TOWARDS MYSELF IN DIFFICULT TIMES. Please read each statement carefully before answering. For each item, indicate how often you behave in the stated manner, using the 1-5 scale below. Please answer according to what really reflects your experience rather than what you think your experience should be.",
+      "phenomenon_name": "Self-Compassion",
+      "phenomenon_description": "Being kind and understanding toward oneself in instances of pain or failure; perceiving one's own experiences as part of the larger human experience; holding painful thoughts and feelings in mindful awareness rather than over-identifying with them (Neff, 2003).",
+      "constructs": [
+        {
+          "name": "Self-Kindness (SCS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Being warm and understanding toward oneself in instances of pain or failure, rather than being harshly self-critical.",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Self-Judgment (SCS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Being disapproving and judgmental toward one's own flaws and inadequacies, rather than kind and understanding (the negative pole of Self-Kindness).",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Common Humanity (SCS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Seeing one's own imperfections and failures as part of the shared human experience, rather than as something that isolates one from others.",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Isolation (SCS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Feeling cut off and separated from the rest of the world by one's own suffering and inadequacy (the negative pole of Common Humanity).",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Mindfulness (SCS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Holding one's painful thoughts and feelings in balanced awareness, rather than over-identifying with them.",
+          "weight_in_instrument": 1
+        },
+        {
+          "name": "Over-Identification (SCS)",
+          "domain": "PSYCHOMETRIC_NEW",
+          "definition": "Becoming consumed by and fused with one's negative emotions and thoughts about oneself (the negative pole of Mindfulness).",
+          "weight_in_instrument": 1
+        }
+      ],
+      "variables": [
+        {
+          "construct_name": "Self-Kindness (SCS)",
+          "name": "Self-Kindness (SCS)",
+          "description": "Being warm and understanding toward oneself in instances of pain or failure, rather than being harshly self-critical.",
+          "operational_definition": "Mean of 5 Likert items, 1-5 scale each (official SCS scoring: subscale score = mean, not sum; see Neff, 2003 and the SCS scoring key).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Self-Kindness (SCS) (score)",
+          "indicator_description": "Mean of the 5 items in this subscale, per the official SCS scoring key.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Self-Judgment (SCS)",
+          "name": "Self-Judgment (SCS)",
+          "description": "Being disapproving and judgmental toward one's own flaws and inadequacies, rather than kind and understanding (the negative pole of Self-Kindness).",
+          "operational_definition": "Mean of 5 Likert items, 1-5 scale each (official SCS scoring: subscale score = mean, not sum; see Neff, 2003 and the SCS scoring key).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Self-Judgment (SCS) (score)",
+          "indicator_description": "Mean of the 5 items in this subscale, per the official SCS scoring key.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Common Humanity (SCS)",
+          "name": "Common Humanity (SCS)",
+          "description": "Seeing one's own imperfections and failures as part of the shared human experience, rather than as something that isolates one from others.",
+          "operational_definition": "Mean of 4 Likert items, 1-5 scale each (official SCS scoring: subscale score = mean, not sum; see Neff, 2003 and the SCS scoring key).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Common Humanity (SCS) (score)",
+          "indicator_description": "Mean of the 4 items in this subscale, per the official SCS scoring key.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Isolation (SCS)",
+          "name": "Isolation (SCS)",
+          "description": "Feeling cut off and separated from the rest of the world by one's own suffering and inadequacy (the negative pole of Common Humanity).",
+          "operational_definition": "Mean of 4 Likert items, 1-5 scale each (official SCS scoring: subscale score = mean, not sum; see Neff, 2003 and the SCS scoring key).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Isolation (SCS) (score)",
+          "indicator_description": "Mean of the 4 items in this subscale, per the official SCS scoring key.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Mindfulness (SCS)",
+          "name": "Mindfulness (SCS)",
+          "description": "Holding one's painful thoughts and feelings in balanced awareness, rather than over-identifying with them.",
+          "operational_definition": "Mean of 4 Likert items, 1-5 scale each (official SCS scoring: subscale score = mean, not sum; see Neff, 2003 and the SCS scoring key).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Mindfulness (SCS) (score)",
+          "indicator_description": "Mean of the 4 items in this subscale, per the official SCS scoring key.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        },
+        {
+          "construct_name": "Over-Identification (SCS)",
+          "name": "Over-Identification (SCS)",
+          "description": "Becoming consumed by and fused with one's negative emotions and thoughts about oneself (the negative pole of Mindfulness).",
+          "operational_definition": "Mean of 4 Likert items, 1-5 scale each (official SCS scoring: subscale score = mean, not sum; see Neff, 2003 and the SCS scoring key).",
+          "measurement_level": "INTERVAL",
+          "indicator_name": "Over-Identification (SCS) (score)",
+          "indicator_description": "Mean of the 4 items in this subscale, per the official SCS scoring key.",
+          "indicator_type": "COMPOSITE_MEAN",
+          "measurement_unit": "LIKERT_POINT",
+          "direction": "POSITIVE",
+          "min_value": 1,
+          "max_value": 5
+        }
+      ],
+      "response_anchor_sets": [
+        {
+          "key": "SCS_5",
+          "alternatives": [
+            {
+              "order": 1,
+              "label": "Almost Never",
+              "numeric_value": 1
+            },
+            {
+              "order": 2,
+              "label": "2",
+              "numeric_value": 2
+            },
+            {
+              "order": 3,
+              "label": "3",
+              "numeric_value": 3
+            },
+            {
+              "order": 4,
+              "label": "4",
+              "numeric_value": 4
+            },
+            {
+              "order": 5,
+              "label": "Almost Always",
+              "numeric_value": 5
+            }
+          ]
+        }
+      ],
+      "items": [
+        {
+          "order": 1,
+          "statement_text": "I'm disapproving and judgmental about my own flaws and inadequacies.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Judgment (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 2,
+          "statement_text": "When I'm feeling down I tend to obsess and fixate on everything that's wrong.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Over-Identification (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 3,
+          "statement_text": "When things are going badly for me, I see the difficulties as part of life that everyone goes through.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Common Humanity (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 4,
+          "statement_text": "When I think about my inadequacies, it tends to make me feel more separate and cut off from the rest of the world.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Isolation (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 5,
+          "statement_text": "I try to be loving towards myself when I'm feeling emotional pain.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Kindness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 6,
+          "statement_text": "When I fail at something important to me I become consumed by feelings of inadequacy.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Over-Identification (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 7,
+          "statement_text": "When I'm down, I remind myself that there are lots of other people in the world feeling like I am.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Common Humanity (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 8,
+          "statement_text": "When times are really difficult, I tend to be tough on myself.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Judgment (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 9,
+          "statement_text": "When something upsets me I try to keep my emotions in balance.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Mindfulness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 10,
+          "statement_text": "When I feel inadequate in some way, I try to remind myself that feelings of inadequacy are shared by most people.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Common Humanity (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 11,
+          "statement_text": "I'm intolerant and impatient towards those aspects of my personality I don't like.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Judgment (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 12,
+          "statement_text": "When I'm going through a very hard time, I give myself the caring and tenderness I need.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Kindness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 13,
+          "statement_text": "When I'm feeling down, I tend to feel like most other people are probably happier than I am.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Isolation (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 14,
+          "statement_text": "When something painful happens I try to take a balanced view of the situation.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Mindfulness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 15,
+          "statement_text": "I try to see my failings as part of the human condition.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Common Humanity (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 16,
+          "statement_text": "When I see aspects of myself that I don't like, I get down on myself.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Judgment (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 17,
+          "statement_text": "When I fail at something important to me I try to keep things in perspective.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Mindfulness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 18,
+          "statement_text": "When I'm really struggling, I tend to feel like other people must be having an easier time of it.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Isolation (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 19,
+          "statement_text": "I'm kind to myself when I'm experiencing suffering.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Kindness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 20,
+          "statement_text": "When something upsets me I get carried away with my feelings.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Over-Identification (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 21,
+          "statement_text": "I can be a bit cold-hearted towards myself when I'm experiencing suffering.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Judgment (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 22,
+          "statement_text": "When I'm feeling down I try to approach my feelings with curiosity and openness.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Mindfulness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 23,
+          "statement_text": "I'm tolerant of my own flaws and inadequacies.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Kindness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 24,
+          "statement_text": "When something painful happens I tend to blow the incident out of proportion.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Over-Identification (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 25,
+          "statement_text": "When I fail at something that's important to me, I tend to feel alone in my failure.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Isolation (SCS)",
+          "reversed": 1,
+          "indicator_item_weight": 1
+        },
+        {
+          "order": 26,
+          "statement_text": "I try to be understanding and patient towards those aspects of my personality I don't like.",
+          "response_type": "LIKERT_5",
+          "anchor_set": "SCS_5",
+          "required": 1,
+          "weight": 1,
+          "variable_name": "Self-Kindness (SCS)",
+          "reversed": 0,
+          "indicator_item_weight": 1
+        }
+      ]
+    }
+  ]
+}
