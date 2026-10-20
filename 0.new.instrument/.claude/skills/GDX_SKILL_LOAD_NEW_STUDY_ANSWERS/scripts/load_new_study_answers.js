@@ -441,12 +441,24 @@ async function main() {
       }
     } else {
       summary.personCreated = true;
+      // Consent = No ("N"/"Não", see FIELD_ALIASES.consent's regex in readParticipant()):
+      // the real "Full Name" typed into the sheet is never stored for a brand-new person.
+      // Only applies at creation time -- an EXISTING person's NAME is still never
+      // overwritten (see the "keeping the stored name" NOTE above), so a later no-consent
+      // submission for an already-known person does not retroactively rename them.
+      if (participant.consent === 0) {
+        console.log(`NOTE: consent = No for this participant -- real name will be withheld, stored as ` +
+          `"Participant <new ID_PERSON>" instead${args.dryRun ? ' (dry run -- no id assigned yet)' : ''}.`);
+      }
       if (!args.dryRun) {
         const inserted = await query(db,
           `INSERT INTO GDX_PSY_PERSON (NAME, EXTERNAL_IDENTIFIER, BIRTH_DATE, GENDER, EDUCATION_LEVEL)
            VALUES (?, ?, ?, ?, ?) RETURNING ID_PERSON`,
           [participant.fullName, participant.externalId, participant.birthDate, participant.gender, participant.educationLevel]);
         personId = returningRow(inserted).ID_PERSON;
+        if (participant.consent === 0) {
+          await query(db, 'UPDATE GDX_PSY_PERSON SET NAME = ? WHERE ID_PERSON = ?', [`Participant ${personId}`, personId]);
+        }
       }
     }
     summary.personId = personId;

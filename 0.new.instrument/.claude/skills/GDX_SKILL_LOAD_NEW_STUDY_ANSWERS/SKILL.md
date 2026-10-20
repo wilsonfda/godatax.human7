@@ -22,7 +22,7 @@ Given `--file <path-to-xlsx>` (a filled copy of
 
 | Table | When |
 |---|---|
-| `GDX_PSY_PERSON` | Found by `EXTERNAL_IDENTIFIER` (the "Participant" sheet's code); inserted only if not found. An existing person's `NAME` is never overwritten, even if the sheet disagrees. |
+| `GDX_PSY_PERSON` | Found by `EXTERNAL_IDENTIFIER` (the "Participant" sheet's code); inserted only if not found. An existing person's `NAME` is never overwritten, even if the sheet disagrees. **Consent = No** (see below) on a brand-new person additionally withholds the real "Full Name": `NAME` is stored as `Participant <ID_PERSON>` instead -- only at creation time, never retroactively on an already-known person. |
 | `GDX_PSY_STUDY_PARTICIPANT` | Found by `(ID_STUDY, ID_PERSON)`; inserted only if not found. `CONSENT` comes from the sheet's "Consent Given (Y/N)" field — never invented — and defaults to `0` (not confirmed) if left blank. |
 | `GDX_PSY_APPLICATION` | One per instrument sheet that has any answer filled in. |
 | `GDX_PSY_ITEM_RESPONSE` | One per answered item, matched to its `GDX_PSY_ITEM_ALTERNATIVE` when the item has alternatives. |

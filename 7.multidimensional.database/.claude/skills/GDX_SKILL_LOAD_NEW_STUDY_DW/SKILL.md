@@ -78,10 +78,32 @@ running this skill end-to-end for `ID_STUDY=1`.
 
 ## What is bootstrapped once, not scoped by study
 
-`DW_DIM_DATE`, `DW_DIM_SEPTENARY_LEVEL`, `DW_DIM_CHAKRA`, `DW_DIM_FIVE_WAY` are global reference
-dimensions (a calendar, the 7 levels, the 7 chakras, the 5 ways) — not study-specific by nature. This
-skill inserts any row missing from them (insert-if-missing per row, same discipline as everything
-else) and leaves them untouched on every later run, for any study.
+`DW_DIM_DATE`, `DW_DIM_SEPTENARY_LEVEL`, `DW_DIM_CHAKRA`, `DW_DIM_FIVE_WAY`, `DW_DIM_VIRTUE` are
+global reference dimensions (a calendar, the 7 levels, the 7 chakras, the 5 ways, the 33 Virtology
+virtues) — not study-specific by nature. This skill inserts any row missing from them (insert-if-missing
+per row, same discipline as everything else) and leaves them untouched on every later run, for any
+study.
+
+## Virtue / chakra / way bridges — `GDX_VT_VARIABLE_VIRTUE_MAP`, `GDX_PSY_CHAKRA_VAR_MAP`, `GDX_TA_WAY_SEPT_MAP`
+
+Three more interpretive "_MAP" correspondence tables already exist in the OLTP schemas besides the
+septenary one (`GDX_PSY_SEPT_LEVEL_PSY_MAP`, reconciled into `DW_DIM_VARIABLE.ID_SEPTENARY_LEVEL`
+above): Virtology's `GDX_VT_VARIABLE_VIRTUE_MAP` (`12.gdx.virtology`), the chakra correspondence
+`GDX_PSY_CHAKRA_VAR_MAP` (`14.metaphysical.measuring.instrument`), and the Five Ways' own variable
+extension on `GDX_TA_WAY_SEPT_MAP` (`metaphysical_variable_way_map_firebird25.sql`, same folder).
+For every variable in this study's scope, `loadVariables()` now also mirrors every matching row from
+these three tables into `DW_BRIDGE_VARIABLE_VIRTUE` / `DW_BRIDGE_VARIABLE_CHAKRA` /
+`DW_BRIDGE_VARIABLE_WAY` (see `dw_virtue_chakra_way_bridges_firebird25.sql`, this folder) —
+insert-if-missing, looked up by the variable's own `ID_VARIABLE` directly (every row these three
+source tables' own association skills insert resolves `ID_VARIABLE` live, so no `.sav`-column
+fallback is needed here, unlike the septenary case).
+
+**Why three bridge tables instead of three more single FK columns on `DW_DIM_VARIABLE`** (mirroring
+`ID_SEPTENARY_LEVEL`'s "take `FIRST 1`" shape): these three correspondences are genuinely
+many-to-many in the live data already — e.g. the IPIP-VIA "Forgiveness" variable maps to three
+different virtues (Perdão, Reconciliação, Pagar o Mal com o Bem). A single FK column would silently
+drop every mapping past the first one for a variable like that. The bridge tables keep every row,
+and are bootstrapped/loaded every run — nothing is ever removed from them, only added.
 
 ## Septenary-level reconciliation — reuses `GDX_SKILL_LOAD_SEPT_MAPS_DB`'s exact key rule
 
@@ -134,6 +156,8 @@ Read the summary before trusting a run is complete: "variables with no septenary
   loads it into the DW star schema (Node.js + `node-firebird`, no native client library required)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)
+- `../../dw_virtue_chakra_way_bridges_firebird25.sql` — DDL for `DW_DIM_VIRTUE` and the three
+  `DW_BRIDGE_VARIABLE_*` tables this skill loads (must already be applied to the database)
 
 See `GoDataX_Human_7_DW.md` for the DW's own design rationale (why `GDX_PSY_PERSON` is the single
 central person table, the star schema shape, the whole-database ETL this skill deliberately does not

@@ -50,12 +50,13 @@ const { getAuthorizedClient, requireEnv } = require('./google_auth');
 const RESPONSES_SCOPES = ['https://www.googleapis.com/auth/forms.responses.readonly'];
 
 function parseArgs(argv) {
-  const args = { study: null, intakeDir: null, dryRun: false };
+  const args = { study: null, intakeDir: null, dryRun: false, forceNewPerson: new Set() };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--study') args.study = argv[++i];
     else if (a === '--intake-dir') args.intakeDir = argv[++i];
     else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '--force-new-person') argv[++i].split(',').forEach((id) => args.forceNewPerson.add(id.trim()));
     else throw new Error(`Unknown argument: ${a}`);
   }
   if (!args.study) {
@@ -199,25 +200,92 @@ async function main() {
       const consentRaw = (participantRaw.consent || '').trim();
       const consent = /^(y|yes|s|sim|1|true)$/i.test(consentRaw) ? 1 : 0;
       const respTimestamp = resp.createTime ? new Date(resp.createTime) : new Date();
+      // Shared across every instrument this one response touches -- hoisted here so the
+      // re-run-safety check below (by responseId, not by the typed code) can use it too.
+      const contextTag = `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS:${map.formId}:${responseId}`;
 
       // --- GDX_PSY_PERSON ---
-      const personRows = await query(db, 'SELECT ID_PERSON, NAME FROM GDX_PSY_PERSON WHERE EXTERNAL_IDENTIFIER = ?', [externalId]);
+      // Resolution order, most to least trustworthy:
+      //   1. This exact Google Form response (by its own immutable responseId, via the
+      //      GDX_PSY_APPLICATION.CONTEXT tag already written by a prior run) already has a
+      //      person -- reuse it. This is what makes a re-run safe at the PERSON level, not
+      //      just the item-response level: it no longer depends on the respondent having
+      //      typed the same External Identifier/Code twice.
+      //   2. An existing person already carries this typed External Identifier/Code --
+      //      reuse it (the common case: someone who consistently types their own real code).
+      //   3. Otherwise this is a genuinely new person. The typed code is NOT trusted as the
+      //      stored EXTERNAL_IDENTIFIER here -- "External Identifier/Code" is free text a
+      //      respondent can mistype or reuse from someone else (this is exactly how a real
+      //      collision happened: a respondent typed "1", which was already Wilson's code,
+      //      and would have silently merged the two people). Instead the newly-generated,
+      //      already-unique GDX_PSY_PERSON.ID_PERSON surrogate key (the database's own
+      //      "last id, next sequential one" sequence) becomes the EXTERNAL_IDENTIFIER --
+      //      collision-proof by construction, no separate counter to maintain. The
+      //      respondent's own typed code is never discarded silently: it is still recorded
+      //      verbatim in GDX_PSY_STUDY_PARTICIPANT.ANONYMOUS_CODE below (scoped to this one
+      //      study, where a same-study collision is far less likely and, if it still
+      //      happens, that table's own UNIQUE constraint raises a real error instead of
+      //      silently merging two people).
       let personId = null;
-      if (personRows.length > 0) {
-        personId = personRows[0].ID_PERSON;
-        if (personRows[0].NAME !== fullName) {
-          console.log(`  NOTE: existing GDX_PSY_PERSON ID_PERSON=${personId} has NAME "${personRows[0].NAME}", ` +
-            `this response says "${fullName}" -- keeping the stored name (never overwritten).`);
-        }
+      let personSource = null;
+      const priorAppRows = await query(db,
+        'SELECT FIRST 1 ID_PERSON FROM GDX_PSY_APPLICATION WHERE CONTEXT = ?', [contextTag]);
+      if (priorAppRows.length > 0) {
+        personId = priorAppRows[0].ID_PERSON;
+        personSource = 'prior run of this exact response';
+      } else if (args.forceNewPerson.has(responseId)) {
+        // --force-new-person <responseId>: a human has confirmed this response's typed
+        // code collides with an unrelated existing person's -- skip the
+        // EXTERNAL_IDENTIFIER lookup entirely for this one response so it falls straight
+        // through to "genuinely new person" below, never merging into that other record.
+        console.log(`  NOTE: --force-new-person set for this response -- skipping the typed-code lookup, ` +
+          `will create a new person regardless of any existing match on "${externalId}".`);
       } else {
+        const personRows = await query(db, 'SELECT ID_PERSON, NAME FROM GDX_PSY_PERSON WHERE EXTERNAL_IDENTIFIER = ?', [externalId]);
+        if (personRows.length > 0) {
+          personId = personRows[0].ID_PERSON;
+          personSource = 'typed External Identifier/Code';
+          if (personRows[0].NAME !== fullName) {
+            console.log(`  NOTE: existing GDX_PSY_PERSON ID_PERSON=${personId} has NAME "${personRows[0].NAME}", ` +
+              `this response says "${fullName}" -- keeping the stored name (never overwritten).`);
+          }
+        }
+      }
+
+      let isNewPerson = false;
+      if (!personId) {
+        isNewPerson = true;
         summary.personsCreated += 1;
+        console.log(`  NOTE: creating a new person for "${fullName}" -- typed code "${externalId}" is NOT used as ` +
+          `EXTERNAL_IDENTIFIER (free text, can collide with someone else's code); the new ID_PERSON itself becomes ` +
+          `it (and this study's ANONYMOUS_CODE too, for the same reason -- see GDX_PSY_STUDY_PARTICIPANT below).`);
+        // Consent = No ("N"/"Nao"/blank-interpreted-as-not-given, see the consent regex
+        // above): the respondent's real typed name is never stored for a brand-new person.
+        // It is overwritten right after the insert below with an English codename built
+        // from the same already-unique ID_PERSON surrogate key the collision-proofing above
+        // already uses for EXTERNAL_IDENTIFIER -- consistent with that same "don't trust a
+        // human-typed/human-given value, fall back to the database's own unique id"
+        // reasoning, just applied to NAME instead of EXTERNAL_IDENTIFIER. Only applies at
+        // creation time: an EXISTING person's NAME is still never overwritten (see the
+        // "keeping the stored name" NOTE above), so a later no-consent response for an
+        // already-known person does not retroactively rename them.
+        if (consent === 0) {
+          console.log(`  NOTE: consent = No for this response -- real name will be withheld, stored as ` +
+            `"Participant <new ID_PERSON>" instead${args.dryRun ? ' (dry run -- no id assigned yet)' : ''}.`);
+        }
         if (!args.dryRun) {
           const inserted = await query(db,
-            `INSERT INTO GDX_PSY_PERSON (NAME, EXTERNAL_IDENTIFIER, BIRTH_DATE, GENDER, EDUCATION_LEVEL)
-             VALUES (?, ?, ?, ?, ?) RETURNING ID_PERSON`,
-            [fullName, externalId, participantRaw.birthDate || null, participantRaw.gender || null, participantRaw.educationLevel || null]);
+            `INSERT INTO GDX_PSY_PERSON (NAME, BIRTH_DATE, GENDER, EDUCATION_LEVEL)
+             VALUES (?, ?, ?, ?) RETURNING ID_PERSON`,
+            [fullName, participantRaw.birthDate || null, participantRaw.gender || null, participantRaw.educationLevel || null]);
           personId = returningRow(inserted).ID_PERSON;
+          await query(db, 'UPDATE GDX_PSY_PERSON SET EXTERNAL_IDENTIFIER = ? WHERE ID_PERSON = ?', [String(personId), personId]);
+          if (consent === 0) {
+            await query(db, 'UPDATE GDX_PSY_PERSON SET NAME = ? WHERE ID_PERSON = ?', [`Participant ${personId}`, personId]);
+          }
         }
+      } else if (personSource === 'prior run of this exact response') {
+        console.log(`  NOTE: this response was already loaded before -- reusing ID_PERSON=${personId} (matched by the Form's own response id, not by the typed code).`);
       }
 
       // --- GDX_PSY_STUDY_PARTICIPANT ---
@@ -225,11 +293,19 @@ async function main() {
         const spRows = await query(db, 'SELECT 1 FROM GDX_PSY_STUDY_PARTICIPANT WHERE ID_STUDY = ? AND ID_PERSON = ?', [studyId, personId]);
         if (spRows.length === 0) {
           summary.participantsCreated += 1;
+          // ANONYMOUS_CODE is UNIQUE per study -- for a brand-new person the typed code has
+          // the exact same collision risk here as it did for EXTERNAL_IDENTIFIER above (this
+          // is literally how the Fabiano Ramos case surfaced: typed "1", already Wilson's
+          // ANONYMOUS_CODE in this same study). Same fix: use the new, already-unique
+          // ID_PERSON instead of trusting the typed code. An existing (matched) person keeps
+          // using the typed code, same as before -- that case already proved reliable enough
+          // to have matched successfully.
+          const anonymousCode = isNewPerson ? String(personId) : externalId;
           if (!args.dryRun) {
             await query(db,
               `INSERT INTO GDX_PSY_STUDY_PARTICIPANT (ID_STUDY, ID_PERSON, ANONYMOUS_CODE, ENTRY_DATE, CONSENT)
                VALUES (?, ?, ?, ?, ?)`,
-              [studyId, personId, externalId, respTimestamp, consent]);
+              [studyId, personId, anonymousCode, respTimestamp, consent]);
           }
         }
       } else {
@@ -241,7 +317,7 @@ async function main() {
         const anyAnswered = items.some((it) => extractAnswerText(answers[it.questionId]));
         if (!anyAnswered) continue;
 
-        const contextTag = `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS:${map.formId}:${responseId}`;
+        // contextTag is hoisted above, shared across every instrument in this one response.
         let alreadyLoaded = false;
         let applicationId = null;
         if (personId) {

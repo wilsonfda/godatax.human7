@@ -10,9 +10,18 @@
  * psychometric/metaphysical variables) is picked up on the next run
  * automatically, as long as its table name matches one of the
  * TABLE_PREFIXES below.
+ *
+ * DW_BRIDGE_ added (2026-10-19) for
+ * 7.multidimensional.database/dw_virtue_chakra_way_bridges_firebird25.sql --
+ * DW_DIM_VIRTUE (a DW_DIM_ table, already covered) plus
+ * DW_BRIDGE_VARIABLE_VIRTUE/CHAKRA/WAY, the many-to-many mirrors of
+ * GDX_VT_VARIABLE_VIRTUE_MAP / GDX_PSY_CHAKRA_VAR_MAP / GDX_TA_WAY_SEPT_MAP
+ * inside the DW star schema -- needed a genuinely new prefix since they are
+ * pure dimension-to-dimension links (no measures of their own), not named
+ * DW_DIM_/DW_FACT_ like everything else in that schema.
  */
 
-const TABLE_PREFIXES = ['GDX_PSY_', 'GDX_TA_', 'GDX_CC_', 'GDX_VT_', 'DW_DIM_', 'DW_FACT_'];
+const TABLE_PREFIXES = ['GDX_PSY_', 'GDX_TA_', 'GDX_CC_', 'GDX_VT_', 'DW_DIM_', 'DW_FACT_', 'DW_BRIDGE_'];
 
 const FB_BLOB_TYPE = 261; // RDB$FIELD_TYPE code for BLOB columns
 

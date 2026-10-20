@@ -28,8 +28,8 @@ Given `--study <slug>`, this skill inserts the same FK chain
 
 | Table | When |
 |---|---|
-| `GDX_PSY_PERSON` | Found by `EXTERNAL_IDENTIFIER` (the "External Identifier / Code" question's answer); inserted only if not found. An existing person's `NAME` is never overwritten, even if the response disagrees. |
-| `GDX_PSY_STUDY_PARTICIPANT` | Found by `(ID_STUDY, ID_PERSON)`; inserted only if not found. `CONSENT` comes from the "Consent Given (Y/N)" answer -- never invented -- and defaults to `0` (not confirmed) if left blank. |
+| `GDX_PSY_PERSON` | Resolved first by this exact response's own `GDX_PSY_APPLICATION.CONTEXT` tag (safe re-run), then by the typed "External Identifier / Code"; otherwise a new person is created. The typed code is **not** trusted as `EXTERNAL_IDENTIFIER` for a new person -- free text can collide with someone else's code -- so the new, already-unique `ID_PERSON` becomes `EXTERNAL_IDENTIFIER` instead. An existing person's `NAME` is never overwritten, even if the response disagrees. **Consent = No** (see below) on a brand-new person additionally withholds the real "Full Name": `NAME` is stored as `Participant <ID_PERSON>` instead -- only at creation time, never retroactively on an already-known person. |
+| `GDX_PSY_STUDY_PARTICIPANT` | Found by `(ID_STUDY, ID_PERSON)`; inserted only if not found. `CONSENT` comes from the "Consent Given (Y/N)" answer -- never invented -- and defaults to `0` (not confirmed) if left blank. `ANONYMOUS_CODE` follows the same new-person collision-proofing as `EXTERNAL_IDENTIFIER` above (the typed code only for an existing/matched person, `ID_PERSON` for a brand-new one). |
 | `GDX_PSY_APPLICATION` | One per instrument that has any answered question in a given response. |
 | `GDX_PSY_ITEM_RESPONSE` | One per answered item, matched to its `GDX_PSY_ITEM_ALTERNATIVE` when the item has alternatives. |
 

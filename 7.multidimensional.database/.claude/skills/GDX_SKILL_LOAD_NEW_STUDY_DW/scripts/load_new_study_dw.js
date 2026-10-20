@@ -33,10 +33,22 @@
  * column either.
  *
  * What is NOT scoped by study (bootstrapped once, shared by every study):
- *   DW_DIM_DATE, DW_DIM_SEPTENARY_LEVEL, DW_DIM_CHAKRA, DW_DIM_FIVE_WAY --
- *   these are global reference dimensions (a calendar, the 7 levels, the 7
- *   chakras, the 5 ways), not study-specific. Bootstrapped once (insert-if-
- *   missing per row) and left untouched on later runs for other studies.
+ *   DW_DIM_DATE, DW_DIM_SEPTENARY_LEVEL, DW_DIM_CHAKRA, DW_DIM_FIVE_WAY,
+ *   DW_DIM_VIRTUE -- these are global reference dimensions (a calendar, the
+ *   7 levels, the 7 chakras, the 5 ways, the 33 Virtology virtues), not
+ *   study-specific. Bootstrapped once (insert-if-missing per row) and left
+ *   untouched on later runs for other studies.
+ *
+ * Virtue/chakra/way bridges (DW_BRIDGE_VARIABLE_VIRTUE/CHAKRA/WAY, see
+ * dw_virtue_chakra_way_bridges_firebird25.sql, this folder): for every
+ * variable in this study's scope, loadVariables() also mirrors every
+ * matching row from GDX_VT_VARIABLE_VIRTUE_MAP (12.gdx.virtology),
+ * GDX_PSY_CHAKRA_VAR_MAP (14.metaphysical.measuring.instrument) and
+ * GDX_TA_WAY_SEPT_MAP's ID_VARIABLE extension (same folder) into these three
+ * bridge tables -- insert-if-missing, every row, not just the first (unlike
+ * ID_SEPTENARY_LEVEL's single-column "FIRST 1" reconciliation, these three
+ * correspondences are genuinely many-to-many in the live data: a variable
+ * can -- and does -- map to more than one virtue).
  *
  * Usage:
  *   node load_new_study_dw.js --study <slug> [--dry-run] [--intake-dir <path>]
@@ -359,6 +371,19 @@ async function bootstrapFiveWays(db, dryRun, summary) {
   }
 }
 
+/** DW_DIM_VIRTUE <- GDX_VT_VIRTUE (12.gdx.virtology), global catalog, same
+ * bootstrap-once treatment as the three functions above. See
+ * 7.multidimensional.database/dw_virtue_chakra_way_bridges_firebird25.sql. */
+async function bootstrapVirtues(db, dryRun, summary) {
+  const rows = await query(db, 'SELECT ID_VIRTUE, ORDER_NUM, NAME_PT, NAME_EN FROM GDX_VT_VIRTUE');
+  for (const r of rows) {
+    await upsertRow(db, dryRun, summary, `DW_DIM_VIRTUE: ${r.NAME_EN}`,
+      'DW_DIM_VIRTUE', 'ID_VIRTUE', r.ID_VIRTUE,
+      `INSERT INTO DW_DIM_VIRTUE (ID_VIRTUE, ORDER_NUM, NAME_PT, NAME_EN) VALUES (?, ?, ?, ?)`,
+      [r.ID_VIRTUE, r.ORDER_NUM, r.NAME_PT, r.NAME_EN]);
+  }
+}
+
 /* ----------------------------------------------------------------------------
  * Study-scoped dimensions and facts.
  * -------------------------------------------------------------------------- */
@@ -393,6 +418,66 @@ async function loadInstrumentsAndConstructs(db, scope, dryRun, summary) {
   }
 }
 
+/** Generic insert-if-missing for a composite-key bridge row (no surrogate id
+ * on DW_BRIDGE_VARIABLE_VIRTUE/CHAKRA/WAY -- see
+ * dw_virtue_chakra_way_bridges_firebird25.sql). */
+async function upsertBridgeRow(db, dryRun, summary, label, table, whereSql, whereParams, insertSql, insertParams) {
+  const already = await exists(db, table, whereSql, whereParams);
+  if (already) { summary.reused.push(label); return; }
+  summary.inserted.push(label);
+  if (!dryRun) await query(db, insertSql, insertParams);
+}
+
+/** DW_BRIDGE_VARIABLE_VIRTUE <- GDX_VT_VARIABLE_VIRTUE_MAP, one row per
+ * (variable, virtue) pair -- deliberately many-to-many (e.g. the IPIP-VIA
+ * "Forgiveness" variable maps to three virtues: Perdao, Reconciliacao, Pagar
+ * o Mal com o Bem), unlike the single-column ID_SEPTENARY_LEVEL
+ * reconciliation below it. Looked up by ID_VARIABLE directly: every row this
+ * project's GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR has ever inserted
+ * resolves ID_VARIABLE live (never leaves it NULL while naming a real
+ * variable), so no SAV_COLUMN/CONTAINING fallback is needed here. */
+async function loadVariableVirtueBridges(db, v, dryRun, summary) {
+  const rows = await query(db,
+    'SELECT ID_VIRTUE, CONFIDENCE_LEVEL, SCALE_POLARITY FROM GDX_VT_VARIABLE_VIRTUE_MAP WHERE ID_VARIABLE = ?',
+    [v.ID_VARIABLE]);
+  for (const r of rows) {
+    await upsertBridgeRow(db, dryRun, summary, `DW_BRIDGE_VARIABLE_VIRTUE: ${v.NAME} -> virtue ${r.ID_VIRTUE}`,
+      'DW_BRIDGE_VARIABLE_VIRTUE', 'ID_VARIABLE = ? AND ID_VIRTUE = ?', [v.ID_VARIABLE, r.ID_VIRTUE],
+      'INSERT INTO DW_BRIDGE_VARIABLE_VIRTUE (ID_VARIABLE, ID_VIRTUE, CONFIDENCE_LEVEL, SCALE_POLARITY) VALUES (?, ?, ?, ?)',
+      [v.ID_VARIABLE, r.ID_VIRTUE, r.CONFIDENCE_LEVEL, r.SCALE_POLARITY]);
+  }
+}
+
+/** DW_BRIDGE_VARIABLE_CHAKRA <- GDX_PSY_CHAKRA_VAR_MAP, same many-to-many
+ * shape and same direct ID_VARIABLE lookup as the virtue bridge above. */
+async function loadVariableChakraBridges(db, v, dryRun, summary) {
+  const rows = await query(db,
+    'SELECT ID_CHAKRA, CONFIDENCE_LEVEL FROM GDX_PSY_CHAKRA_VAR_MAP WHERE ID_VARIABLE = ?',
+    [v.ID_VARIABLE]);
+  for (const r of rows) {
+    await upsertBridgeRow(db, dryRun, summary, `DW_BRIDGE_VARIABLE_CHAKRA: ${v.NAME} -> chakra ${r.ID_CHAKRA}`,
+      'DW_BRIDGE_VARIABLE_CHAKRA', 'ID_VARIABLE = ? AND ID_CHAKRA = ?', [v.ID_VARIABLE, r.ID_CHAKRA],
+      'INSERT INTO DW_BRIDGE_VARIABLE_CHAKRA (ID_VARIABLE, ID_CHAKRA, CONFIDENCE_LEVEL) VALUES (?, ?, ?)',
+      [v.ID_VARIABLE, r.ID_CHAKRA, r.CONFIDENCE_LEVEL]);
+  }
+}
+
+/** DW_BRIDGE_VARIABLE_WAY <- GDX_TA_WAY_SEPT_MAP's ID_VARIABLE extension
+ * (metaphysical_variable_way_map_firebird25.sql). The table's 5 original
+ * conceptual Way<->Level rows have ID_VARIABLE NULL and are correctly never
+ * matched here -- there is nothing to bridge for those. */
+async function loadVariableWayBridges(db, v, dryRun, summary) {
+  const rows = await query(db,
+    'SELECT ID_WAY, CONFIDENCE_LEVEL FROM GDX_TA_WAY_SEPT_MAP WHERE ID_VARIABLE = ?',
+    [v.ID_VARIABLE]);
+  for (const r of rows) {
+    await upsertBridgeRow(db, dryRun, summary, `DW_BRIDGE_VARIABLE_WAY: ${v.NAME} -> way ${r.ID_WAY}`,
+      'DW_BRIDGE_VARIABLE_WAY', 'ID_VARIABLE = ? AND ID_WAY = ?', [v.ID_VARIABLE, r.ID_WAY],
+      'INSERT INTO DW_BRIDGE_VARIABLE_WAY (ID_VARIABLE, ID_WAY, CONFIDENCE_LEVEL) VALUES (?, ?, ?)',
+      [v.ID_VARIABLE, r.ID_WAY, r.CONFIDENCE_LEVEL]);
+  }
+}
+
 async function loadVariables(db, scope, dryRun, summary) {
   for (const v of scope.variables) {
     const savColumn = parseSavColumn(v.OPERATIONAL_DEFINITION);
@@ -406,27 +491,35 @@ async function loadVariables(db, scope, dryRun, summary) {
     // when there is one, otherwise an exact match on the variable's own name.
     const current = await query(db, 'SELECT ID_SEPTENARY_LEVEL FROM DW_DIM_VARIABLE WHERE ID_VARIABLE = ?', [v.ID_VARIABLE]);
     const alreadyResolved = !inserted && current.length > 0 && current[0].ID_SEPTENARY_LEVEL !== null;
-    if (alreadyResolved) { summary.reused.push(`DW_DIM_VARIABLE level: ${v.NAME} already resolved`); continue; }
-
-    let levelRows;
-    if (savColumn) {
-      levelRows = await query(db,
-        `SELECT FIRST 1 ID_SEPTENARY_LEVEL, CONFIDENCE_LEVEL FROM GDX_PSY_SEPT_LEVEL_PSY_MAP WHERE VARIABLE_LABEL CONTAINING (?)`,
-        [`-> ${savColumn}`]);
+    if (!alreadyResolved) {
+      let levelRows;
+      if (savColumn) {
+        levelRows = await query(db,
+          `SELECT FIRST 1 ID_SEPTENARY_LEVEL, CONFIDENCE_LEVEL FROM GDX_PSY_SEPT_LEVEL_PSY_MAP WHERE VARIABLE_LABEL CONTAINING (?)`,
+          [`-> ${savColumn}`]);
+      } else {
+        levelRows = await query(db,
+          `SELECT FIRST 1 ID_SEPTENARY_LEVEL, CONFIDENCE_LEVEL FROM GDX_PSY_SEPT_LEVEL_PSY_MAP WHERE VARIABLE_LABEL = ?`,
+          [v.NAME]);
+      }
+      if (levelRows.length === 0) {
+        summary.unresolvedLevel.push(`${v.NAME}: no GDX_PSY_SEPT_LEVEL_PSY_MAP row yet (run GDX_SKILL_LOAD_SEPT_MAPS_DB --study <slug> first if a septenary mapping is wanted)`);
+      } else {
+        summary.inserted.push(`DW_DIM_VARIABLE level: ${v.NAME} -> level ${levelRows[0].ID_SEPTENARY_LEVEL}`);
+        if (!dryRun) {
+          await query(db, 'UPDATE DW_DIM_VARIABLE SET ID_SEPTENARY_LEVEL = ?, SEPT_LEVEL_CONFIDENCE = ? WHERE ID_VARIABLE = ?',
+            [levelRows[0].ID_SEPTENARY_LEVEL, levelRows[0].CONFIDENCE_LEVEL, v.ID_VARIABLE]);
+        }
+      }
     } else {
-      levelRows = await query(db,
-        `SELECT FIRST 1 ID_SEPTENARY_LEVEL, CONFIDENCE_LEVEL FROM GDX_PSY_SEPT_LEVEL_PSY_MAP WHERE VARIABLE_LABEL = ?`,
-        [v.NAME]);
+      summary.reused.push(`DW_DIM_VARIABLE level: ${v.NAME} already resolved`);
     }
-    if (levelRows.length === 0) {
-      summary.unresolvedLevel.push(`${v.NAME}: no GDX_PSY_SEPT_LEVEL_PSY_MAP row yet (run GDX_SKILL_LOAD_SEPT_MAPS_DB --study <slug> first if a septenary mapping is wanted)`);
-      continue;
-    }
-    summary.inserted.push(`DW_DIM_VARIABLE level: ${v.NAME} -> level ${levelRows[0].ID_SEPTENARY_LEVEL}`);
-    if (!dryRun) {
-      await query(db, 'UPDATE DW_DIM_VARIABLE SET ID_SEPTENARY_LEVEL = ?, SEPT_LEVEL_CONFIDENCE = ? WHERE ID_VARIABLE = ?',
-        [levelRows[0].ID_SEPTENARY_LEVEL, levelRows[0].CONFIDENCE_LEVEL, v.ID_VARIABLE]);
-    }
+
+    // Virtology/chakra/way bridges -- many-to-many, unlike septenary level
+    // above, so every matching row is inserted, not just the first.
+    await loadVariableVirtueBridges(db, v, dryRun, summary);
+    await loadVariableChakraBridges(db, v, dryRun, summary);
+    await loadVariableWayBridges(db, v, dryRun, summary);
   }
 }
 
@@ -624,6 +717,7 @@ async function main() {
     await bootstrapSeptenaryLevels(db, args.dryRun, summary);
     await bootstrapChakras(db, args.dryRun, summary);
     await bootstrapFiveWays(db, args.dryRun, summary);
+    await bootstrapVirtues(db, args.dryRun, summary);
 
     console.log('-- Study-scoped dimensions --');
     const personIds = await loadPersons(db, studyId, args.dryRun, summary);

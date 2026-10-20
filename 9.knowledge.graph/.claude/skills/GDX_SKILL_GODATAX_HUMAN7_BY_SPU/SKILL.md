@@ -11,7 +11,7 @@ Turns one study's slice of the `GDX_HUMAN` relational schema into a Neo4j proper
 
 All tables in the `godatax.human` Firebird database matching:
 
-`GDX_PSY_*` (folder 2, psychometrics), `GDX_TA_*` (folder 5, Aquinas's Five Ways), `GDX_CC_*` (folder 6, cardiac coherence), `GDX_VT_*` (folder 12, Virtology -- added 2026-10-15), `DW_DIM_*` / `DW_FACT_*` (folder 7, the data warehouse). Folders 3 (septenary constitution) and 4 (kundalini/chakras) are included too -- their tables (`GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA`) already carry the `GDX_PSY_` prefix, so no separate prefix is needed for them.
+`GDX_PSY_*` (folder 2, psychometrics), `GDX_TA_*` (folder 5, Aquinas's Five Ways), `GDX_CC_*` (folder 6, cardiac coherence), `GDX_VT_*` (folder 12, Virtology -- added 2026-10-15), `DW_DIM_*` / `DW_FACT_*` / `DW_BRIDGE_*` (folder 7, the data warehouse -- `DW_BRIDGE_*` added 2026-10-19 for `DW_DIM_VIRTUE` and the `DW_BRIDGE_VARIABLE_VIRTUE/CHAKRA/WAY` many-to-many bridges, see `dw_virtue_chakra_way_bridges_firebird25.sql`). Folders 3 (septenary constitution) and 4 (kundalini/chakras) are included too -- their tables (`GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA`) already carry the `GDX_PSY_` prefix, so no separate prefix is needed for them.
 
 ## Scoped to one study
 
@@ -39,7 +39,12 @@ for its own global DW dimensions.
 | `ID_APPLICATION` in this study's applications | `GDX_PSY_ITEM_RESPONSE`, `GDX_PSY_VARIABLE_RESULT`, `GDX_PSY_CONSTRUCT_RESULT`, `GDX_PSY_INDICATOR_RESULT` |
 | `SESSION_ID` in this study's CC sessions | `GDX_CC_RR_INTERVAL`, `GDX_CC_ECG_SAMPLE`, `GDX_CC_MOTION`, `GDX_CC_HRV_WINDOW`, `GDX_CC_DEVICE_EVENT` |
 | `ID_EVALUATION` in this study's evaluations | `GDX_PSY_EVALUATION_ACTION` |
-| *(not scoped -- always full)* | everything else: `GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA`, `GDX_PSY_CHAKRA_VAR_MAP`, `GDX_TA_WAY`, `GDX_TA_WAY_SEPT_MAP`, `GDX_VT_VIRTUE`, `GDX_VT_VARIABLE_VIRTUE_MAP`, `GDX_PSY_INSTRUMENT`, `GDX_PSY_CONSTRUCT`, `GDX_PSY_VARIABLE`, `GDX_PSY_INSTRUMENT_ITEM`, `GDX_PSY_INSTRUMENT_CONSTRUCT`, `GDX_PSY_ITEM_ALTERNATIVE`, `GDX_PSY_INDICATOR`, `GDX_PSY_EVALUATOR`, `GDX_PSY_ACTION`, `GDX_PSY_PSYCHOMETRIC_PROPERTY`, `GDX_CC_DEVICE`, `DW_DIM_SEPTENARY_LEVEL`, `DW_DIM_CHAKRA`, `DW_DIM_FIVE_WAY`, `DW_DIM_DATE`, `DW_DIM_INSTRUMENT`, `DW_DIM_CONSTRUCT`, `DW_DIM_VARIABLE`, `DW_DIM_ITEM`, `DW_DIM_DEVICE`, and a handful of empty/unused catalogs (`GDX_PSY_TEAM*`, `GDX_PSY_OCCUPATION*`) |
+| *(not scoped -- always full)* | everything else: `GDX_PSY_SEPTENARY_LEVEL`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, `GDX_PSY_CHAKRA`, `GDX_PSY_CHAKRA_VAR_MAP`, `GDX_TA_WAY`, `GDX_TA_WAY_SEPT_MAP`, `GDX_VT_VIRTUE`, `GDX_VT_VARIABLE_VIRTUE_MAP`, `GDX_PSY_INSTRUMENT`, `GDX_PSY_CONSTRUCT`, `GDX_PSY_VARIABLE`, `GDX_PSY_INSTRUMENT_ITEM`, `GDX_PSY_INSTRUMENT_CONSTRUCT`, `GDX_PSY_ITEM_ALTERNATIVE`, `GDX_PSY_INDICATOR`, `GDX_PSY_EVALUATOR`, `GDX_PSY_ACTION`, `GDX_PSY_PSYCHOMETRIC_PROPERTY`, `GDX_CC_DEVICE`, `DW_DIM_SEPTENARY_LEVEL`, `DW_DIM_CHAKRA`, `DW_DIM_FIVE_WAY`, `DW_DIM_VIRTUE`, `DW_BRIDGE_VARIABLE_VIRTUE`, `DW_BRIDGE_VARIABLE_CHAKRA`, `DW_BRIDGE_VARIABLE_WAY`, `DW_DIM_DATE`, `DW_DIM_INSTRUMENT`, `DW_DIM_CONSTRUCT`, `DW_DIM_VARIABLE`, `DW_DIM_ITEM`, `DW_DIM_DEVICE`, and a handful of empty/unused catalogs (`GDX_PSY_TEAM*`, `GDX_PSY_OCCUPATION*`) |
+
+`DW_BRIDGE_VARIABLE_VIRTUE/CHAKRA/WAY` key off `ID_VARIABLE`, same as `DW_DIM_VARIABLE` itself --
+global catalog data (which variable maps to which virtue/chakra/way is a property of the variable's
+catalog row, not of any one study), so they are never scoped by `--study` either, consistent with
+`DW_DIM_VARIABLE`'s own treatment above.
 
 `GDX_PSY_PERSON` and `GDX_CC_PERSON` are both filtered by `ID_PERSON` directly: cardiac-coherence and
 psychometric person ids **share the same numbering by convention** in this dataset (see
@@ -72,7 +77,7 @@ npm install                          # once: installs neo4j-driver + node-firebi
 # vars directly -- never commit the filled-in .env
 
 node export_graph.js --study <slug> --dry-run            # introspect + count rows only, writes nothing to Neo4j
-node export_graph.js --study <slug> --tables GDX_PSY_SEPTENARY_LEVEL,GDX_PSY_CHAKRA,GDX_TA_WAY,GDX_TA_WAY_SEPT_MAP,GDX_PSY_SEPT_LEVEL_PSY_MAP,GDX_PSY_INSTRUMENT,GDX_PSY_CONSTRUCT,GDX_PSY_VARIABLE,GDX_VT_VIRTUE,GDX_VT_VARIABLE_VIRTUE_MAP
+node export_graph.js --study <slug> --tables GDX_PSY_SEPTENARY_LEVEL,GDX_PSY_CHAKRA,GDX_TA_WAY,GDX_TA_WAY_SEPT_MAP,GDX_PSY_SEPT_LEVEL_PSY_MAP,GDX_PSY_INSTRUMENT,GDX_PSY_CONSTRUCT,GDX_PSY_VARIABLE,GDX_VT_VIRTUE,GDX_VT_VARIABLE_VIRTUE_MAP,DW_DIM_VIRTUE,DW_BRIDGE_VARIABLE_VIRTUE,DW_BRIDGE_VARIABLE_CHAKRA,DW_BRIDGE_VARIABLE_WAY
                                                           # small-scale real run: just the catalog/mapping tables -- do this before a full run
 node export_graph.js --study <slug> --limit 50           # real run, capped at 50 rows per table -- a fast full-breadth smoke test
 node export_graph.js --study <slug>                      # full export, every row of every in-scope table for this one study
@@ -87,8 +92,10 @@ with no real intake -- see `GoDataX_Human_7_Knowledge_Graph.md` for how `ID_STUD
 ## Scale warning -- read before a full run
 
 As of the 2026-10-15 introspection (after `GDX_VT_VIRTUE`/`GDX_VT_VARIABLE_VIRTUE_MAP` were added), this
-schema has **58 in-scope tables and 77 FK relationships**, of which **23 are study-scoped** and **35 are
-always exported in full** regardless of `--study` (see the table above). For `ID_STUDY=1` -- the oldest
+schema had 58 in-scope tables and 77 FK relationships, of which 23 were study-scoped and 35 were
+always exported in full regardless of `--study` (see the table above); `DW_DIM_VIRTUE` and the three
+`DW_BRIDGE_VARIABLE_*` tables added 2026-10-19 push both counts up further -- run `--dry-run` for the
+real current numbers rather than trusting either figure here. For `ID_STUDY=1` -- the oldest
 study, so a scoped run captures everything anyone has loaded so far for it -- `--dry-run` reports node
 counts still dominated by `GDX_PSY_ITEM_RESPONSE` and its DW mirror `DW_FACT_PSY_ITEM_RESPONSE` (~58k rows
 each) plus `DW_FACT_PSY_VARIABLE_RESULT`/`GDX_PSY_VARIABLE_RESULT` (~9.3k rows each); re-run `--dry-run`
