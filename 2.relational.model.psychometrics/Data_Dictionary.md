@@ -1,14 +1,16 @@
 # GDX_HUMAN — Data Dictionary (All Firebird Tables)
 
-> Generated 2026-10-03. Location: `GDX_HUMAN/2.relational.model.psychometrics/`
+> Regenerated 2026-10-20 (originally generated 2026-10-03) against the live database
+> `13.onboarding.env/GODATAX7HPH.GDB`. Location: `GDX_HUMAN/2.relational.model.psychometrics/`
 >
 > Scope: every table that is actually **persisted in Firebird** across the folders
 > `0.new.instrument`, `2.relational.model.psychometrics`, `3.septenary.constitution`,
 > `4.kundalini.chakras`, `5.five.ways.tomas.aquino`, `6.cardiac.coherence`,
 > `7.multidimensional.database`, `8.gdx.dashboards`, `9.knowledge.graph`,
-> `10.gdx.machine.learning`, `12.gdx.virtology` and `14.metaphysical.measuring.instrument`.
+> `10.gdx.machine.learning`, `12.gdx.virtology`, `14.metaphysical.measuring.instrument`
+> and `15.environmental.anomalous.phenomena`.
 >
-> Each table is tagged **[RELATIONAL]** (OLTP, transactional schema, one of the five
+> Each table is tagged **[RELATIONAL]** (OLTP, transactional schema, one of the six
 > source schemas) or **[ANALYTICAL / DW]** (the star-schema Data Warehouse in
 > `7.multidimensional.database`, derived from the relational schemas, read-mostly).
 >
@@ -21,15 +23,37 @@
 > - `6.cardiac.coherence/gdx_coerencia_cardiaca_fb25_ddl.sql`
 > - `7.multidimensional.database/godatax_human_dw_model_firebird25.sql`
 > - `7.multidimensional.database/godatax_human_dw_fk_gdx_cc_person_firebird25.sql` (adds one cross-schema FK, no new table)
+> - `7.multidimensional.database/dw_virtue_chakra_way_bridges_firebird25.sql` (DW_DIM_VIRTUE + 3 bridge tables)
+> - `12.gdx.virtology/virtology_model_firebird25.sql` (GDX_VT_VIRTUE, GDX_VT_VARIABLE_VIRTUE_MAP)
+> - `12.gdx.virtology/variable_virtue_map_polarity_firebird25.sql` (adds SCALE_POLARITY, no new table)
+> - `14.metaphysical.measuring.instrument/metaphysical_variable_chakra_map_firebird25.sql` (GDX_PSY_CHAKRA_VAR_MAP)
+> - `14.metaphysical.measuring.instrument/metaphysical_variable_way_map_firebird25.sql` (extends GDX_TA_WAY_SEPT_MAP, no new table)
+> - `14.metaphysical.measuring.instrument/confirmation_fields_association_maps_firebird25.sql` (adds confirmation columns to three "_MAP" tables, no new table)
+> - `15.environmental.anomalous.phenomena/environmental_anomalous_phenomena_model_firebird25.sql` (15 `GDX_PH_*` tables)
 >
-> **55 tables total**: 41 relational (OLTP) + 14 analytical (DW). This matches the "55
-> relational tables as nodes" figure used elsewhere in the project (Knowledge Graph,
-> Chapter 07) — every persisted table catalogued here has a corresponding node label
-> in Neo4j.
+> Every table list above was cross-checked directly against the live database's
+> `RDB$RELATIONS`/`RDB$RELATION_FIELDS`/`RDB$RELATION_CONSTRAINTS` system tables, not
+> just against the DDL source files, so this dictionary reflects what is actually
+> deployed, not just what was scripted.
+>
+> **77 tables total**: 59 relational (OLTP) + 18 analytical (DW). This is up from the
+> 55 tables (41 + 14) documented as of 2026-10-03 — the difference is the 18 tables
+> added since then: `GDX_PSY_CHAKRA_VAR_MAP`, `GDX_VT_VIRTUE`, `GDX_VT_VARIABLE_VIRTUE_MAP`,
+> 15 `GDX_PH_*` tables (§1.7), and `DW_DIM_VIRTUE` + `DW_BRIDGE_VARIABLE_VIRTUE` +
+> `DW_BRIDGE_VARIABLE_CHAKRA` + `DW_BRIDGE_VARIABLE_WAY` (§2.2).
+>
+> **Knowledge Graph note**: `9.knowledge.graph/.claude/skills/GDX_SKILL_GODATAX_HUMAN7_BY_SPU`
+> projects every table with prefix `GDX_PSY_`, `GDX_TA_`, `GDX_CC_`, `GDX_VT_`,
+> `DW_DIM_`, `DW_FACT_` or `DW_BRIDGE_` into Neo4j as a node label — that is every
+> table in this dictionary **except** the 15 `GDX_PH_*` tables (§1.7), which are not
+> yet in that skill's scope.
+>
+> Not in scope for this dictionary (lives in the same physical `.gdb` but is a
+> self-contained, unrelated module): the 7 `GDX_EAD_*` tables — same exclusion
+> `13.onboarding.env/godatax_human_full_ddl_no_gdx_ead_firebird25.sql` already makes.
 >
 > Folders with **no Firebird tables of their own** — see §3 for why: `0.new.instrument`,
-> `8.gdx.dashboards`, `9.knowledge.graph`, `10.gdx.machine.learning`,
-> `12.gdx.virtology`, `14.metaphysical.measuring.instrument`.
+> `8.gdx.dashboards`, `9.knowledge.graph`, `10.gdx.machine.learning`.
 
 ---
 
@@ -433,6 +457,9 @@ permanently, even after reconciliation.
 | `RECORDED_BEHAVIOR` | BLOB SUB_TYPE TEXT, NOT NULL | What behavior/response pattern is actually being read. |
 | `CORRESPONDENCE_JUSTIFICATION` | BLOB SUB_TYPE TEXT, NOT NULL | Why this mapping was made. |
 | `CONFIDENCE_LEVEL` | VARCHAR(20), NOT NULL, default `'SPECULATIVE'`, `CHECK IN ('HIGH','MEDIUM','LOW','SPECULATIVE')` | How confident the mapping is. |
+| `NUMBER_CONFIRMATIONS` | INTEGER, NOT NULL, default `0` | How many times this correspondence has been independently corroborated (added by `14.metaphysical.measuring.instrument/confirmation_fields_association_maps_firebird25.sql`). |
+| `CONFIRMATION_BY` | VARCHAR(160) | Name of the most recent confirmer, if any. |
+| `NAME_INSTITUTION` | VARCHAR(160) | Institution that confirmer is affiliated with, if any. |
 
 ---
 
@@ -455,6 +482,29 @@ empirical finding.
 | `ID_SEPTENARY_LEVEL` | BIGINT, NOT NULL, FK → `GDX_PSY_SEPTENARY_LEVEL` | Corresponding septenary level. |
 | `SEPTENARY_LEVEL_JUSTIFICATION` | VARCHAR(500) | Why that correspondence was chosen. |
 
+#### `GDX_PSY_CHAKRA_VAR_MAP` — [RELATIONAL]  (defined in `14.metaphysical.measuring.instrument/metaphysical_variable_chakra_map_firebird25.sql`)
+Interpretive bridge table: links a psychometric/metaphysical instrument/variable
+to one of the 7 chakras, mirroring `GDX_PSY_SEPT_LEVEL_PSY_MAP`'s column shape
+exactly so the Septenary/Way/Chakra association tables stay structurally
+consistent. `GDX_PSY_CHAKRA` itself is a pure 7-row catalog and was never a
+relation table, so this correspondence lives in its own table rather than
+extending `GDX_PSY_CHAKRA` in place.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_MAPPING` | BIGINT, **PK** | Surrogate key. |
+| `ID_CHAKRA` | BIGINT, NOT NULL, FK → `GDX_PSY_CHAKRA` | Target chakra. |
+| `ID_INSTRUMENT` | BIGINT, FK → `GDX_PSY_INSTRUMENT` (nullable) | Resolved catalog link, once available. |
+| `INSTRUMENT_LABEL` | VARCHAR(160), NOT NULL | Original free-text instrument name (kept permanently). |
+| `ID_VARIABLE` | BIGINT, FK → `GDX_PSY_VARIABLE` (nullable) | Resolved catalog link, once available. |
+| `VARIABLE_LABEL` | VARCHAR(150), NOT NULL, UNIQUE with `ID_CHAKRA` | Original free-text variable name (kept permanently). |
+| `RECORDED_BEHAVIOR` | BLOB SUB_TYPE TEXT, NOT NULL | What behavior/response pattern is actually being read. |
+| `CORRESPONDENCE_JUSTIFICATION` | BLOB SUB_TYPE TEXT, NOT NULL | Why this mapping was made. |
+| `CONFIDENCE_LEVEL` | VARCHAR(20), NOT NULL, default `'SPECULATIVE'`, `CHECK IN ('HIGH','MEDIUM','LOW','SPECULATIVE')` | How confident the mapping is. |
+| `NUMBER_CONFIRMATIONS` | INTEGER, NOT NULL, default `0` | Independent-corroboration count (added by `confirmation_fields_association_maps_firebird25.sql`). |
+| `CONFIRMATION_BY` | VARCHAR(160) | Name of the most recent confirmer, if any. |
+| `NAME_INSTITUTION` | VARCHAR(160) | Institution that confirmer is affiliated with, if any. |
+
 ---
 
 ### 1.4 The Five Ways of Aquinas — `5.five.ways.tomas.aquino/`
@@ -476,19 +526,35 @@ God's existence from the *Summa Theologica*, I, Q.2, A.3.
 | `CONCLUSION` | VARCHAR(500), NOT NULL | What the argument concludes. |
 | `SOURCE_REFERENCE` | VARCHAR(300), NOT NULL | Citation back to the *Summa Theologica*. |
 
-#### `GDX_TA_WAY_SEPT_MAP` — [RELATIONAL]  (`five_ways_septenary_map_firebird25.sql`)
+#### `GDX_TA_WAY_SEPT_MAP` — [RELATIONAL]  (`five_ways_septenary_map_firebird25.sql`, extended by `14.metaphysical.measuring.instrument/metaphysical_variable_way_map_firebird25.sql` and `confirmation_fields_association_maps_firebird25.sql`)
 Maps each of the Five Ways to a Septenary Constitution level, by the reasoning
 faculty it exercises (not by its conclusion — all five converge on the same
 conclusion, which would make a conclusion-based mapping uninformative). Level 7
-is deliberately left unmapped to any individual way.
+is deliberately left unmapped to any individual way. Originally a pure 5-row
+Way↔Level conceptual table; later extended to optionally also record which
+metaphysical instrument/variable (`GDX_PSY_VARIABLE`, typically
+`VARIABLE_TYPE='METAPHYSICS'`) sits at a given Way/Level intersection — the
+five original rows keep `ID_INSTRUMENT`/`ID_VARIABLE`/`VARIABLE_LABEL`/
+`RECORDED_BEHAVIOR` all `NULL` (pure conceptual mapping, no concrete instrument
+attached), while newer rows can carry a full correspondence, several per Way
+(the uniqueness constraint was redefined from `(ID_WAY, ID_SEPTENARY_LEVEL)` to
+`(ID_WAY, ID_SEPTENARY_LEVEL, VARIABLE_LABEL)` to allow this).
 
 | Column | Type | Description |
 |---|---|---|
 | `ID_MAPPING` | BIGINT, **PK** | Surrogate key. |
-| `ID_WAY` | BIGINT, NOT NULL, FK → `GDX_TA_WAY`, UNIQUE with `ID_SEPTENARY_LEVEL` | Way. |
+| `ID_WAY` | BIGINT, NOT NULL, FK → `GDX_TA_WAY` | Way. |
 | `ID_SEPTENARY_LEVEL` | BIGINT, NOT NULL, FK → `GDX_PSY_SEPTENARY_LEVEL` | Corresponding level. |
+| `ID_INSTRUMENT` | BIGINT, FK → `GDX_PSY_INSTRUMENT` (nullable) | Resolved instrument, if this row carries a concrete instrument/variable correspondence. |
+| `INSTRUMENT_LABEL` | VARCHAR(160) (nullable) | Original free-text instrument name, if any. |
+| `ID_VARIABLE` | BIGINT, FK → `GDX_PSY_VARIABLE` (nullable) | Resolved variable, if any. |
+| `VARIABLE_LABEL` | VARCHAR(150), UNIQUE with `(ID_WAY, ID_SEPTENARY_LEVEL)` (nullable) | Original free-text variable name, if any — `NULL` on the 5 original pure conceptual rows. |
+| `RECORDED_BEHAVIOR` | BLOB SUB_TYPE TEXT (nullable) | What behavior/response pattern is being read, if this row has a concrete variable attached. |
 | `CORRESPONDENCE_JUSTIFICATION` | BLOB SUB_TYPE TEXT, NOT NULL | Why this mapping was made. |
 | `CONFIDENCE_LEVEL` | VARCHAR(20), NOT NULL, default `'SPECULATIVE'`, `CHECK IN ('HIGH','MEDIUM','LOW','SPECULATIVE')` | How confident the mapping is. |
+| `NUMBER_CONFIRMATIONS` | INTEGER, NOT NULL, default `0` | Independent-corroboration count (added by `confirmation_fields_association_maps_firebird25.sql`). |
+| `CONFIRMATION_BY` | VARCHAR(160) | Name of the most recent confirmer, if any. |
+| `NAME_INSTITUTION` | VARCHAR(160) | Institution that confirmer is affiliated with, if any. |
 
 ---
 
@@ -633,6 +699,283 @@ contact loss, Bluetooth, resets, errors).
 
 ---
 
+### 1.6 Virtology — `12.gdx.virtology/virtology_model_firebird25.sql`
+
+Database-backed equivalent of the 33-virtue catalog and the variable↔virtue
+judgment calls that previously lived only in code (`virtue_knowledge.js`,
+duplicated between `GDX_SKILL_LINK_SUGGESTIONS` and `GDX_SKILL_IDENTIFY_VIRTUES`).
+Mirrors the shape already established by the other catalog + "_MAP" pairs in
+this project (`GDX_PSY_CHAKRA` / `GDX_PSY_CHAKRA_VAR_MAP`, `GDX_TA_WAY` /
+`GDX_TA_WAY_SEPT_MAP`).
+
+#### `GDX_VT_VIRTUE` — [RELATIONAL]
+Fixed catalog of the 33 virtues (institutovirtudes.com.br manual — see
+`12.gdx.virtology/Virtology_Knowledge_Base.md` §5), in the manual's own order.
+Populated once, shared by every study.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_VIRTUE` | BIGINT, **PK** | Surrogate key (1–33 in practice, `ID_VIRTUE = ORDER_NUM`). |
+| `ORDER_NUM` | SMALLINT, NOT NULL, UNIQUE, `CHECK` 1–33 | Position in the manual. |
+| `NAME_PT` | VARCHAR(60), UNIQUE, NOT NULL | Virtue name in Portuguese, e.g. "Humildade". |
+| `NAME_EN` | VARCHAR(60), NOT NULL | Virtue name in English, e.g. "Humility". |
+
+#### `GDX_VT_VARIABLE_VIRTUE_MAP` — [RELATIONAL]
+Interpretive bridge table: links a psychometric/metaphysical variable to one
+of the 33 virtues. Unlike the other three "_MAP" tables in this project, it
+carries no `ID_INSTRUMENT` (virtue correspondences are made at the variable
+level only) and has **two** justification columns side by side instead of one,
+plus a scale-polarity flag.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_MAPPING` | BIGINT, **PK** | Surrogate key. |
+| `ID_VIRTUE` | BIGINT, NOT NULL, FK → `GDX_VT_VIRTUE` | Target virtue. |
+| `ID_VARIABLE` | BIGINT, FK → `GDX_PSY_VARIABLE` (nullable) | Resolved catalog link, once available. |
+| `SAV_COLUMN` | VARCHAR(60), NOT NULL, UNIQUE | Resolved from `DW_DIM_VARIABLE.SAV_COLUMN`; mandatory and unique on this table (unlike the optional `*_LABEL` columns elsewhere). |
+| `VARIABLE_LABEL` | VARCHAR(150) | Free-text variable name. |
+| `RECORDED_BEHAVIOR` | BLOB SUB_TYPE TEXT, NOT NULL | What behavior/response pattern is actually being read. |
+| `JUSTIFICATION_DEFICIT` | BLOB SUB_TYPE TEXT, NOT NULL | "Low score → antidote" framing (read by `GDX_SKILL_LINK_SUGGESTIONS`). |
+| `JUSTIFICATION_STRENGTH` | BLOB SUB_TYPE TEXT, NOT NULL | "High score → already present" framing (read by `GDX_SKILL_IDENTIFY_VIRTUES`). |
+| `CONFIDENCE_LEVEL` | VARCHAR(20), NOT NULL, default `'SPECULATIVE'`, `CHECK IN ('HIGH','MEDIUM','LOW','SPECULATIVE')` | How confident the mapping is. |
+| `NUMBER_CONFIRMATIONS` | INTEGER, NOT NULL, default `0` | Independent-corroboration count. |
+| `CONFIRMATION_BY` | VARCHAR(160) | Name of the most recent confirmer, if any. |
+| `NAME_INSTITUTION` | VARCHAR(160) | Institution that confirmer is affiliated with, if any. |
+| `SCALE_POLARITY` | VARCHAR(10), NOT NULL, default `'POSITIVE'`, `CHECK IN ('POSITIVE','NEGATIVE')` | Added by `variable_virtue_map_polarity_firebird25.sql`. `POSITIVE`: a high raw score is desirable (the common case). `NEGATIVE`: a high raw score is undesirable (e.g. "Negative Emotions") — inverts which end of the score range `GDX_SKILL_LINK_SUGGESTIONS`/`GDX_SKILL_IDENTIFY_VIRTUES` read as the deficit/strength. |
+
+---
+
+### 1.7 Environmental & Anomalous Phenomena — `15.environmental.anomalous.phenomena/environmental_anomalous_phenomena_model_firebird25.sql`
+
+Instrumented-monitoring pipeline for anomalous/environmental-phenomena
+investigation: locations, sensors, sessions, events, raw observations, media,
+analysis and interpretation — whose sensor timeline is meant to be correlated
+against a person's psychometric / physiological / cardiac-coherence data.
+All 15 tables carry the `GDX_PH_` prefix (Environmental/Phenomena) and a
+nullable `ID_PERSON` FK → `GDX_PSY_PERSON` (applied uniformly, even on pure
+catalog tables, the same way `GDX_PSY_STUDY_PARTICIPANT`/`GDX_PSY_APPLICATION`
+link participant data to `GDX_PSY_PERSON` elsewhere in this project). **Not yet
+in the knowledge-graph export's scope** (see header note).
+
+#### `GDX_PH_LOCATION` — [RELATIONAL]
+A physical location where sessions/sensors are set up.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_LOCATION` | BIGINT, **PK** | Surrogate key. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `NAME` | VARCHAR(160), NOT NULL | Location name. |
+| `LOCATION_TYPE` | VARCHAR(20), NOT NULL, default `'INDOOR'`, `CHECK IN ('INDOOR','OUTDOOR')` | Indoor/outdoor. |
+| `LATITUDE` / `LONGITUDE` | NUMERIC(9,6) | Coordinates. |
+| `ALTITUDE` | NUMERIC(8,2) | Altitude. |
+| `DESCRIPTION` | VARCHAR(1000) | Free-text description. |
+
+#### `GDX_PH_SENSOR_TYPE` — [RELATIONAL]
+Catalog of sensor types/dimensions (e.g. EMF, temperature, infrasound).
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_SENSOR_TYPE` | BIGINT, **PK** | Surrogate key. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `NAME` | VARCHAR(120), UNIQUE, NOT NULL | Sensor type name. |
+| `DIMENSION` | VARCHAR(60), NOT NULL | What physical dimension it measures. |
+| `UNIT` | VARCHAR(40) | Unit of measurement. |
+| `DESCRIPTION` | VARCHAR(500) | Free-text description. |
+
+#### `GDX_PH_SENSOR` — [RELATIONAL]
+A physical sensor device, of a given type, optionally installed at a location.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_SENSOR` | BIGINT, **PK** | Surrogate key. |
+| `ID_SENSOR_TYPE` | BIGINT, NOT NULL, FK → `GDX_PH_SENSOR_TYPE` | Sensor type. |
+| `ID_LOCATION` | BIGINT, FK → `GDX_PH_LOCATION` (nullable) | Installed location, if any. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `NAME` | VARCHAR(160), NOT NULL | Sensor name. |
+| `MODEL` / `MANUFACTURER` | VARCHAR(120) | Device identity. |
+| `SERIAL_NUMBER` | VARCHAR(80), UNIQUE | Serial number. |
+| `STATUS` | VARCHAR(20), NOT NULL, default `'ACTIVE'`, `CHECK IN ('ACTIVE','INACTIVE','MAINTENANCE','RETIRED')` | Lifecycle status. |
+| `INSTALLATION_DATE` | DATE | When installed. |
+
+#### `GDX_PH_ENVIRONMENT_CONDITION` — [RELATIONAL]
+Ambient environmental readings at a location at a point in time.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_ENVIRONMENT_CONDITION` | BIGINT, **PK** | Surrogate key. |
+| `ID_LOCATION` | BIGINT, NOT NULL, FK → `GDX_PH_LOCATION` | Location measured. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `MEASURED_AT` | TIMESTAMP, NOT NULL | When measured. |
+| `TEMPERATURE_C` / `HUMIDITY_PCT` / `PRESSURE_HPA` / `CO2_PPM` / `VOC_PPB` | NUMERIC | Environmental readings. |
+| `NOTES` | VARCHAR(1000) | Free-text notes. |
+
+#### `GDX_PH_SESSION` — [RELATIONAL]
+One monitoring session at a location.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_SESSION` | BIGINT, **PK** | Surrogate key. |
+| `ID_LOCATION` | BIGINT, NOT NULL, FK → `GDX_PH_LOCATION` | Location. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `START_TIME` | TIMESTAMP, NOT NULL | Session start. |
+| `END_TIME` | TIMESTAMP | Session end. |
+| `SESSION_TYPE` | VARCHAR(30), NOT NULL, default `'EXPERIMENT'` | e.g. "BASELINE", "EXPERIMENT" (free text, open-ended by design). |
+| `DESCRIPTION` | VARCHAR(1000) | Free-text description. |
+| `OPERATOR` | VARCHAR(150) | Person running the session. |
+| `ENVIRONMENT_NOTES` | VARCHAR(1000) | Free-text notes. |
+
+#### `GDX_PH_EVENT` — [RELATIONAL]
+One discrete occurrence within a session — the finest-grained unit most other
+`GDX_PH_*` tables (media, tags, observations, analysis) hang off of.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_EVENT` | BIGINT, **PK** | Surrogate key. |
+| `ID_SESSION` | BIGINT, NOT NULL, FK → `GDX_PH_SESSION` | Parent session. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `EVENT_TIME` | TIMESTAMP, NOT NULL | When the event occurred. |
+| `EVENT_TYPE` | VARCHAR(30), NOT NULL | e.g. "question", "stimulus" (free text, open-ended by design). |
+| `DESCRIPTION` | VARCHAR(1000) | Free-text description. |
+| `EXPECTED_RESPONSE` | VARCHAR(500) | What response/reaction was expected, if any. |
+| `TAG` | VARCHAR(100) | Quick free-text tag. |
+
+#### `GDX_PH_MEDIA_FILE` — [RELATIONAL]
+A media file (audio/video/image/document) documenting an event.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_MEDIA_FILE` | BIGINT, **PK** | Surrogate key. |
+| `ID_EVENT` | BIGINT, NOT NULL, FK → `GDX_PH_EVENT` | Event documented. |
+| `ID_SENSOR` | BIGINT, FK → `GDX_PH_SENSOR` (nullable) | Originating sensor, if a registered one (vs. e.g. a handheld photo). |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `FILE_PATH` | VARCHAR(500), NOT NULL | File location. |
+| `FILE_TYPE` | VARCHAR(20), NOT NULL, `CHECK IN ('AUDIO','VIDEO','IMAGE','DOCUMENT','OTHER')` | File category. |
+| `THUMBNAIL_PATH` | VARCHAR(500) | Thumbnail location, if any. |
+| `METADATA` | BLOB SUB_TYPE TEXT | Free-form metadata. |
+| `CREATED_AT` | TIMESTAMP, NOT NULL, default `CURRENT_TIMESTAMP` | Record creation time. |
+
+#### `GDX_PH_EVENT_TAG` — [RELATIONAL]
+Many free-text tags per event (beyond the single `GDX_PH_EVENT.TAG` field).
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_EVENT_TAG` | BIGINT, **PK** | Surrogate key. |
+| `ID_EVENT` | BIGINT, NOT NULL, FK → `GDX_PH_EVENT`, UNIQUE with `TAG` | Event tagged. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `TAG` | VARCHAR(100), NOT NULL | Tag text. |
+
+#### `GDX_PH_OBSERVATION` — [RELATIONAL]
+A raw sensor reading tied to a specific event.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_OBSERVATION` | BIGINT, **PK** | Surrogate key. |
+| `ID_EVENT` | BIGINT, NOT NULL, FK → `GDX_PH_EVENT` | Event observed. |
+| `ID_SENSOR` | BIGINT, NOT NULL, FK → `GDX_PH_SENSOR` | Sensor that captured it. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `MEASURED_AT` | TIMESTAMP, NOT NULL | When measured. |
+| `VALUE_NUMERIC` | NUMERIC(18,6) | Numeric reading, if applicable. |
+| `VALUE_TEXT` | VARCHAR(500) | Text reading, if applicable. |
+| `UNIT` | VARCHAR(40) | Unit of measurement. |
+| `QUALITY_FLAG` | VARCHAR(20), NOT NULL, default `'OK'`, `CHECK IN ('OK','SUSPECT','INVALID')` | Signal quality flag. |
+| `METADATA` | BLOB SUB_TYPE TEXT | Free-form metadata. |
+
+#### `GDX_PH_ANALYSIS_RESULT` — [RELATIONAL]
+A computed/algorithmic analysis of an event (e.g. an anomaly score).
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_ANALYSIS_RESULT` | BIGINT, **PK** | Surrogate key. |
+| `ID_EVENT` | BIGINT, NOT NULL, FK → `GDX_PH_EVENT` | Event analyzed. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `ALGORITHM` | VARCHAR(120), NOT NULL | Algorithm/method used. |
+| `ANOMALY_SCORE` | NUMERIC(9,4) | Computed anomaly score. |
+| `CORRELATED_SENSORS` | VARCHAR(500) | Free text listing correlated sensors. |
+| `RESULT_SUMMARY` | VARCHAR(1000) | Free-text summary. |
+| `INTERPRETATION_NOTE` | VARCHAR(1000) | Free-text note (kept distinct in name from the separate `GDX_PH_INTERPRETATION` table below). |
+| `CREATED_AT` | TIMESTAMP, NOT NULL, default `CURRENT_TIMESTAMP` | Record creation time. |
+
+#### `GDX_PH_INTERPRETATION` — [RELATIONAL]
+A formal interpretive hypothesis issued about an analysis result.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_INTERPRETATION` | BIGINT, **PK** | Surrogate key. |
+| `ID_ANALYSIS_RESULT` | BIGINT, NOT NULL, FK → `GDX_PH_ANALYSIS_RESULT` | Analysis interpreted. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `CATEGORY` | VARCHAR(30), NOT NULL, `CHECK IN ('ENVIRONMENTAL','PARANORMAL','EQUIPMENT_ARTIFACT','INCONCLUSIVE','OTHER')` | Interpretive category. |
+| `HYPOTHESIS` | VARCHAR(1000), NOT NULL | The hypothesis itself. |
+| `CONFIDENCE_LEVEL` | VARCHAR(20), NOT NULL, default `'SPECULATIVE'`, `CHECK IN ('HIGH','MEDIUM','LOW','SPECULATIVE')` | How confident the hypothesis is. |
+| `UNIT` | VARCHAR(40) | Unit of measurement, if relevant. |
+| `CREATED_AT` | TIMESTAMP, NOT NULL, default `CURRENT_TIMESTAMP` | Record creation time. |
+
+#### `GDX_PH_SENSOR_CALIBRATION` — [RELATIONAL]
+Calibration history for a sensor.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_SENSOR_CALIBRATION` | BIGINT, **PK** | Surrogate key. |
+| `ID_SENSOR` | BIGINT, NOT NULL, FK → `GDX_PH_SENSOR` | Sensor calibrated. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `CALIBRATION_DATE` | TIMESTAMP, NOT NULL | When calibrated. |
+| `PARAMETERS` | BLOB SUB_TYPE TEXT | Calibration parameters, free-form. |
+| `VALID_UNTIL` | TIMESTAMP | Calibration expiry. |
+| `NOTES` | VARCHAR(1000) | Free-text notes. |
+
+#### `GDX_PH_USER` — [RELATIONAL]
+A system user account tied to a person.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_USER` | BIGINT, **PK** | Surrogate key. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Underlying person. |
+| `ROLE` | VARCHAR(60) | User role. |
+| `EMAIL` | VARCHAR(160), UNIQUE | Email address. |
+
+#### `GDX_PH_REFERENCE_DATA` — [RELATIONAL]
+Baseline/normal reference ranges per dimension/parameter, used to judge
+whether a reading is anomalous.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_REFERENCE_DATA` | BIGINT, **PK** | Surrogate key. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Associated person, if any. |
+| `DIMENSION` | VARCHAR(60), NOT NULL, UNIQUE with `PARAMETER_NAME` | Physical dimension. |
+| `PARAMETER_NAME` | VARCHAR(120), NOT NULL | Parameter name. |
+| `NORMAL_MIN` / `NORMAL_MAX` | NUMERIC(18,6) | Normal reference range. |
+| `UNIT` | VARCHAR(40) | Unit of measurement. |
+| `SOURCE_REFERENCE` | VARCHAR(300) | Citation for the reference range. |
+| `NOTES` | VARCHAR(1000) | Free-text notes. |
+
+#### `GDX_PH_EVENT_VAR_MAP` — [RELATIONAL]
+Interpretive bridge table (not in the original source images; added per a
+later, separate instruction): links a specific `GDX_PH_EVENT` occurrence to a
+metaphysical/psychometric variable (and optionally its instrument) — "this
+anomalous event's recorded behavior reads as a correlate of construct X from
+instrument Y". Mirrors `GDX_PSY_CHAKRA_VAR_MAP`'s shape exactly, including the
+confirmation-tracking columns (added from the start here, not bolted on
+later). Keyed on `GDX_PH_EVENT` rather than `GDX_PH_SESSION` because the
+correlation is only meaningful at the same fine-grained, timestamped level
+`GDX_PH_ANALYSIS_RESULT`/`GDX_PH_INTERPRETATION` already use.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_MAPPING` | BIGINT, **PK** | Surrogate key. |
+| `ID_EVENT` | BIGINT, NOT NULL, FK → `GDX_PH_EVENT`, UNIQUE with `VARIABLE_LABEL` | Event this correspondence is about. |
+| `ID_INSTRUMENT` | BIGINT, FK → `GDX_PSY_INSTRUMENT` (nullable) | Resolved instrument, once available. |
+| `INSTRUMENT_LABEL` | VARCHAR(160), NOT NULL | Free-text instrument name. |
+| `ID_VARIABLE` | BIGINT, FK → `GDX_PSY_VARIABLE` (nullable) | Resolved variable, once available. |
+| `VARIABLE_LABEL` | VARCHAR(150), NOT NULL | Free-text variable name. |
+| `ID_PERSON` | BIGINT, FK → `GDX_PSY_PERSON` (nullable) | Person this specific correspondence is about, if any. |
+| `RECORDED_BEHAVIOR` | BLOB SUB_TYPE TEXT, NOT NULL | What behavior/response pattern is actually being read. |
+| `CORRESPONDENCE_JUSTIFICATION` | BLOB SUB_TYPE TEXT, NOT NULL | Why this mapping was made. |
+| `CONFIDENCE_LEVEL` | VARCHAR(20), NOT NULL, default `'SPECULATIVE'`, `CHECK IN ('HIGH','MEDIUM','LOW','SPECULATIVE')` | How confident the mapping is. |
+| `NUMBER_CONFIRMATIONS` | INTEGER, NOT NULL, default `0` | Independent-corroboration count. |
+| `CONFIRMATION_BY` | VARCHAR(160) | Name of the most recent confirmer, if any. |
+| `NAME_INSTITUTION` | VARCHAR(160) | Institution that confirmer is affiliated with, if any. |
+
+---
+
 ## 2. Analytical Model (Data Warehouse) — `7.multidimensional.database/godatax_human_dw_model_firebird25.sql`
 
 A single star-schema analytical layer unifying all five relational schemas above
@@ -642,7 +985,7 @@ system's own BIGINT primary key wherever one already exists — no parallel
 surrogate ID space is invented. `GDX_PSY_PERSON` is the single, central person
 table for the whole DW; `DW_DIM_PERSON` is sourced from it alone.
 
-### 2.1 Dimensions (11)
+### 2.1 Dimensions (12)
 
 #### `DW_DIM_PERSON` — [ANALYTICAL / DW]
 Central, single person dimension for the entire warehouse — sourced only from
@@ -732,6 +1075,22 @@ extra FK duplicated on the fact table.
 | `ID_SEPTENARY_LEVEL` | BIGINT, FK → `DW_DIM_SEPTENARY_LEVEL` (nullable) | Resolved septenary mapping, denormalized from `GDX_PSY_SEPT_LEVEL_PSY_MAP`. |
 | `SEPT_LEVEL_CONFIDENCE` | VARCHAR(20) | Confidence of that mapping. |
 
+#### `DW_DIM_VIRTUE` — [ANALYTICAL / DW]
+Virtology dimension, mirroring `GDX_VT_VIRTUE`. Added by
+`7.multidimensional.database/dw_virtue_chakra_way_bridges_firebird25.sql`.
+Unlike `ID_SEPTENARY_LEVEL` on `DW_DIM_VARIABLE` above, the variable↔virtue
+correspondence is **not** a single FK column here — it is genuinely
+many-to-many in the live data (e.g. the IPIP-VIA "Forgiveness" variable maps
+to three different virtues), so it is carried instead by the bridge table
+`DW_BRIDGE_VARIABLE_VIRTUE` (§2.2) rather than risking silently dropping every
+mapping past the first.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_VIRTUE` | BIGINT, **PK** | Reused from `GDX_VT_VIRTUE.ID_VIRTUE`. |
+| `ORDER_NUM` | SMALLINT, NOT NULL | Position 1–33. |
+| `NAME_PT` / `NAME_EN` | VARCHAR(60), NOT NULL | Virtue names. |
+
 #### `DW_DIM_ITEM` — [ANALYTICAL / DW]
 Item dimension, mirroring `GDX_PSY_INSTRUMENT_ITEM`'s descriptive attributes.
 
@@ -776,7 +1135,44 @@ fact row (the `.sav` data carries no timestamps, only person + study).
 | `FULL_DATE` | DATE | Calendar date. |
 | `YEAR_NUM` / `MONTH_NUM` / `DAY_NUM` / `WEEKDAY_NUM` | SMALLINT | Calendar parts. |
 
-### 2.2 Facts (3)
+### 2.2 Bridges (3) — `7.multidimensional.database/dw_virtue_chakra_way_bridges_firebird25.sql`
+
+Pure dimension-to-dimension many-to-many links, with no surrogate key/sequence/
+trigger of their own (composite natural PK, same shape as other pure junction
+tables in this project like `GDX_PSY_INSTRUMENT_CONSTRUCT`) — named `DW_BRIDGE_`
+rather than `DW_DIM_`/`DW_FACT_` to say plainly that they carry no measures.
+All three are insert-if-missing, global (not scoped by study), loaded by
+`GDX_SKILL_LOAD_NEW_STUDY_DW`.
+
+#### `DW_BRIDGE_VARIABLE_VIRTUE` — [ANALYTICAL / DW]
+Mirrors `GDX_VT_VARIABLE_VIRTUE_MAP`.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_VARIABLE` | BIGINT, **PK** (composite), FK → `DW_DIM_VARIABLE` | Variable. |
+| `ID_VIRTUE` | BIGINT, **PK** (composite), FK → `DW_DIM_VIRTUE` | Virtue. |
+| `CONFIDENCE_LEVEL` | VARCHAR(20) | Copied through from the OLTP mapping. |
+| `SCALE_POLARITY` | VARCHAR(10) | Copied through verbatim (`POSITIVE`/`NEGATIVE`) so a query can tell, without a join back to the OLTP, whether a high raw score reads as the virtue already present or as its deficit. |
+
+#### `DW_BRIDGE_VARIABLE_CHAKRA` — [ANALYTICAL / DW]
+Mirrors `GDX_PSY_CHAKRA_VAR_MAP`.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_VARIABLE` | BIGINT, **PK** (composite), FK → `DW_DIM_VARIABLE` | Variable. |
+| `ID_CHAKRA` | BIGINT, **PK** (composite), FK → `DW_DIM_CHAKRA` | Chakra. |
+| `CONFIDENCE_LEVEL` | VARCHAR(20) | Copied through from the OLTP mapping. |
+
+#### `DW_BRIDGE_VARIABLE_WAY` — [ANALYTICAL / DW]
+Mirrors `GDX_TA_WAY_SEPT_MAP`'s variable extension.
+
+| Column | Type | Description |
+|---|---|---|
+| `ID_VARIABLE` | BIGINT, **PK** (composite), FK → `DW_DIM_VARIABLE` | Variable. |
+| `ID_WAY` | BIGINT, **PK** (composite), FK → `DW_DIM_FIVE_WAY` | Way. |
+| `CONFIDENCE_LEVEL` | VARCHAR(20) | Copied through from the OLTP mapping. |
+
+### 2.3 Facts (3)
 
 #### `DW_FACT_PSY_ITEM_RESPONSE` — [ANALYTICAL / DW]
 Grain: one row per (person, item) raw questionnaire response.
@@ -835,9 +1231,15 @@ exists in the central person dimension.
 
 | Folder | Why it defines no table |
 |---|---|
-| `0.new.instrument` | Hosts the onboarding **skills** (`GDX_SKILL_NEW_STUDY`, `GDX_SKILL_RECORD_NEW_STUDY`, `GDX_SKILL_EXPORT_NEW_STUDY`, `GDX_SKILL_LOAD_NEW_STUDY_ANSWERS`, `GDX_SKILL_DELETE_STUDY`) that **write into** the tables already defined in §1.1 (`GDX_PSY_STUDY`, `GDX_PSY_INSTRUMENT`, etc.) — it is a process/pipeline layer, not a schema of its own. |
+| `0.new.instrument` | Hosts the onboarding **skills** (`GDX_SKILL_NEW_STUDY`, `GDX_SKILL_RECORD_NEW_STUDY`, `GDX_SKILL_EXPORT_NEW_STUDY`, `GDX_SKILL_LOAD_NEW_STUDY_ANSWERS`, `GDX_SKILL_GENERATE_GOOGLE_FORM`, `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS`, `GDX_SKILL_DELETE_STUDY`) that **write into** the tables already defined in §1.1 (`GDX_PSY_STUDY`, `GDX_PSY_INSTRUMENT`, etc.) — it is a process/pipeline layer, not a schema of its own. |
 | `8.gdx.dashboards` | Generates self-contained HTML charts by **reading** the Data Warehouse (§2) and the psychometric-properties catalog (§1.1); it persists nothing back to Firebird. |
-| `9.knowledge.graph` | Projects the 55 tables catalogued here into **Neo4j** (one node label per table, one relationship type per FK) — a graph database, not Firebird. |
+| `9.knowledge.graph` | Projects the tables catalogued here (all but the 15 `GDX_PH_*` tables, §1.7 — see header note) into **Neo4j** (one node label per table, one relationship type per FK) — a graph database, not Firebird. |
 | `10.gdx.machine.learning` | Runs link-prediction and community-detection **on the Neo4j graph**; reads only Neo4j, writes only timestamped Markdown reports. |
-| `12.gdx.virtology` | The 33-virtue catalog and its variable↔virtue mapping live only in code (`virtue_knowledge.js`), never in Firebird — see `Virtology_Knowledge_Base.md`. |
-| `14.metaphysical.measuring.instrument` | Documentation and a read-only audit skill (`GDX_SKILL_LIST_ASSOCIATIONS`) over the tables/code already catalogued above; the OT7 prototype instrument itself is not yet implemented as a schema. |
+
+> As of 2026-10-03, `12.gdx.virtology` and `14.metaphysical.measuring.instrument`
+> were also listed here (Virtology's catalog lived only in code, in
+> `virtue_knowledge.js`; `14.metaphysical.measuring.instrument` had only
+> documentation and a read-only audit skill). Both now define real tables —
+> `GDX_VT_VIRTUE` / `GDX_VT_VARIABLE_VIRTUE_MAP` (§1.6) and
+> `GDX_PSY_CHAKRA_VAR_MAP` (§1.3) respectively — so they have been removed
+> from this list.

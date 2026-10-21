@@ -1,28 +1,12 @@
 @echo off
-echo ============================================================
-echo  GoDataX Human7 (GDXH7ph) - Configuracao inicial
-echo ============================================================
-echo.
-echo  Este script vai preparar seu computador para trabalhar no
-echo  projeto GoDataX Human7. Ele vai, nesta ordem:
-echo.
-echo    1. Instalar o Git (se ainda nao estiver instalado)
-echo    2. Instalar o Claude Code (ferramenta de linha de comando)
-echo    3. Pedir para voce fazer login na sua conta Claude
-echo       (vai abrir uma janela no seu navegador)
-echo    4. Baixar (clonar) o projeto GoDataX Human7 do GitHub
-echo    5. Preparar o projeto para uso no Claude Code
-echo.
-echo  Requisitos: conexao com a internet e uma conta Claude
-echo  (Pro, Max, Team, Enterprise ou Console).
-echo.
-echo  O processo pode levar alguns minutos. Nao feche esta janela
-echo  ate ver a mensagem de conclusao.
-echo ============================================================
-echo.
-pause
-
 REM Double-click launcher for OnBoard_GDXH7ph.ps1.
+REM
+REM What this does and what it needs from you is documented once, in
+REM on.bording.txt (this same folder) -- not repeated here as a static
+REM banner, since OnBoard_GDXH7ph.ps1 itself already prints a live
+REM "==> ..." message before each step as it runs, including the Neo4j
+REM instructions. Read on.bording.txt first if you want the full picture
+REM before double-clicking this file.
 REM
 REM .ps1 files are not directly runnable by double-click on Windows (the
 REM default file association just opens them in a text editor), and even

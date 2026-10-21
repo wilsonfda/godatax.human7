@@ -128,10 +128,20 @@ and no study yet are associated).
 
 ## Step 4 — collect and load participant answers
 
-Once the study has real instruments loaded, **GDX_SKILL_EXPORT_NEW_STUDY** (same `.claude/skills/`
-folder) reads them back out of Firebird and writes a blank `.xlsx` questionnaire to send to
-participants; **GDX_SKILL_LOAD_NEW_STUDY_ANSWERS** then loads each filled-in copy back into
-`GDX_PSY_PERSON` / `GDX_PSY_STUDY_PARTICIPANT` / `GDX_PSY_APPLICATION` / `GDX_PSY_ITEM_RESPONSE`:
+Once the study has real instruments loaded, **ask the user whether they want to collect answers
+via an Excel questionnaire or a Google Form** before running anything else — the two paths are
+fully independent, self-contained skill pairs, and which one applies depends entirely on that
+answer:
+
+- **Excel** → `GDX_SKILL_EXPORT_NEW_STUDY` + `GDX_SKILL_LOAD_NEW_STUDY_ANSWERS` (below).
+- **Google Form** → `GDX_SKILL_GENERATE_GOOGLE_FORM` + `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS` (below).
+
+### Option A — Excel
+
+**GDX_SKILL_EXPORT_NEW_STUDY** (same `.claude/skills/` folder) reads the instruments back out of
+Firebird and writes a blank `.xlsx` questionnaire to send to participants; **GDX_SKILL_LOAD_NEW_STUDY_ANSWERS**
+then loads each filled-in copy back into `GDX_PSY_PERSON` / `GDX_PSY_STUDY_PARTICIPANT` /
+`GDX_PSY_APPLICATION` / `GDX_PSY_ITEM_RESPONSE`:
 
 ```
 node GDX_HUMAN/0.new.instrument/.claude/skills/GDX_SKILL_EXPORT_NEW_STUDY/scripts/export_new_study.js \
@@ -143,6 +153,26 @@ node GDX_HUMAN/0.new.instrument/.claude/skills/GDX_SKILL_LOAD_NEW_STUDY_ANSWERS/
 
 See `New_Instrument_Onboarding_Process.md` §6 for the full contract (the workbook's hidden META
 sheet, answer-matching rules, idempotency) and each skill's own `SKILL.md` for details.
+
+### Option B — Google Form
+
+**GDX_SKILL_GENERATE_GOOGLE_FORM** reads the same instruments out of Firebird and creates a real
+Google Form (one section per instrument, one question per item) via the Forms API; **GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS**
+then pulls the responses back into the same tables Option A writes to:
+
+```
+node GDX_HUMAN/0.new.instrument/.claude/skills/GDX_SKILL_GENERATE_GOOGLE_FORM/scripts/generate_google_form.js \
+  --study <slug> --dry-run
+# ... drop --dry-run to actually create the Form (one-time Google OAuth consent the first time),
+#     send the printed responder link to participants, wait for responses ...
+node GDX_HUMAN/0.new.instrument/.claude/skills/GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS/scripts/load_google_form_answers.js \
+  --study <slug> --dry-run
+```
+
+See `Google_Forms_Integration_Plan.md` and each skill's own `SKILL.md` for the full contract
+(the `google_form_map.json` file that plays the role the xlsx's hidden META sheet plays, the
+one-time OAuth setup, answer-matching rules, idempotency). Both options write to the exact same
+downstream tables, so Step 5 below is identical regardless of which one was used.
 
 ## Step 5 — make the study queryable in the multidimensional DW
 
