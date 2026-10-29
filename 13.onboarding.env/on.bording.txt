@@ -1,30 +1,25 @@
 a) Execute OnBoard_GDXH7ph.bat
 
-    1) Install IntelliJ IDEA Community Edition (via winget) if it is not
-       already installed -- done first, matching on.bording.txt's own order
-       ("instale o IntelliJ Community" is its very first line). Best-effort:
-       nothing later in this script depends on IntelliJ (unlike Git), so a
-       failure here only warns and continues instead of aborting the run.
-    2) Install Git for Windows (via winget) if it is not already on PATH --
-       done next, before anything else that needs it, since the clone step
+    1) Install Git for Windows (via winget) if it is not already on PATH --
+       done first, before anything else that needs it, since the clone step
        later requires it.
-    3) Install the Claude Code CLI (official native installer) if it is not
+    2) Install the Claude Code CLI (official native installer) if it is not
        already on PATH.
-    4) Authenticate with Claude Code (claude auth login), skipped if already
+    3) Authenticate with Claude Code (claude auth login), skipped if already
        logged in, and skipped if ANTHROPIC_API_KEY is set in the environment
        (Claude Code picks that up on its own -- see
        https://code.claude.com/docs/en/setup#authenticate).
-    5) git clone https://github.com/wilsonfda/godatax.human7.git into
+    4) git clone https://github.com/wilsonfda/godatax.human7.git into
        -TargetDir (default: a GoDataX\GDX_HUMAN7 folder under your user
        profile). Refuses to clone over an existing, non-empty, non-git
        directory -- never overwrites something already there.
-    6) Neo4j account setup (manual, in your browser): points you at
+    5) Neo4j account setup (manual, in your browser): points you at
        on.bording.txt for the step-by-step walkthrough (creating a free
        Neo4j instance and downloading its credentials file into the
        just-cloned project's 9.knowledge.graph folder), waits for you to
        press Enter once done, then makes sure .gitignore actually protects
        that file and explains why that matters.
-    7) Run the built-in /init command (claude -p "/init") inside the cloned
+    6) Run the built-in /init command (claude -p "/init") inside the cloned
        project to generate its CLAUDE.md.
 
 b) Execute the Skill GDX_SKILL_UP_FIREBIRD_DB

@@ -10,34 +10,29 @@
   of a checklist a person follows by hand.
 
   Steps, in order:
-    1) Install IntelliJ IDEA Community Edition (via winget) if it is not
-       already installed -- done first, matching on.bording.txt's own order
-       ("instale o IntelliJ Community" is its very first line). Best-effort:
-       nothing later in this script depends on IntelliJ (unlike Git), so a
-       failure here only warns and continues instead of aborting the run.
-    2) Install Git for Windows (via winget) if it is not already on PATH --
-       done next, before anything else that needs it, since the clone step
+    1) Install Git for Windows (via winget) if it is not already on PATH --
+       done first, before anything else that needs it, since the clone step
        later requires it.
-    3) Install the Claude Code CLI (official native installer) if it is not
+    2) Install the Claude Code CLI (official native installer) if it is not
        already on PATH.
-    4) Authenticate with Claude Code (claude auth login), skipped if already
+    3) Authenticate with Claude Code (claude auth login), skipped if already
        logged in, and skipped if ANTHROPIC_API_KEY is set in the environment
        (Claude Code picks that up on its own -- see
        https://code.claude.com/docs/en/setup#authenticate).
-    5) git clone https://github.com/wilsonfda/godatax.human7.git into
+    4) git clone https://github.com/wilsonfda/godatax.human7.git into
        -TargetDir (default: a GoDataX\GDX_HUMAN7 folder under your user
        profile). Refuses to clone over an existing, non-empty, non-git
        directory -- never overwrites something already there.
-    6) Neo4j account setup (manual, in your browser): points you at
+    5) Neo4j account setup (manual, in your browser): points you at
        on.bording.txt for the step-by-step walkthrough (creating a free
        Neo4j instance and downloading its credentials file into the
        just-cloned project's 9.knowledge.graph folder), waits for you to
        press Enter once done, then makes sure .gitignore actually protects
        that file and explains why that matters.
-    7) Run the built-in /init command (claude -p "/init") inside the cloned
+    6) Run the built-in /init command (claude -p "/init") inside the cloned
        project to generate its CLAUDE.md.
 
-  Login (step 4), Neo4j (step 6) and /init (step 7) all require your own
+  Login (step 3), Neo4j (step 5) and /init (step 6) all require your own
   input -- login and /init talk to Anthropic's servers and, for login, open
   a real browser window to complete the sign-in; Neo4j needs you to create
   the account and instance yourself. This script cannot finish those steps
@@ -67,43 +62,8 @@ function Write-Step([string]$Message) {
 }
 
 # ---------------------------------------------------------------------------
-# 1) Install IntelliJ IDEA Community Edition (via winget), if not already
-#    installed. Best-effort and non-blocking: unlike Git below, nothing
-#    later in this script depends on IntelliJ actually being present, so a
-#    missing winget or a failed install only warns and moves on instead of
-#    throwing and aborting the whole onboarding run.
-# ---------------------------------------------------------------------------
-Write-Step 'Checking for IntelliJ IDEA Community Edition...'
-
-if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-  Write-Warning ("winget (Windows Package Manager) is not available -- skipping the automatic " +
-                 "IntelliJ IDEA Community install. Install it manually later from " +
-                 "https://www.jetbrains.com/idea/download/ if you want it.")
-}
-else {
-  $intellijListed = & winget list --id JetBrains.IntelliJIDEA.Community -e 2>&1
-  $intellijInstalled = ($LASTEXITCODE -eq 0) -and ($intellijListed -match 'JetBrains\.IntelliJIDEA\.Community')
-
-  if ($intellijInstalled) {
-    Write-Host 'IntelliJ IDEA Community Edition is already installed -- skipping.'
-  }
-  else {
-    Write-Host 'Installing IntelliJ IDEA Community Edition via winget (this can take a few minutes)...'
-    winget install --id JetBrains.IntelliJIDEA.Community -e --silent --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -ne 0) {
-      Write-Warning ("IntelliJ IDEA Community Edition install reported an error (exit code $LASTEXITCODE) " +
-                     "-- continuing anyway, since nothing later in this script depends on it. Install it " +
-                     "manually later from https://www.jetbrains.com/idea/download/ if needed.")
-    }
-    else {
-      Write-Host 'IntelliJ IDEA Community Edition installed.'
-    }
-  }
-}
-
-# ---------------------------------------------------------------------------
-# 2) Install Git for Windows, if not already on PATH -- before anything else
-#    that needs it, since step 5 (clone) requires it.
+# 1) Install Git for Windows, if not already on PATH -- before anything else
+#    that needs it, since step 4 (clone) requires it.
 # ---------------------------------------------------------------------------
 Write-Step 'Checking for Git...'
 $gitCmd = Get-Command git -ErrorAction SilentlyContinue
@@ -137,7 +97,7 @@ if (-not $gitCmd) {
 Write-Host "Git: $(git --version)"
 
 # ---------------------------------------------------------------------------
-# 3) Install Claude Code (native installer), if not already on PATH.
+# 2) Install Claude Code (native installer), if not already on PATH.
 #    Official command, see https://code.claude.com/docs/en/setup#install-claude-code
 # ---------------------------------------------------------------------------
 Write-Step 'Checking for the Claude Code CLI...'
@@ -168,7 +128,7 @@ if (-not $claudeCmd) {
 Write-Host "Claude Code: $(claude --version)"
 
 # ---------------------------------------------------------------------------
-# 4) Log in, unless already authenticated or ANTHROPIC_API_KEY is set.
+# 3) Log in, unless already authenticated or ANTHROPIC_API_KEY is set.
 #    Official commands, see https://code.claude.com/docs/en/cli-reference
 # ---------------------------------------------------------------------------
 Write-Step 'Checking Claude Code authentication...'
@@ -187,9 +147,9 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 5) Clone the project. Never clones over an existing non-empty, non-git
+# 4) Clone the project. Never clones over an existing non-empty, non-git
 #    directory -- that would risk overwriting someone's work. (Git itself is
-#    already guaranteed present by step 2 above.) Done before the Neo4j step
+#    already guaranteed present by step 1 above.) Done before the Neo4j step
 #    below so that project's 9.knowledge.graph folder -- and its .gitignore
 #    -- already exist by the time Neo4j instructions reference them.
 # ---------------------------------------------------------------------------
@@ -212,14 +172,14 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 6) Neo4j account setup -- manual, done in your browser. The step-by-step
+# 5) Neo4j account setup -- manual, done in your browser. The step-by-step
 #    walkthrough (create account, Free plan instance, download credentials)
 #    is documented once, in on.bording.txt (this folder) -- not repeated
 #    here, since it is static text identical on every run. This script only
 #    points you there, waits for you to finish, and then handles what it
 #    actually CAN do unattended: making sure the credentials file you just
 #    saved is protected from ever being committed. The project is already
-#    cloned (step 5 above), so the file's real destination, 9.knowledge.graph,
+#    cloned (step 4 above), so the file's real destination, 9.knowledge.graph,
 #    already exists -- on.bording.txt tells you to save straight into it.
 #
 #    Security: a Neo4j credentials file holds a live database username and
@@ -292,7 +252,7 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 7) Run /init inside the cloned project to generate its CLAUDE.md.
+# 6) Run /init inside the cloned project to generate its CLAUDE.md.
 #    There is no standalone "claude init" CLI subcommand (see
 #    https://code.claude.com/docs/en/cli-reference) -- /init is a built-in
 #    slash command, run here non-interactively via `claude -p "/init"`.
