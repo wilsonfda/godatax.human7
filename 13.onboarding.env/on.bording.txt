@@ -1,27 +1,117 @@
-a) Execute OnBoard_GDXH7ph.bat
+GDX_HUMAN7 -- Onboarding a New Machine
+========================================
 
-    1) Install Git for Windows (via winget) if it is not already on PATH --
-       done first, before anything else that needs it, since the clone step
-       later requires it.
-    2) Install the Claude Code CLI (official native installer) if it is not
-       already on PATH.
-    3) Authenticate with Claude Code (claude auth login), skipped if already
-       logged in, and skipped if ANTHROPIC_API_KEY is set in the environment
-       (Claude Code picks that up on its own -- see
-       https://code.claude.com/docs/en/setup#authenticate).
-    4) git clone https://github.com/wilsonfda/godatax.human7.git into
-       -TargetDir (default: a GoDataX\GDX_HUMAN7 folder under your user
-       profile). Refuses to clone over an existing, non-empty, non-git
-       directory -- never overwrites something already there.
-    5) Neo4j account setup (manual, in your browser): points you at
-       on.bording.txt for the step-by-step walkthrough (creating a free
-       Neo4j instance and downloading its credentials file into the
-       just-cloned project's 9.knowledge.graph folder), waits for you to
-       press Enter once done, then makes sure .gitignore actually protects
-       that file and explains why that matters.
-    6) Run the built-in /init command (claude -p "/init") inside the cloned
-       project to generate its CLAUDE.md.
+This document walks a new person through getting a machine ready to work on
+GDX_HUMAN7, end to end. Part A is automated by OnBoard_GDXH7ph.bat/.ps1 (in
+this same folder); Part B is the one step that script cannot do for you
+(creating your own Neo4j account); Part C lists what is left once the
+script finishes.
 
-b) Execute the Skill GDX_SKILL_UP_FIREBIRD_DB
 
-c) Execute the Skill GDX_SKILL_CREATE_SPU_AGENT
+A) Run OnBoard_GDXH7ph.bat
+---------------------------
+
+Double-click OnBoard_GDXH7ph.bat in this folder (or run
+OnBoard_GDXH7ph.ps1 directly from PowerShell, optionally with
+-TargetDir <path> to set the clone destination without being prompted for
+it). It performs the following steps, in order, and is safe to re-run --
+every step either skips cleanly or asks before overwriting anything:
+
+  1. Git for Windows
+     Installs it via winget if `git` is not already on PATH.
+
+  2. Claude Code CLI
+     Installs the official native installer if `claude` is not already on
+     PATH.
+
+  3. Claude Code sign-in
+     Runs `claude auth login`, which opens your browser to complete the
+     sign-in. Skipped if you are already authenticated, or if
+     ANTHROPIC_API_KEY is already set in your environment.
+
+  4. Clone the repository
+     Shows the default destination (a GoDataX\GDX_HUMAN7 folder under your
+     user profile) and asks you to confirm it or type a different path.
+     Then clones https://github.com/wilsonfda/godatax.human7.git there.
+     Refuses to clone over an existing, non-empty, non-git folder -- it
+     will never overwrite work that is already there.
+
+  5. Build the local Firebird database
+     Runs the newly cloned project's own GDX_SKILL_UP_FIREBIRD_DB skill,
+     which creates GoDataX7Hph.gdb directly in this folder
+     (13.onboarding.env) via GDS32.DLL -- no Firebird Server, no
+     node-firebird. Skipped if that file already exists.
+
+  6. Neo4j account and instance setup (manual -- see Part B below)
+     Opens https://neo4j.com/ in your browser and pauses, waiting for you
+     to create a free AuraDB instance and save its credentials file into
+     the cloned project's 9.knowledge.graph folder. Once you press Enter
+     to continue, the script makes sure .gitignore actually protects that
+     file and proves it with `git check-ignore` rather than just assuming.
+     Then, if exactly one credentials file was found and it has every
+     required value, the script parses it, installs
+     GDX_SKILL_CREATE_SPU_AGENT's dependencies (`npm install`), verifies
+     the Neo4j connection actually works -- and only if that succeeds,
+     runs that skill itself to help you set up the Aura Agent. Any problem
+     along the way (a missing value, no Node.js on PATH, a failed
+     connection) just prints a warning and moves on to step 7; it never
+     aborts the whole script over it. See Part C below for running that
+     skill yourself if it gets skipped.
+
+  7. Generate CLAUDE.md
+     Moves into the cloned project, prints a short welcome message, then
+     runs `claude -p "/init"` to generate the project's own CLAUDE.md.
+
+
+B) Creating your Neo4j AuraDB Free instance (step 6 above)
+------------------------------------------------------------
+
+The script cannot create this account for you -- it only opens the page
+and waits.
+
+  1. Go to https://console.neo4j.io and sign up, or log in if you already
+     have an account.
+  2. Create a new database instance on the free tier (AuraDB Free).
+  3. When the instance finishes provisioning, Aura shows you a one-time
+     credentials file to download. Download it immediately -- this is the
+     only time the generated password is shown; it cannot be recovered
+     afterward (only reset).
+  4. Save that file directly into the cloned project's 9.knowledge.graph
+     folder. Keep its original filename
+     (Neo4j-<instance-id>-Created-<date>.txt) -- that is exactly the
+     pattern the script's .gitignore rule and the rest of this project
+     expect.
+  5. Switch back to the terminal running OnBoard_GDXH7ph and press Enter
+     to let it continue.
+
+  Security note: this file holds a live database username and password.
+  Never commit it to git -- .gitignore already has a rule for it
+  (Neo4j-*-Created-*.txt), and step 6 above proves that rule actually
+  covers your saved file before moving on. If `git status` ever shows this
+  file as untracked-but-about-to-be-staged, stop and double-check
+  .gitignore before running `git add`.
+
+
+C) After the script finishes
+------------------------------
+
+  1. Only if step 6 skipped it: run GDX_SKILL_CREATE_SPU_AGENT yourself
+     Step 6 above already runs this skill for you once the Neo4j
+     connection is confirmed working. If it printed a warning instead
+     (missing value in the credentials file, no Node.js on PATH, or the
+     connection check failed -- e.g. the instance was still provisioning),
+     fix that and run the skill by hand:
+       cd 9.knowledge.graph\.claude\skills\GDX_SKILL_CREATE_SPU_AGENT\scripts
+       npm install
+       node create_spu_agent.js
+     It sets up (or confirms) the project's Neo4j Aura Agent, which backs
+     the LLM assistant described in 11.gdx.llm.agent.mcp. Neo4j Aura has
+     no management API for Agent configuration, so this skill verifies
+     the underlying database connection and then walks you through the
+     console steps by hand. See
+     9.knowledge.graph/.claude/skills/GDX_SKILL_CREATE_SPU_AGENT/SKILL.md.
+
+  2. Load your first study's data
+     Once the environment is up, see
+     0.new.instrument/New_Instrument_Onboarding_Process.md to bring in a
+     new study's instruments, participants, and answers.

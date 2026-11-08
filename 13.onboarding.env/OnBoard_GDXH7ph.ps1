@@ -19,27 +19,47 @@
        logged in, and skipped if ANTHROPIC_API_KEY is set in the environment
        (Claude Code picks that up on its own -- see
        https://code.claude.com/docs/en/setup#authenticate).
-    4) git clone https://github.com/wilsonfda/godatax.human7.git into
-       -TargetDir (default: a GoDataX\GDX_HUMAN7 folder under your user
-       profile). Refuses to clone over an existing, non-empty, non-git
-       directory -- never overwrites something already there.
-    5) Neo4j account setup (manual, in your browser): points you at
+    4) Asks you to confirm the clone destination (default: -TargetDir, a
+       GoDataX\GDX_HUMAN7 folder under your user profile -- press Enter to
+       accept it, or type a different path), then
+       git clone https://github.com/wilsonfda/godatax.human7.git there.
+       Refuses to clone over an existing, non-empty, non-git directory --
+       never overwrites something already there.
+    5) Build the local Firebird database by running the just-cloned
+       project's own GDX_SKILL_UP_FIREBIRD_DB skill
+       (13.onboarding.env\.claude\skills\GDX_SKILL_UP_FIREBIRD_DB\scripts\
+       up_firebird_db.ps1), which creates the .gdb file directly in
+       13.onboarding.env via GDS32.DLL -- no Firebird Server, no
+       node-firebird. Skipped (never overwritten) if that .gdb file already
+       exists there.
+    6) Neo4j account setup (manual, in your browser): points you at
        on.bording.txt for the step-by-step walkthrough (creating a free
        Neo4j instance and downloading its credentials file into the
-       just-cloned project's 9.knowledge.graph folder), waits for you to
-       press Enter once done, then makes sure .gitignore actually protects
-       that file and explains why that matters.
-    6) Run the built-in /init command (claude -p "/init") inside the cloned
-       project to generate its CLAUDE.md.
+       just-cloned project's 9.knowledge.graph folder), opens
+       https://neo4j.com/ in your default browser to get you started, waits
+       for you to press Enter once done, then makes sure .gitignore actually
+       protects that file and explains why that matters. If exactly one
+       credentials file was found and has every required value, this step
+       then parses it, runs `npm install` for GDX_SKILL_CREATE_SPU_AGENT,
+       verifies the Neo4j connection actually works, and -- only if that
+       succeeds -- runs that skill (node create_spu_agent.js) to help set
+       up the Aura Agent. Any failure along the way (missing values, no
+       Node.js, connection failure) just warns and skips the rest of this
+       sub-step; it never aborts the whole script over it.
+    7) cd into the cloned project, print an English welcome message
+       ("Welcome to GoDataX Human7ph!"), then run the built-in /init command
+       (claude -p "/init") there to generate its CLAUDE.md.
 
-  Login (step 3), Neo4j (step 5) and /init (step 6) all require your own
+  Login (step 3), Neo4j (step 6) and /init (step 7) all require your own
   input -- login and /init talk to Anthropic's servers and, for login, open
   a real browser window to complete the sign-in; Neo4j needs you to create
   the account and instance yourself. This script cannot finish those steps
   silently without you, except login when ANTHROPIC_API_KEY is already set.
 
 .PARAMETER TargetDir
-  Where to clone the project. Defaults to "$HOME\GoDataX\GDX_HUMAN7".
+  Where to clone the project. Defaults to "$HOME\GoDataX\GDX_HUMAN7" -- the
+  script still asks you to confirm (or override) this path interactively
+  right before cloning, regardless of whether you passed this parameter.
 
 .PARAMETER RepoUrl
   The repository to clone. Defaults to the GDX_HUMAN7 project's own URL.
@@ -147,12 +167,20 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 4) Clone the project. Never clones over an existing non-empty, non-git
-#    directory -- that would risk overwriting someone's work. (Git itself is
-#    already guaranteed present by step 1 above.) Done before the Neo4j step
-#    below so that project's 9.knowledge.graph folder -- and its .gitignore
-#    -- already exist by the time Neo4j instructions reference them.
+# 4) Confirm the clone destination with the user, then clone. Never clones
+#    over an existing non-empty, non-git directory -- that would risk
+#    overwriting someone's work. (Git itself is already guaranteed present by
+#    step 1 above.) Done before the Neo4j step below so that project's
+#    9.knowledge.graph folder -- and its .gitignore -- already exist by the
+#    time Neo4j instructions reference them.
 # ---------------------------------------------------------------------------
+Write-Step 'Confirming clone destination...'
+Write-Host "Default destination: `"$TargetDir`""
+$targetDirInput = Read-Host 'Press Enter to use this path, or type a different one'
+if ($targetDirInput) {
+  $TargetDir = $targetDirInput
+}
+
 Write-Step "Cloning $RepoUrl into `"$TargetDir`" ..."
 
 if (Test-Path (Join-Path $TargetDir '.git')) {
@@ -172,7 +200,46 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 5) Neo4j account setup -- manual, done in your browser. The step-by-step
+# 5) Build the local Firebird database by running the just-cloned project's
+#    own GDX_SKILL_UP_FIREBIRD_DB skill -- it executes
+#    godatax_human_full_ddl_no_gdx_ead_firebird25.sql through GDS32.DLL
+#    directly (no Firebird Server, no node-firebird; see that skill's own
+#    SKILL.md for details/known quirks). Done before the Neo4j step below,
+#    in the same "cloned project first" order as everything else here.
+#
+#    Skipped (never overwritten) if the .gdb file already exists in
+#    13.onboarding.env -- same "never silently overwrite" rule as the clone
+#    step above; up_firebird_db.ps1 itself refuses to run without -Force
+#    against an existing file, and this check keeps that same decision
+#    visible here rather than letting that script's own error surface
+#    midway through this one.
+#
+#    Called with the plain `&` call operator, not a separate `powershell`
+#    process: up_firebird_db.ps1 re-launches itself under 32-bit PowerShell
+#    when needed (GDS32.DLL is x86-only) and finishes with its own
+#    `exit $LASTEXITCODE` -- confirmed (by direct test) that an `exit`
+#    inside a script invoked this way only ends that script, not this one,
+#    so `$LASTEXITCODE` right after the call is this step's own real result.
+# ---------------------------------------------------------------------------
+Write-Step 'Building the local Firebird database (GDX_SKILL_UP_FIREBIRD_DB)...'
+$firebirdSkillScript = Join-Path $TargetDir '13.onboarding.env\.claude\skills\GDX_SKILL_UP_FIREBIRD_DB\scripts\up_firebird_db.ps1'
+$firebirdDbPath = Join-Path $TargetDir '13.onboarding.env\GoDataX7Hph.gdb'
+
+if (-not (Test-Path $firebirdSkillScript)) {
+  throw "Could not find `"$firebirdSkillScript`" -- is `"$TargetDir`" really a clone of godatax.human7?"
+}
+elseif (Test-Path $firebirdDbPath) {
+  Write-Host "`"$firebirdDbPath`" already exists -- skipping (never overwrites an existing database file silently). Run up_firebird_db.ps1 yourself with -Force if you really want to rebuild it."
+}
+else {
+  & $firebirdSkillScript
+  if ($LASTEXITCODE -ne 0) {
+    throw "up_firebird_db.ps1 exited with code $LASTEXITCODE -- the Firebird database was not created. See its output above."
+  }
+}
+
+# ---------------------------------------------------------------------------
+# 6) Neo4j account setup -- manual, done in your browser. The step-by-step
 #    walkthrough (create account, Free plan instance, download credentials)
 #    is documented once, in on.bording.txt (this folder) -- not repeated
 #    here, since it is static text identical on every run. This script only
@@ -197,6 +264,13 @@ $knowledgeGraphDir = Join-Path $TargetDir '9.knowledge.graph'
 Write-Host "See on.bording.txt (this folder) for the Neo4j account/instance setup steps."
 Write-Host "Save the credentials file it gives you directly into:"
 Write-Host "  $knowledgeGraphDir"
+Write-Host 'Opening https://neo4j.com/ in your default browser to get started...'
+try {
+  Start-Process 'https://neo4j.com/'
+}
+catch {
+  Write-Warning "Could not open the browser automatically ($($_.Exception.Message)) -- open https://neo4j.com/ yourself to continue."
+}
 Read-Host 'Press Enter once you have created the free instance and saved its credentials file there, to continue'
 
 $neo4jIgnorePattern = 'Neo4j-*-Created-*.txt'
@@ -243,6 +317,113 @@ an old commit. The .gitignore rule above is what prevents that. Never run
 'git add -A' without checking 'git status' first to see exactly what you
 are about to stage.
 "@
+
+  # -------------------------------------------------------------------------
+  # Verify the credentials file is actually usable, and that the Neo4j
+  # instance it points at is actually reachable, BEFORE handing off to
+  # GDX_SKILL_CREATE_SPU_AGENT -- so a bad/incomplete download fails here
+  # with a clear message instead of a confusing error from inside that
+  # skill. Only attempted when exactly one credentials file was found above
+  # (ambiguous with more than one -- this script will not guess which to use).
+  # -------------------------------------------------------------------------
+  if ($savedCredFiles.Count -gt 1) {
+    Write-Warning ("Found $($savedCredFiles.Count) files matching 'Neo4j-*-Created-*.txt' in " +
+                   "`"$knowledgeGraphDir`" -- not guessing which one to use. Remove the stale one(s), " +
+                   "then run GDX_SKILL_CREATE_SPU_AGENT yourself; see on.bording.txt.")
+  }
+  else {
+    $credFile = $savedCredFiles[0]
+    Write-Step 'Verifying the Neo4j credentials file and connection...'
+
+    function Read-DotEnvFile([string]$Path) {
+      $result = @{}
+      foreach ($line in Get-Content -Path $Path) {
+        $trimmed = $line.Trim()
+        if (-not $trimmed -or $trimmed.StartsWith('#')) { continue }
+        $idx = $trimmed.IndexOf('=')
+        if ($idx -lt 1) { continue }
+        $result[$trimmed.Substring(0, $idx).Trim()] = $trimmed.Substring($idx + 1).Trim()
+      }
+      return $result
+    }
+
+    $neo4jCreds = Read-DotEnvFile -Path $credFile.FullName
+    $requiredKeys = @('NEO4J_URI', 'NEO4J_USERNAME', 'NEO4J_PASSWORD')
+    $missingKeys = $requiredKeys | Where-Object { -not $neo4jCreds.ContainsKey($_) -or -not $neo4jCreds[$_] }
+
+    $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+    $npmCmd = Get-Command npm -ErrorAction SilentlyContinue
+
+    if ($missingKeys.Count -gt 0) {
+      Write-Warning ("`"$($credFile.Name)`" is missing (or has an empty) value for: " +
+                     "$($missingKeys -join ', '). Skipping the connection check and " +
+                     "GDX_SKILL_CREATE_SPU_AGENT -- re-download the credentials file if this looks " +
+                     "wrong, then run that skill yourself; see on.bording.txt.")
+    }
+    elseif (-not $nodeCmd -or -not $npmCmd) {
+      Write-Warning ("Node.js/npm not found on PATH -- skipping the connection check and " +
+                     "GDX_SKILL_CREATE_SPU_AGENT (both need it). Install Node.js, then run that " +
+                     "skill yourself; see on.bording.txt.")
+    }
+    else {
+      $agentSkillScriptsDir = Join-Path $TargetDir '9.knowledge.graph\.claude\skills\GDX_SKILL_CREATE_SPU_AGENT\scripts'
+      # Must live INSIDE $agentSkillScriptsDir, not $env:TEMP: Node resolves a
+      # bare require('neo4j-driver') relative to the requiring FILE's own
+      # directory, not the process's current working directory -- a temp-dir
+      # script would fail with MODULE_NOT_FOUND even after `Push-Location`
+      # into the folder that actually has node_modules\neo4j-driver.
+      $neo4jCheckScript = Join-Path $agentSkillScriptsDir "gdx_neo4j_connectivity_check_$([guid]::NewGuid()).js"
+
+      @'
+const neo4j = require('neo4j-driver');
+const driver = neo4j.driver(process.env.NEO4J_URI, neo4j.auth.basic(process.env.NEO4J_USERNAME, process.env.NEO4J_PASSWORD));
+driver.verifyConnectivity()
+  .then(() => { console.log('Connection to Neo4j confirmed.'); return driver.close(); })
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Could not connect to Neo4j:', err.message);
+    driver.close().finally(() => process.exit(1));
+  });
+'@ | Set-Content -Path $neo4jCheckScript -Encoding utf8
+
+      $env:NEO4J_URI = $neo4jCreds['NEO4J_URI']
+      $env:NEO4J_USERNAME = $neo4jCreds['NEO4J_USERNAME']
+      $env:NEO4J_PASSWORD = $neo4jCreds['NEO4J_PASSWORD']
+      if ($neo4jCreds.ContainsKey('NEO4J_DATABASE')) { $env:NEO4J_DATABASE = $neo4jCreds['NEO4J_DATABASE'] }
+      if ($neo4jCreds.ContainsKey('AURA_INSTANCENAME')) { $env:AURA_INSTANCENAME = $neo4jCreds['AURA_INSTANCENAME'] }
+
+      Push-Location $agentSkillScriptsDir
+      try {
+        Write-Host 'Installing GDX_SKILL_CREATE_SPU_AGENT dependencies (npm install, once)...'
+        npm install --silent
+        $npmOk = ($LASTEXITCODE -eq 0)
+
+        $connectivityOk = $false
+        if ($npmOk) {
+          node $neo4jCheckScript
+          $connectivityOk = ($LASTEXITCODE -eq 0)
+        }
+        else {
+          Write-Warning "npm install failed (exit $LASTEXITCODE) in `"$agentSkillScriptsDir`" -- skipping the connection check and GDX_SKILL_CREATE_SPU_AGENT."
+        }
+
+        if ($connectivityOk) {
+          Write-Step 'Running GDX_SKILL_CREATE_SPU_AGENT to help set up the Neo4j Aura Agent...'
+          node create_spu_agent.js
+        }
+        elseif ($npmOk) {
+          Write-Warning ("Could not connect to Neo4j with `"$($credFile.Name)`" -- skipping " +
+                         "GDX_SKILL_CREATE_SPU_AGENT. A brand-new Aura instance can take a couple of " +
+                         "minutes to finish provisioning -- wait and run that skill yourself once it's " +
+                         "up; see on.bording.txt.")
+        }
+      }
+      finally {
+        Pop-Location
+        Remove-Item $neo4jCheckScript -Force -ErrorAction SilentlyContinue
+      }
+    }
+  }
 }
 else {
   Write-Warning ("No file matching 'Neo4j-*-Created-*.txt' was found in `"$knowledgeGraphDir`" -- " +
@@ -252,7 +433,7 @@ else {
 }
 
 # ---------------------------------------------------------------------------
-# 6) Run /init inside the cloned project to generate its CLAUDE.md.
+# 7) cd into the cloned project and run /init to generate its CLAUDE.md.
 #    There is no standalone "claude init" CLI subcommand (see
 #    https://code.claude.com/docs/en/cli-reference) -- /init is a built-in
 #    slash command, run here non-interactively via `claude -p "/init"`.
@@ -263,6 +444,9 @@ else {
 Write-Step "Running /init inside `"$TargetDir`" ..."
 Push-Location $TargetDir
 try {
+  Write-Host ''
+  Write-Host 'Welcome to GoDataX Human7ph!' -ForegroundColor Green
+  Write-Host ''
   claude -p --permission-mode acceptEdits '/init'
 }
 finally {
@@ -272,4 +456,4 @@ finally {
 Write-Step 'Done.'
 Write-Host "Project ready at `"$TargetDir`"."
 Write-Host ("See on.bording.txt in this same folder for the remaining manual steps this script does not " +
-            "cover (configuring the Neo4j Agent/prompt instructions, GDX_SKILL_UP_FIREBIRD_DB, etc.).")
+            "cover (configuring the Neo4j Agent/prompt instructions, etc.).")
