@@ -37,6 +37,11 @@ secrets.yml
 *.fdb
 *.FDB
 
+# Script run logs -- transient debug output, not documentation. Some of these
+# print real Firebird/Neo4j hostnames (e.g. a live Aura instance subdomain),
+# which is infrastructure disclosure even without a password in the log.
+*.log
+
 # OS
 .DS_Store
 Thumbs.db
