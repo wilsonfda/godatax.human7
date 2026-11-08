@@ -35,11 +35,21 @@
  * the screen.
  *
  * Usage:
- *   node list_associations.js [--sample] [--out <path>]
+ *   node list_associations.js [--sample] [--detail] [--out <path>]
  *
  *   --sample  use embedded synthetic data for every section (no DB
  *             connection) -- including Virtology, now that it is DB-backed
  *             too.
+ *   --detail  add two columns -- "Confirmed By" and "Institution" -- to
+ *             every section that has a NUMBER_CONFIRMATIONS column
+ *             (1b, 2, 2b, 3, 4), sourced from that same table's
+ *             CONFIRMATION_BY/NAME_INSTITUTION columns. Those two columns
+ *             hold only the most recent confirmer, same as
+ *             NUMBER_CONFIRMATIONS' own semantics; unconfirmed rows show
+ *             "—". Without this flag the report is unchanged -- origin of
+ *             each confirmation is the only thing this flag adds, since
+ *             justification/confidence/confirmation-count are already
+ *             printed by default.
  *   --out     override the default output path (14.metaphysical.measuring.instrument/
  *             Framework_Associations_<timestamp>.md)
  */
@@ -51,9 +61,10 @@ const Firebird = require('node-firebird');
 const OUTPUT_DIR = path.join(__dirname, '..', '..', '..', '..');
 
 function parseArgs(argv) {
-  const args = { sample: false, out: null };
+  const args = { sample: false, detail: false, out: null };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--sample') args.sample = true;
+    else if (argv[i] === '--detail') args.detail = true;
     else if (argv[i] === '--out') args.out = argv[++i];
     else throw new Error(`Unknown argument: ${argv[i]}`);
   }
@@ -81,19 +92,19 @@ const SAMPLE_CHAKRA_ROWS = [
   { ORDER_NUM: 7, SANSKRIT_NAME: 'Sahasrara', COMMON_NAME: 'Crown Chakra', LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', SEPTENARY_LEVEL_JUSTIFICATION: 'Corresponds to the Atmic Body/Spirit (level 7) -- both represent the top of the ladder of consciousness' },
 ];
 const SAMPLE_WAY_ROWS = [
-  { ORDER_NUM: 1, LATIN_NAME: 'Prima Via', ENGLISH_NAME: 'Argument from Motion', LEVEL_ORDER: 4, LEVEL_NAME: 'Lower Mental Body', CORRESPONDENCE_JUSTIFICATION: 'Reasons about concrete, observable change -- practical, this-worldly causal reasoning', CONFIDENCE_LEVEL: 'MEDIUM', NUMBER_CONFIRMATIONS: 1 },
-  { ORDER_NUM: 5, LATIN_NAME: 'Quinta Via', ENGLISH_NAME: 'Argument from the Governance of the World', LEVEL_ORDER: 6, LEVEL_NAME: 'Buddhic Body', CORRESPONDENCE_JUSTIFICATION: 'Recognizing purpose/design in nature is an act of grasping meaning beyond mechanical description', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0 },
+  { ORDER_NUM: 1, LATIN_NAME: 'Prima Via', ENGLISH_NAME: 'Argument from Motion', LEVEL_ORDER: 4, LEVEL_NAME: 'Lower Mental Body', CORRESPONDENCE_JUSTIFICATION: 'Reasons about concrete, observable change -- practical, this-worldly causal reasoning', CONFIDENCE_LEVEL: 'MEDIUM', NUMBER_CONFIRMATIONS: 1, CONFIRMATION_BY: 'Maria Oliveira', NAME_INSTITUTION: 'Escola de Comando e Estado-Maior do Exército' },
+  { ORDER_NUM: 5, LATIN_NAME: 'Quinta Via', ENGLISH_NAME: 'Argument from the Governance of the World', LEVEL_ORDER: 6, LEVEL_NAME: 'Buddhic Body', CORRESPONDENCE_JUSTIFICATION: 'Recognizing purpose/design in nature is an act of grasping meaning beyond mechanical description', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0, CONFIRMATION_BY: null, NAME_INSTITUTION: null },
 ];
 const SAMPLE_CHAKRA_VAR_ROWS = [
-  { ORDER_NUM: 2, SANSKRIT_NAME: 'Svadhisthana', COMMON_NAME: 'Sacral Chakra', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', RECORDED_BEHAVIOR: 'Vital energy invested in an activity', CORRESPONDENCE_JUSTIFICATION: 'Sacral chakra governs vital/creative energy, matching Vigor', CONFIDENCE_LEVEL: 'MEDIUM', NUMBER_CONFIRMATIONS: 1 },
+  { ORDER_NUM: 2, SANSKRIT_NAME: 'Svadhisthana', COMMON_NAME: 'Sacral Chakra', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', RECORDED_BEHAVIOR: 'Vital energy invested in an activity', CORRESPONDENCE_JUSTIFICATION: 'Sacral chakra governs vital/creative energy, matching Vigor', CONFIDENCE_LEVEL: 'MEDIUM', NUMBER_CONFIRMATIONS: 1, CONFIRMATION_BY: 'João Pereira', NAME_INSTITUTION: 'Instituto Militar de Engenharia' },
 ];
 const SAMPLE_PSY_SEPT_ROWS = [
-  { LEVEL_ORDER: 2, LEVEL_NAME: 'Vital/Etheric Body', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition, energy, willingness to invest effort in studying', CORRESPONDENCE_JUSTIFICATION: 'Vigor is by definition vital energy applied to an activity -- a direct mapping', CONFIDENCE_LEVEL: 'HIGH', NUMBER_CONFIRMATIONS: 1 },
-  { LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', INSTRUMENT_LABEL: 'Block an1-an11 (undocumented, hypothesis)', VARIABLE_LABEL: 'Personal Fulfillment -> RealizPess', SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', CORRESPONDENCE_JUSTIFICATION: 'The name and semantics suggest the highest level of meaning, beyond the abstract mind', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0 },
+  { LEVEL_ORDER: 2, LEVEL_NAME: 'Vital/Etheric Body', INSTRUMENT_LABEL: 'Engagement Scale', VARIABLE_LABEL: 'Vigor -> ENGAGvigor', SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition, energy, willingness to invest effort in studying', CORRESPONDENCE_JUSTIFICATION: 'Vigor is by definition vital energy applied to an activity -- a direct mapping', CONFIDENCE_LEVEL: 'HIGH', NUMBER_CONFIRMATIONS: 1, CONFIRMATION_BY: 'Ana Souza', NAME_INSTITUTION: 'Academia Militar das Agulhas Negras' },
+  { LEVEL_ORDER: 7, LEVEL_NAME: 'Atmic Body/Spirit', INSTRUMENT_LABEL: 'Block an1-an11 (undocumented, hypothesis)', VARIABLE_LABEL: 'Personal Fulfillment -> RealizPess', SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', CORRESPONDENCE_JUSTIFICATION: 'The name and semantics suggest the highest level of meaning, beyond the abstract mind', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 0, CONFIRMATION_BY: null, NAME_INSTITUTION: null },
 ];
 const SAMPLE_VIRTUE_ROWS = [
-  { SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition and energy to invest effort in studying', JUSTIFICATION_DEFICIT: 'Low vigor is depletion of sustained energy -- Perseverance is the practice of maintaining effort despite wear, a direct antidote for the drop in disposition', JUSTIFICATION_STRENGTH: 'High vigor is sustained energy already in action -- a sign that Perseverance, the practice of maintaining effort despite wear, is already a resource present in this population', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 1, VIRTUE_NAME_PT: 'Perseverança', VIRTUE_NAME_EN: 'Perseverance', VIRTUE_ORDER_NUM: 10 },
-  { SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', JUSTIFICATION_DEFICIT: 'Maximal personal fulfillment is the direct psychological correlate of the Jungian process of individuation -- becoming a fully integrated Self', JUSTIFICATION_STRENGTH: 'An already-high sense of personal fulfillment is the direct psychological correlate of an Individuation process already underway -- the Self already on its way to integration', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 1, VIRTUE_NAME_PT: 'Individuação', VIRTUE_NAME_EN: 'Individuation', VIRTUE_ORDER_NUM: 2 },
+  { SAV_COLUMN: 'ENGAGvigor', RECORDED_BEHAVIOR: 'Disposition and energy to invest effort in studying', JUSTIFICATION_DEFICIT: 'Low vigor is depletion of sustained energy -- Perseverance is the practice of maintaining effort despite wear, a direct antidote for the drop in disposition', JUSTIFICATION_STRENGTH: 'High vigor is sustained energy already in action -- a sign that Perseverance, the practice of maintaining effort despite wear, is already a resource present in this population', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 1, CONFIRMATION_BY: 'Carlos Lima', NAME_INSTITUTION: 'Universidade Federal Fluminense', VIRTUE_NAME_PT: 'Perseverança', VIRTUE_NAME_EN: 'Perseverance', VIRTUE_ORDER_NUM: 10 },
+  { SAV_COLUMN: 'RealizPess', RECORDED_BEHAVIOR: 'Sense of ultimate fulfillment, purpose achieved', JUSTIFICATION_DEFICIT: 'Maximal personal fulfillment is the direct psychological correlate of the Jungian process of individuation -- becoming a fully integrated Self', JUSTIFICATION_STRENGTH: 'An already-high sense of personal fulfillment is the direct psychological correlate of an Individuation process already underway -- the Self already on its way to integration', CONFIDENCE_LEVEL: 'SPECULATIVE', NUMBER_CONFIRMATIONS: 1, CONFIRMATION_BY: 'Beatriz Castro', NAME_INSTITUTION: 'Pontifícia Universidade Católica', VIRTUE_NAME_PT: 'Individuação', VIRTUE_NAME_EN: 'Individuation', VIRTUE_ORDER_NUM: 2 },
 ];
 
 async function fetchVirtueLinks(fbDb) {
@@ -101,6 +112,7 @@ async function fetchVirtueLinks(fbDb) {
     SELECT M.SAV_COLUMN AS SAV_COLUMN, M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR,
            M.JUSTIFICATION_DEFICIT AS JUSTIFICATION_DEFICIT, M.JUSTIFICATION_STRENGTH AS JUSTIFICATION_STRENGTH,
            M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS,
+           M.CONFIRMATION_BY AS CONFIRMATION_BY, M.NAME_INSTITUTION AS NAME_INSTITUTION,
            V.NAME_PT AS VIRTUE_NAME_PT, V.NAME_EN AS VIRTUE_NAME_EN, V.ORDER_NUM AS VIRTUE_ORDER_NUM
     FROM GDX_VT_VARIABLE_VIRTUE_MAP M
     JOIN GDX_VT_VIRTUE V ON V.ID_VIRTUE = M.ID_VIRTUE
@@ -130,7 +142,8 @@ async function fetchFiveWaysLinks(fbDb) {
     SELECT W.ORDER_NUM AS ORDER_NUM, W.LATIN_NAME AS LATIN_NAME, W.ENGLISH_NAME AS ENGLISH_NAME,
            L.ORDER_NUM AS LEVEL_ORDER, L.NAME AS LEVEL_NAME,
            M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION, M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL,
-           M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
+           M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS,
+           M.CONFIRMATION_BY AS CONFIRMATION_BY, M.NAME_INSTITUTION AS NAME_INSTITUTION
     FROM GDX_TA_WAY_SEPT_MAP M
     JOIN GDX_TA_WAY W ON W.ID_WAY = M.ID_WAY
     JOIN GDX_PSY_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = M.ID_SEPTENARY_LEVEL
@@ -147,7 +160,8 @@ async function fetchFiveWaysVariableLinks(fbDb) {
            L.ORDER_NUM AS LEVEL_ORDER, L.NAME AS LEVEL_NAME,
            M.INSTRUMENT_LABEL AS INSTRUMENT_LABEL, M.VARIABLE_LABEL AS VARIABLE_LABEL,
            M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR, M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION,
-           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS,
+           M.CONFIRMATION_BY AS CONFIRMATION_BY, M.NAME_INSTITUTION AS NAME_INSTITUTION
     FROM GDX_TA_WAY_SEPT_MAP M
     JOIN GDX_TA_WAY W ON W.ID_WAY = M.ID_WAY
     JOIN GDX_PSY_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = M.ID_SEPTENARY_LEVEL
@@ -166,7 +180,8 @@ async function fetchChakraVarLinks(fbDb) {
     SELECT C.ORDER_NUM AS ORDER_NUM, C.SANSKRIT_NAME AS SANSKRIT_NAME, C.COMMON_NAME AS COMMON_NAME,
            M.INSTRUMENT_LABEL AS INSTRUMENT_LABEL, M.VARIABLE_LABEL AS VARIABLE_LABEL,
            M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR, M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION,
-           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS,
+           M.CONFIRMATION_BY AS CONFIRMATION_BY, M.NAME_INSTITUTION AS NAME_INSTITUTION
     FROM GDX_PSY_CHAKRA_VAR_MAP M
     JOIN GDX_PSY_CHAKRA C ON C.ID_CHAKRA = M.ID_CHAKRA
     ORDER BY C.ORDER_NUM, M.ID_MAPPING`);
@@ -179,7 +194,8 @@ async function fetchPsySeptenaryLinks(fbDb) {
            M.INSTRUMENT_LABEL AS INSTRUMENT_LABEL, M.VARIABLE_LABEL AS VARIABLE_LABEL,
            DV.SAV_COLUMN AS SAV_COLUMN, V.VARIABLE_TYPE AS VARIABLE_TYPE,
            M.RECORDED_BEHAVIOR AS RECORDED_BEHAVIOR, M.CORRESPONDENCE_JUSTIFICATION AS CORRESPONDENCE_JUSTIFICATION,
-           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS
+           M.CONFIDENCE_LEVEL AS CONFIDENCE_LEVEL, M.NUMBER_CONFIRMATIONS AS NUMBER_CONFIRMATIONS,
+           M.CONFIRMATION_BY AS CONFIRMATION_BY, M.NAME_INSTITUTION AS NAME_INSTITUTION
     FROM GDX_PSY_SEPT_LEVEL_PSY_MAP M
     JOIN GDX_PSY_SEPTENARY_LEVEL L ON L.ID_SEPTENARY_LEVEL = M.ID_SEPTENARY_LEVEL
     LEFT JOIN DW_DIM_VARIABLE DV ON DV.ID_VARIABLE = M.ID_VARIABLE
@@ -205,17 +221,29 @@ function sumConfirmations(rows) {
   return rows.reduce((total, r) => total + (Number(r.NUMBER_CONFIRMATIONS) || 0), 0);
 }
 
-function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtueRows, sample, host, timestamp }) {
+function confirmedByCell(r) {
+  return r.CONFIRMATION_BY || '—';
+}
+
+function institutionCell(r) {
+  return r.CONFIRMATION_BY ? (r.NAME_INSTITUTION || '—') : '—';
+}
+
+function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtueRows, sample, detail, host, timestamp }) {
   const lines = [];
 
   lines.push('# GDX_HUMAN — Conceptual Associations Between Perspectives');
   lines.push('');
-  lines.push(`> Generated ${timestamp} by \`GDX_SKILL_LIST_ASSOCIATIONS\`.`);
+  lines.push(`> Generated ${timestamp} by \`GDX_SKILL_LIST_ASSOCIATIONS\`${detail ? ' (--detail: every section below includes who confirmed each row and their institution)' : ''}.`);
   lines.push('> Scope: the whole framework — **not** per study. Every row below is catalog/reference data, the same for any study.');
   lines.push(`> Source: DDL from \`3.septenary.constitution\`, \`4.kundalini.chakras\`, \`5.five.ways.tomas.aquino\`, \`2.relational.model.psychometrics\`, \`7.multidimensional.database\`, \`12.gdx.virtology\`${sample ? ' — **SAMPLE DATA, not a real read**' : ` — live read from ${host}`}.`);
   lines.push('>');
   lines.push('> **Every association below is a real row in Firebird**, most with a `CONFIDENCE_LEVEL` column (`HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE`) and a `NUMBER_CONFIRMATIONS` column (independent corroborations, separate from confidence). The one exception is `GDX_PSY_CHAKRA` (Section 1), a 7-row catalog that predates both columns and has neither — flagged explicitly in its own section, not silently treated as confirmed or graded.');
   lines.push('> This command does not judge whether a correspondence is "correct" — it only lists what has already been decided somewhere in the framework, with the justification that already existed, and flags where a decision has no recorded confidence or confirmation.');
+  if (detail) {
+    lines.push('>');
+    lines.push('> **`--detail` mode:** each section with a `NUMBER_CONFIRMATIONS` column also shows two extra columns, **Confirmed By** (`CONFIRMATION_BY`) and **Institution** (`NAME_INSTITUTION`) — who gave the most recent independent confirmation, and their institution. Like `NUMBER_CONFIRMATIONS` itself, these two columns hold only the most recent confirmer, not a full history; an unconfirmed row (`NUMBER_CONFIRMATIONS = 0`) shows `—` in both.');
+  }
   lines.push('');
 
   // Section 1: Chakras
@@ -238,10 +266,18 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
     lines.push('');
     lines.push(`Source: \`GDX_PSY_CHAKRA_VAR_MAP\` (14.metaphysical.measuring.instrument/metaphysical_variable_chakra_map_firebird25.sql) — **DATABASE**, ${chakraVarRows.length} concrete instrument/variable↔chakra correspondence(s).`);
     lines.push('');
-    lines.push('| Chakra | Instrument | Variable | What it measures | Confidence | Confirmations | Justification |');
-    lines.push('|---|---|---|---|---|---|---|');
-    for (const r of chakraVarRows) {
-      lines.push(`| ${r.SANSKRIT_NAME} (${r.COMMON_NAME}) | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    if (detail) {
+      lines.push('| Chakra | Instrument | Variable | What it measures | Confidence | Confirmations | Confirmed By | Institution | Justification |');
+      lines.push('|---|---|---|---|---|---|---|---|---|');
+      for (const r of chakraVarRows) {
+        lines.push(`| ${r.SANSKRIT_NAME} (${r.COMMON_NAME}) | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${confirmedByCell(r)} | ${institutionCell(r)} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+      }
+    } else {
+      lines.push('| Chakra | Instrument | Variable | What it measures | Confidence | Confirmations | Justification |');
+      lines.push('|---|---|---|---|---|---|---|');
+      for (const r of chakraVarRows) {
+        lines.push(`| ${r.SANSKRIT_NAME} (${r.COMMON_NAME}) | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+      }
     }
     lines.push('');
     lines.push(`Confirmations total: ${sumConfirmations(chakraVarRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${chakraVarRows.length} row(s)).`);
@@ -253,10 +289,18 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
   lines.push('');
   lines.push(`Source: \`GDX_TA_WAY_SEPT_MAP\` (5.five.ways.tomas.aquino) × \`GDX_PSY_SEPTENARY_LEVEL\` — **DATABASE**, ${wayRows.length} of 5 ways.`);
   lines.push('');
-  lines.push('| Way | Septenary Level | Confidence | Confirmations | Justification |');
-  lines.push('|---|---|---|---|---|');
-  for (const r of wayRows) {
-    lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+  if (detail) {
+    lines.push('| Way | Septenary Level | Confidence | Confirmations | Confirmed By | Institution | Justification |');
+    lines.push('|---|---|---|---|---|---|---|');
+    for (const r of wayRows) {
+      lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${confirmedByCell(r)} | ${institutionCell(r)} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    }
+  } else {
+    lines.push('| Way | Septenary Level | Confidence | Confirmations | Justification |');
+    lines.push('|---|---|---|---|---|');
+    for (const r of wayRows) {
+      lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    }
   }
   lines.push('');
   lines.push('**Note:** level 7 (Atmic Body/Spirit) was deliberately left without an associated way — the 5 ways converge on the same conclusion ("this all men call God"), so mapping any way to level 7 would make the relation trivial/uninformative (see the comment in `five_ways_septenary_map_firebird25.sql`).');
@@ -272,10 +316,18 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
     lines.push('');
     lines.push(`Source: \`GDX_TA_WAY_SEPT_MAP\` (same table as Section 2, extended by \`metaphysical_variable_way_map_firebird25.sql\`) — **DATABASE**, ${wayVarRows.length} concrete instrument/variable↔way correspondence(s), in addition to Section 2's 5 conceptual rows.`);
     lines.push('');
-    lines.push('| Way | Septenary Level | Instrument | Variable | What it measures | Confidence | Confirmations | Justification |');
-    lines.push('|---|---|---|---|---|---|---|---|');
-    for (const r of wayVarRows) {
-      lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    if (detail) {
+      lines.push('| Way | Septenary Level | Instrument | Variable | What it measures | Confidence | Confirmations | Confirmed By | Institution | Justification |');
+      lines.push('|---|---|---|---|---|---|---|---|---|---|');
+      for (const r of wayVarRows) {
+        lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${confirmedByCell(r)} | ${institutionCell(r)} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+      }
+    } else {
+      lines.push('| Way | Septenary Level | Instrument | Variable | What it measures | Confidence | Confirmations | Justification |');
+      lines.push('|---|---|---|---|---|---|---|---|');
+      for (const r of wayVarRows) {
+        lines.push(`| ${r.ORDER_NUM}. ${r.LATIN_NAME} (${r.ENGLISH_NAME}) | #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${(r.VARIABLE_LABEL || '').trim()} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+      }
     }
     lines.push('');
     lines.push(`Confirmations total: ${sumConfirmations(wayVarRows)} (sum of \`NUMBER_CONFIRMATIONS\` across ${wayVarRows.length} row(s)).`);
@@ -287,13 +339,24 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
   lines.push('');
   lines.push(`Source: \`GDX_PSY_SEPT_LEVEL_PSY_MAP\` (3.septenary.constitution) × \`GDX_PSY_SEPTENARY_LEVEL\`, cross-referenced with \`DW_DIM_VARIABLE\` (7.multidimensional.database) just to bring in the real \`SAV_COLUMN\` — **DATABASE**, ${psyRows.length} cataloged correspondences.`);
   lines.push('');
-  lines.push('| Septenary Level | Instrument | Variable (.sav) | What it measures | Confidence | Confirmations | Justification |');
-  lines.push('|---|---|---|---|---|---|---|');
-  for (const r of psyRows) {
-    const sav = r.SAV_COLUMN
-      ? `\`${r.SAV_COLUMN}\``
-      : (r.VARIABLE_TYPE === 'METAPHYSICS' ? '— (metaphysical instrument, no .sav)' : '— (not yet reconciled with the catalog)');
-    lines.push(`| #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${sav} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+  if (detail) {
+    lines.push('| Septenary Level | Instrument | Variable (.sav) | What it measures | Confidence | Confirmations | Confirmed By | Institution | Justification |');
+    lines.push('|---|---|---|---|---|---|---|---|---|');
+    for (const r of psyRows) {
+      const sav = r.SAV_COLUMN
+        ? `\`${r.SAV_COLUMN}\``
+        : (r.VARIABLE_TYPE === 'METAPHYSICS' ? '— (metaphysical instrument, no .sav)' : '— (not yet reconciled with the catalog)');
+      lines.push(`| #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${sav} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${confirmedByCell(r)} | ${institutionCell(r)} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    }
+  } else {
+    lines.push('| Septenary Level | Instrument | Variable (.sav) | What it measures | Confidence | Confirmations | Justification |');
+    lines.push('|---|---|---|---|---|---|---|');
+    for (const r of psyRows) {
+      const sav = r.SAV_COLUMN
+        ? `\`${r.SAV_COLUMN}\``
+        : (r.VARIABLE_TYPE === 'METAPHYSICS' ? '— (metaphysical instrument, no .sav)' : '— (not yet reconciled with the catalog)');
+      lines.push(`| #${r.LEVEL_ORDER} ${r.LEVEL_NAME} | ${(r.INSTRUMENT_LABEL || '').trim()} | ${sav} | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.CORRESPONDENCE_JUSTIFICATION || '').trim()} |`);
+    }
   }
   lines.push('');
   const psyConf = confidenceCounts(psyRows, 'CONFIDENCE_LEVEL');
@@ -307,13 +370,23 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
   lines.push('');
   lines.push('This table carries **two** justification columns side by side, by design: `JUSTIFICATION_DEFICIT` (low score → antidote, read by `GDX_SKILL_LINK_SUGGESTIONS`) and `JUSTIFICATION_STRENGTH` (high score → already present, read by `GDX_SKILL_IDENTIFY_VIRTUES`) — the same virtue, two framings of the same correspondence, not two different claims. When the same variable also appears in Section 3, its septenary level is shown — the only point in the framework where all three perspectives (Septenary, Psychometrics, Virtology) meet on the same row.');
   lines.push('');
-  lines.push('| Variable (.sav) | What it measures | Septenary Level (Section 3) | Virtue | Confidence | Confirmations | Justification (deficit → antidote) | Justification (strength → already present) |');
-  lines.push('|---|---|---|---|---|---|---|---|');
   const psyBySav = new Map(psyRows.filter((r) => r.SAV_COLUMN).map((r) => [r.SAV_COLUMN, r]));
-  for (const r of virtueRows) {
-    const linked = psyBySav.get(r.SAV_COLUMN);
-    const levelCell = linked ? `#${linked.LEVEL_ORDER} ${linked.LEVEL_NAME}` : '— (no matching row in Section 3)';
-    lines.push(`| \`${r.SAV_COLUMN}\` | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${levelCell} | **${r.VIRTUE_NAME_PT}** (${r.VIRTUE_NAME_EN}, #${r.VIRTUE_ORDER_NUM}) | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.JUSTIFICATION_DEFICIT || '').trim()} | ${(r.JUSTIFICATION_STRENGTH || '').trim()} |`);
+  if (detail) {
+    lines.push('| Variable (.sav) | What it measures | Septenary Level (Section 3) | Virtue | Confidence | Confirmations | Confirmed By | Institution | Justification (deficit → antidote) | Justification (strength → already present) |');
+    lines.push('|---|---|---|---|---|---|---|---|---|---|');
+    for (const r of virtueRows) {
+      const linked = psyBySav.get(r.SAV_COLUMN);
+      const levelCell = linked ? `#${linked.LEVEL_ORDER} ${linked.LEVEL_NAME}` : '— (no matching row in Section 3)';
+      lines.push(`| \`${r.SAV_COLUMN}\` | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${levelCell} | **${r.VIRTUE_NAME_PT}** (${r.VIRTUE_NAME_EN}, #${r.VIRTUE_ORDER_NUM}) | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${confirmedByCell(r)} | ${institutionCell(r)} | ${(r.JUSTIFICATION_DEFICIT || '').trim()} | ${(r.JUSTIFICATION_STRENGTH || '').trim()} |`);
+    }
+  } else {
+    lines.push('| Variable (.sav) | What it measures | Septenary Level (Section 3) | Virtue | Confidence | Confirmations | Justification (deficit → antidote) | Justification (strength → already present) |');
+    lines.push('|---|---|---|---|---|---|---|---|');
+    for (const r of virtueRows) {
+      const linked = psyBySav.get(r.SAV_COLUMN);
+      const levelCell = linked ? `#${linked.LEVEL_ORDER} ${linked.LEVEL_NAME}` : '— (no matching row in Section 3)';
+      lines.push(`| \`${r.SAV_COLUMN}\` | ${(r.RECORDED_BEHAVIOR || '').trim()} | ${levelCell} | **${r.VIRTUE_NAME_PT}** (${r.VIRTUE_NAME_EN}, #${r.VIRTUE_ORDER_NUM}) | ${r.CONFIDENCE_LEVEL} | ${r.NUMBER_CONFIRMATIONS} | ${(r.JUSTIFICATION_DEFICIT || '').trim()} | ${(r.JUSTIFICATION_STRENGTH || '').trim()} |`);
+    }
   }
   lines.push('');
   const virtueConf = confidenceCounts(virtueRows, 'CONFIDENCE_LEVEL');
@@ -404,7 +477,7 @@ async function main() {
     }
   }
 
-  const report = buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtueRows, sample: args.sample, host, timestamp });
+  const report = buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, virtueRows, sample: args.sample, detail: args.detail, host, timestamp });
 
   const outPath = args.out
     ? path.resolve(args.out)

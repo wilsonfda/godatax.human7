@@ -59,13 +59,31 @@ Every association this skill reports is a real row in Firebird:
 `NUMBER_CONFIRMATIONS` (added to the first three by
 `confirmation_fields_association_maps_firebird25.sql`, native to
 `GDX_VT_VARIABLE_VIRTUE_MAP` since its own creation, plus
-`CONFIRMATION_BY`/`NAME_INSTITUTION` which this skill does not print) is a
-separate concept from `CONFIDENCE_LEVEL`: it counts how many times a
-correspondence has been **independently corroborated**, not how confident
-the original author was. It exists on every table above except
+`CONFIRMATION_BY`/`NAME_INSTITUTION`, printed only with `--detail`, see
+below) is a separate concept from `CONFIDENCE_LEVEL`: it counts how many
+times a correspondence has been **independently corroborated**, not how
+confident the original author was. It exists on every table above except
 `GDX_PSY_CHAKRA`. Every table/section that has the column shows a per-row
 count plus a summed total for that section, and the Summary table sums it
 again across all sections.
+
+### `--detail`: who confirmed each row, and from where
+
+By default every graded section already shows `CONFIDENCE_LEVEL`,
+`NUMBER_CONFIRMATIONS` and the recorded justification per row — passing
+`--detail` adds two more columns, kept **separate** (not merged into one
+cell) so each DB field is visible on its own: **Confirmed By**
+(`CONFIRMATION_BY`, e.g. `Maria Oliveira`) and **Institution**
+(`NAME_INSTITUTION`, e.g. `Escola de Comando e Estado-Maior do
+Exército`). Both are added to every section that has a
+`NUMBER_CONFIRMATIONS` column (1b, 2, 2b, 3, 4) — i.e. every row in those
+sections is printed, each with its own confidence, confirmation count,
+confirmer, institution, and justification, nothing summarized away. Like
+`NUMBER_CONFIRMATIONS` itself, those two columns hold only the **most
+recent** confirmer, not a full history; an unconfirmed row
+(`NUMBER_CONFIRMATIONS = 0`) shows `—` in both. Section 1
+(`GDX_PSY_CHAKRA`) is unaffected by `--detail` — it has neither column to
+show. Without `--detail` the report is exactly as before.
 
 Where a variable appears in **both** Section 3 and Section 4 (e.g.
 `ENGAGvigor`, `RealizPess`), the report shows the septenary level next to
@@ -90,15 +108,18 @@ Septenary Constitution, Psychometrics, and Virtology all meet.
 cd 14.metaphysical.measuring.instrument/.claude/skills/GDX_SKILL_LIST_ASSOCIATIONS/scripts
 npm install                          # once, installs node-firebird
 node list_associations.js --sample   # sanity check: embedded sample data for every section, no DB connection
+node list_associations.js --sample --detail   # same, but with the Confirmed By / Institution columns too
 # copy ../.env.example to ../.env and fill in GDX_HUMAN_FB_PASSWORD, or export the vars directly
 node list_associations.js            # real run against the live catalog tables
+node list_associations.js --detail   # same, plus who confirmed each row and their institution
 node list_associations.js --out <path>   # write the report somewhere other than the default location
 ```
 
 No `--study` flag exists on purpose — passing one is an error (unknown
 argument). Output: a Markdown report is written to
 `14.metaphysical.measuring.instrument/Framework_Associations_<timestamp>.md`
-and the same content is printed to the console.
+and the same content is printed to the console. `--detail` and `--sample`
+combine freely with each other and with `--out`.
 
 ## Keeping this in sync with the sources it reads
 
@@ -116,8 +137,9 @@ table this skill does.
 - `scripts/list_associations.js` — connects to Firebird (or uses `--sample`
   data), reads all five correspondence tables (including
   `GDX_PSY_CHAKRA_VAR_MAP`, `GDX_VT_VARIABLE_VIRTUE_MAP` × `GDX_VT_VIRTUE`,
-  and each table's `NUMBER_CONFIRMATIONS`), cross-references Section 4 by
-  `.sav` column against Section 3, and writes/prints the consolidated
+  and each table's `NUMBER_CONFIRMATIONS`, plus `CONFIRMATION_BY`/
+  `NAME_INSTITUTION` when `--detail` is passed), cross-references Section 4
+  by `.sav` column against Section 3, and writes/prints the consolidated
   report (Node.js + `node-firebird`, no native client library required)
 - `scripts/package.json`
 - `.env.example` — connection variable template (no secrets)
