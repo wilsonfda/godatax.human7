@@ -57,9 +57,11 @@
   silently without you, except login when ANTHROPIC_API_KEY is already set.
 
 .PARAMETER TargetDir
-  Where to clone the project. Defaults to "$HOME\GoDataX\GDX_HUMAN7" -- the
-  script still asks you to confirm (or override) this path interactively
-  right before cloning, regardless of whether you passed this parameter.
+  Where to clone the project. Defaults to a "GoDataX\GDX_HUMAN7" folder next
+  to this script itself (i.e. wherever OnBoard_GDXH7ph.ps1 is being run
+  from, not a fixed path under your user profile) -- the script still asks
+  you to confirm (or override) this path interactively right before
+  cloning, regardless of whether you passed this parameter.
 
 .PARAMETER RepoUrl
   The repository to clone. Defaults to the GDX_HUMAN7 project's own URL.
@@ -70,7 +72,7 @@
 #>
 
 param(
-  [string]$TargetDir = (Join-Path $HOME 'GoDataX\GDX_HUMAN7'),
+  [string]$TargetDir = (Join-Path $PSScriptRoot 'GoDataX\GDX_HUMAN7'),
   [string]$RepoUrl = 'https://github.com/wilsonfda/godatax.human7.git'
 )
 

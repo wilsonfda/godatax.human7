@@ -1,0 +1,15 @@
+{
+  "name": "f2-gdx-skill-latent-representations",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader/writer for the F2_GDX_SKILL_LATENT_REPRESENTATIONS (F2) skill: fits PCA (so far -- autoencoder/UMAP are a later increment) on the z-scored feature vectors F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE already wrote, and records the resulting latent representation into the GDX_HNF_LATENT_* tables, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_latent_representations.js",
+  "scripts": {
+    "generate": "node generate_latent_representations.js",
+    "sample": "node generate_latent_representations.js --sample"
+  },
+  "dependencies": {
+    "ml-pca": "^4.1.1",
+    "node-firebird": "^2.21.0"
+  }
+}

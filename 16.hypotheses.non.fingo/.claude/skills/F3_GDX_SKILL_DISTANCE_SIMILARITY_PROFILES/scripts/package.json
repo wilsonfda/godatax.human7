@@ -1,0 +1,15 @@
+{
+  "name": "f3-gdx-skill-distance-similarity-profiles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader/writer for the F3_GDX_SKILL_DISTANCE_SIMILARITY_PROFILES (F3) skill: computes pairwise Euclidean, RMS and Mahalanobis distances between every pair of persons' own profile vectors (F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE's normalized z(t), or F2_GDX_SKILL_LATENT_REPRESENTATIONS's learned h(t)), and records the result into the GDX_HNF_DISTANCE_* tables, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_distance_similarity_profiles.js",
+  "scripts": {
+    "generate": "node generate_distance_similarity_profiles.js",
+    "sample": "node generate_distance_similarity_profiles.js --sample"
+  },
+  "dependencies": {
+    "ml-matrix": "^6.11.0",
+    "node-firebird": "^2.21.0"
+  }
+}

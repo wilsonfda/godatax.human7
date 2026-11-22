@@ -2,9 +2,26 @@
 
 > Generated 2026-09-22, from a direct read of every `.md` document, `SKILL.md` file, and
 > `*.sql` DDL/DML script in this repository, plus slides 84–90 of
-> `GDX_CTP_H7/GDX_DOCUMENTS/GDX_HUMAN/GoDataXHuman7-Br2.odp`. This is the single entry point
-> for a developer joining the project: what it is, how the pieces fit together, how to run
-> every automation, and what each relational schema looks like.
+> `GDX_CTP_H7/GDX_DOCUMENTS/GDX_HUMAN/GoDataXHuman7-Br2.odp`. Updated 2026-11-06, from a fresh
+> direct read of every `SKILL.md` across all 15 numbered folders (24 skills in total today) plus
+> the new material added since September — `13.onboarding.env/` (local Firebird bootstrap +
+> web-sync), `14.metaphysical.measuring.instrument/` (OT-7 instrument + generic association
+> skills), the DW's new virtue/chakra/way bridge tables, the dashboard skill's growth to 11
+> chart types, and the as-yet-skill-less `15.environmental.anomalous.phenomena/` schema. Updated
+> again 2026-11-07, from a repo-wide sweep of every `*.sql` file against the ER diagrams already
+> in this document, to catch schema extensions that were applied to the database but never
+> reflected back into a diagram: `GDX_PSY_INSTRUMENT.GOOGLE_FORM_INFO`, the
+> `NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/`NAME_INSTITUTION` trio on all four `"_MAP"`
+> association tables, the brand-new `GDX_PSY_CHAKRA_VAR_MAP` table, `GDX_TA_WAY_SEPT_MAP`'s
+> instrument/variable/behavior columns, `GDX_VT_VARIABLE_VIRTUE_MAP.SCALE_POLARITY` (now with its
+> own ER diagram, previously missing one unlike every other interpretive bridge), and the
+> `study1_indicator_backfill_partial_firebird25.sql` partial backfill. Updated again 2026-11-16,
+> for the brand-new `16.hypotheses.non.fingo/` module: a from-scratch, project-authored
+> multidimensional feature-space mathematical model, implemented one function at a time, starting
+> with `F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE` (MFS; F1 — feature-space assembly and normalization) and its
+> `GDX_HNF_*` schema. This is the single entry point for a developer joining the project: what it
+> is, how the pieces fit together, how to run every automation, and what each relational schema
+> looks like.
 
 ## Repository
 
@@ -25,7 +42,7 @@ by language or layer.
 1. [Project Overview](#1-project-overview)
 2. [Getting Started](#2-getting-started)
 3. [Repository Map](#3-repository-map)
-4. [The Pipeline, Step by Step (0–12)](#4-the-pipeline-step-by-step-012)
+4. [The Pipeline, Step by Step (0–15)](#4-the-pipeline-step-by-step-015)
 5. [Skills Catalog — Full Reference](#5-skills-catalog--full-reference)
 6. [Deep Dive — The Data Warehouse](#6-deep-dive--the-data-warehouse-step-7)
 7. [Deep Dive — The Knowledge Graph](#7-deep-dive--the-knowledge-graph-step-9)
@@ -256,16 +273,30 @@ GDX_HUMAN7/
   9.knowledge.graph/              <- export of the whole relational schema into Neo4j
   10.gdx.machine.learning/        <- 2 graph ML models (link prediction, community detection)
   11.gdx.llm.agent.mcp/           <- system prompt for an LLM assistant over the knowledge graph
-  12.gdx.virtology/                <- knowledge base of 33 virtues + link-suggestion skill
+  12.gdx.virtology/                <- knowledge base of 33 virtues + link-suggestion/identify skills
+  13.onboarding.env/               <- local Firebird bootstrap (GDS32.DLL direct) + web-catalog sync
+  14.metaphysical.measuring.instrument/  <- OT-7 instrument + generic variable<->framework linker
+  15.environmental.anomalous.phenomena/  <- GDX_PH_* schema for environmental/anomalous sensing (DDL only, no skill yet)
+  16.hypotheses.non.fingo/        <- mathematical-model layer (feature space, F1-F8) over folders 2-9
 ```
 
 The numbering reflects, broadly, dependency order: every folder consumes data from lower-numbered
 folders (the DW in folder 7 reads folders 2–6; the dashboards in folder 8 read folder 7; the
-graph in folder 9 reads folders 2–7; the ML in folder 10 reads folder 9 only).
+graph in folder 9 reads folders 2–7; the ML in folder 10 reads folder 9 only). Folders 13–15 are
+later additions that sit slightly outside that linear chain: `13.onboarding.env/` is a parallel,
+standalone path to stand up a *local* Firebird file without a server, plus the one skill that
+pushes the catalog from that local file to the shared `firebird.godatax.com` database; `14` adds a
+generic, interactive alternative to the batch mapping skills already in folders 3 and 12; `15` is
+a DDL-only schema extension with no loader skill and no DW/graph integration yet (see §12/§13); `16`
+is a different kind of later addition — not a new data-collection domain, but a mathematical-model
+layer that *reads* folders 2–9 (relational, BI, and optionally the knowledge graph) for one study
+at a time and writes its own derived results (feature spaces today; latent representations,
+distances, the CDI, trajectories and more in later skills) into its own `GDX_HNF_*` schema, never
+back into any source table.
 
 ---
 
-## 4. The Pipeline, Step by Step (0–12)
+## 4. The Pipeline, Step by Step (0–16)
 
 ### Step 0 — `0.new.instrument/` — Onboarding a brand-new study
 
@@ -288,6 +319,19 @@ assembly line is **generic**: it never hardcodes an id (it relies on Firebird `B
 triggers), never invents a field the user doesn't know the answer to, and never duplicates an
 already-onboarded study. **Filled** `.xlsx` files (real participant data) must never be
 committed — only `intake.json` and the generated SQL are meant to be committed.
+
+Three more skills live in this folder, outside the straight-line chain above:
+
+- `GDX_SKILL_GENERATE_GOOGLE_FORM` / `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS` — a fully
+  self-contained **alternative** third/fourth stage, collecting answers through a real Google
+  Form (Forms API) instead of (or alongside) the `.xlsx` export/import pair. Independent
+  implementation, same end state in `GDX_PSY_*`.
+- `GDX_SKILL_DELETE_STUDY` — the mirror image of the whole onboarding chain: permanently removes
+  one study's data from the OLTP schema, the DW, Neo4j, and its dashboard HTML files, while
+  **never** touching the reusable catalog (instruments/items/constructs/variables) or a person/
+  instrument shared with another study. The single most destructive skill in the repository —
+  always `--dry-run` first, and `--execute` additionally requires `--confirm-title` to match the
+  study's exact title.
 
 See §5 for the full per-skill reference.
 
@@ -424,6 +468,7 @@ erDiagram
         varchar VERSION
         varchar TYPE
         smallint ACTIVE
+        text GOOGLE_FORM_INFO "nullable, added by google_form_instrument_field_firebird25.sql"
     }
     GDX_PSY_INSTRUMENT_ITEM {
         bigint ID_ITEM PK
@@ -523,6 +568,27 @@ space — a simple person↔occupation history table). Every surrogate key is a 
 a Firebird `BEFORE INSERT` trigger reading from a matching `SEQ_GDX_PSY_*` sequence — no id is
 ever hardcoded by application code except in the frozen, one-time historical load scripts.
 
+**Two later extensions to this base schema, both standalone single-purpose scripts in this
+folder:**
+- `google_form_instrument_field_firebird25.sql` adds `GDX_PSY_INSTRUMENT.GOOGLE_FORM_INFO`
+  (`BLOB SUB_TYPE TEXT`, nullable) — a permanent home for `GDX_SKILL_GENERATE_GOOGLE_FORM`'s
+  (§5, `0.new.instrument/`) post-creation printout (edit/share links, `google_form_map.json`
+  path, next-step instructions), one instrument row at a time instead of living only in a shell
+  scrollback.
+- `study1_indicator_backfill_partial_firebird25.sql` partially closes a gap `SPSS_to_Firebird_Mapping.md`
+  already documented and `GDX_SKILL_MAKE_ANALYSES_CFA_EFA` (§5) still describes as "empty in this
+  database": it inserts `GDX_PSY_INDICATOR`/`GDX_PSY_INDICATOR_ITEM` rows for the **5 instruments**
+  whose item-to-dimension split needs no invented judgment call (single-index instruments —
+  Satisfaction With Life, Job Satisfaction, Personal Satisfaction, Perceived Control of Life — plus
+  Positivity Ratio, whose split is already documented in `SPSS_to_Firebird_Mapping.md`), each with
+  `REVERSED=0` justified by that published instrument's own literature, never by guessing against
+  this dataset. The other 6 instruments (Hardiness, Student Engagement, CAAS, the two
+  undocumented/low-confidence blocks, Red Tape) are deliberately **not** backfilled — their
+  item-to-dimension split and/or reverse-keying is still genuinely unknown, so
+  `GDX_PSY_INDICATOR_ITEM` remains empty for those, and Track B of
+  `GDX_SKILL_MAKE_ANALYSES_CFA_EFA` (§5) still discovers their structure computationally rather
+  than reading it from this table.
+
 **Key rules baked into the DDL:**
 - `GDX_PSY_PERSON.EXTERNAL_IDENTIFIER` and `GDX_PSY_STUDY_PARTICIPANT(ID_STUDY, ANONYMOUS_CODE)`
   are unique — one physical person, one row, reusable across studies.
@@ -568,6 +634,9 @@ erDiagram
         text RECORDED_BEHAVIOR
         text CORRESPONDENCE_JUSTIFICATION
         varchar CONFIDENCE_LEVEL
+        integer NUMBER_CONFIRMATIONS "added by confirmation_fields_association_maps_firebird25.sql"
+        varchar CONFIRMATION_BY "nullable"
+        varchar NAME_INSTITUTION "nullable"
     }
     GDX_PSY_INSTRUMENT {
         bigint ID_INSTRUMENT PK
@@ -584,6 +653,13 @@ label (`INSTRUMENT_LABEL`/`VARIABLE_LABEL`) before the formal `GDX_PSY_INSTRUMEN
 unique — exactly 7 levels, ordered; `CONFIDENCE_LEVEL` is check-constrained to
 `HIGH/MEDIUM/LOW/SPECULATIVE`. No uniqueness constraint exists on `(ID_SEPTENARY_LEVEL,
 ID_VARIABLE)` — a level can (and does) receive multiple variable mappings.
+`NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/`NAME_INSTITUTION` (`14.metaphysical.measuring.instrument/
+confirmation_fields_association_maps_firebird25.sql`, DEFAULT 0/NULL/NULL) are a later addition —
+see §4 Step 14 and §5's `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`/`GDX_SKILL_LIST_ASSOCIATIONS` —
+distinct from `CONFIDENCE_LEVEL`: they count independent human corroborations of a correspondence
+already recorded, not how confident the first author was. Every row that pre-dated these columns
+was backfilled once to `NUMBER_CONFIRMATIONS=1` by the companion
+`confirmation_fields_association_maps_dml_firebird25.sql`.
 
 ### Step 4 — `4.kundalini.chakras/` — Interpretive bridge: 7 chakras
 
@@ -595,6 +671,9 @@ empirical).
 ```mermaid
 erDiagram
     GDX_PSY_SEPTENARY_LEVEL ||--|| GDX_PSY_CHAKRA : "corresponds to (1:1, ascending order)"
+    GDX_PSY_CHAKRA ||--o{ GDX_PSY_CHAKRA_VAR_MAP : classifies
+    GDX_PSY_INSTRUMENT |o--o{ GDX_PSY_CHAKRA_VAR_MAP : "optionally resolves to"
+    GDX_PSY_VARIABLE |o--o{ GDX_PSY_CHAKRA_VAR_MAP : "optionally resolves to"
 
     GDX_PSY_CHAKRA {
         bigint ID_CHAKRA PK
@@ -609,11 +688,41 @@ erDiagram
         bigint ID_SEPTENARY_LEVEL FK "NOT NULL"
         varchar SEPTENARY_LEVEL_JUSTIFICATION
     }
+    GDX_PSY_CHAKRA_VAR_MAP {
+        bigint ID_MAPPING PK
+        bigint ID_CHAKRA FK
+        bigint ID_INSTRUMENT FK "nullable"
+        varchar INSTRUMENT_LABEL
+        bigint ID_VARIABLE FK "nullable"
+        varchar VARIABLE_LABEL
+        text RECORDED_BEHAVIOR
+        text CORRESPONDENCE_JUSTIFICATION
+        varchar CONFIDENCE_LEVEL
+        integer NUMBER_CONFIRMATIONS
+        varchar CONFIRMATION_BY "nullable"
+        varchar NAME_INSTITUTION "nullable"
+    }
+    GDX_PSY_INSTRUMENT {
+        bigint ID_INSTRUMENT PK
+    }
+    GDX_PSY_VARIABLE {
+        bigint ID_VARIABLE PK
+    }
 ```
 
-Unlike the septenary mapping table (§4.3), `ID_SEPTENARY_LEVEL` here is `NOT NULL` — every chakra
-always resolves to exactly one level, and the correspondence is fixed DDL/DML (no loader skill
-ever touches this table).
+Unlike the septenary mapping table (§4.3), `ID_SEPTENARY_LEVEL` on `GDX_PSY_CHAKRA` itself is
+`NOT NULL` — every chakra always resolves to exactly one level, and that correspondence is fixed
+DDL/DML (no loader skill ever touches the catalog row itself).
+
+**`GDX_PSY_CHAKRA_VAR_MAP`** (`14.metaphysical.measuring.instrument/
+metaphysical_variable_chakra_map_firebird25.sql`) is a later addition, written in support of
+`GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS` (§4 Step 14): because `GDX_PSY_CHAKRA` is a pure 7-row
+catalog (unlike `GDX_TA_WAY_SEPT_MAP`, it was never itself a relation table), it cannot be
+extended in place with nullable instrument/variable columns — so this script adds a brand-new
+association table instead, mirroring `GDX_PSY_SEPT_LEVEL_PSY_MAP`'s column shape (§4.3) exactly,
+including the same later-added `NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/`NAME_INSTITUTION` trio
+(`confirmation_fields_association_maps_firebird25.sql`), unique on `(ID_CHAKRA, VARIABLE_LABEL)`
+so one chakra can receive more than one variable mapping.
 
 ### Step 5 — `5.five.ways.tomas.aquino/` — Interpretive bridge: the Five Ways
 
@@ -627,6 +736,8 @@ trivially mapping all five to level 7 (their shared conclusion).
 erDiagram
     GDX_TA_WAY ||--o{ GDX_TA_WAY_SEPT_MAP : "reasons at level"
     GDX_PSY_SEPTENARY_LEVEL ||--o{ GDX_TA_WAY_SEPT_MAP : receives
+    GDX_PSY_INSTRUMENT |o--o{ GDX_TA_WAY_SEPT_MAP : "optionally resolves to"
+    GDX_PSY_VARIABLE |o--o{ GDX_TA_WAY_SEPT_MAP : "optionally resolves to"
 
     GDX_TA_WAY {
         bigint ID_WAY PK
@@ -643,15 +754,44 @@ erDiagram
         bigint ID_MAPPING PK
         bigint ID_WAY FK
         bigint ID_SEPTENARY_LEVEL FK
+        bigint ID_INSTRUMENT FK "nullable, added by metaphysical_variable_way_map_firebird25.sql"
+        varchar INSTRUMENT_LABEL "nullable"
+        bigint ID_VARIABLE FK "nullable"
+        varchar VARIABLE_LABEL "nullable"
+        text RECORDED_BEHAVIOR "nullable"
         text CORRESPONDENCE_JUSTIFICATION
         varchar CONFIDENCE_LEVEL
+        integer NUMBER_CONFIRMATIONS
+        varchar CONFIRMATION_BY "nullable"
+        varchar NAME_INSTITUTION "nullable"
+    }
+    GDX_PSY_INSTRUMENT {
+        bigint ID_INSTRUMENT PK
+    }
+    GDX_PSY_VARIABLE {
+        bigint ID_VARIABLE PK
     }
 ```
 
-`GDX_TA_WAY_SEPT_MAP` is unique on `(ID_WAY, ID_SEPTENARY_LEVEL)`. Confidence is mixed by design:
-way 4 → Higher Mental is rated `HIGH` (an explicit textual match to "values/judgment"), way 5 →
-Buddhic is `SPECULATIVE`, the rest `MEDIUM` — the table does not claim uniform certainty across
-all five ways.
+The original 5 rows are unique on `(ID_WAY, ID_SEPTENARY_LEVEL)` and carry mixed confidence by
+design: way 4 → Higher Mental is rated `HIGH` (an explicit textual match to "values/judgment"),
+way 5 → Buddhic is `SPECULATIVE`, the rest `MEDIUM` — the table does not claim uniform certainty
+across all five ways.
+
+**`ID_INSTRUMENT`/`INSTRUMENT_LABEL`/`ID_VARIABLE`/`VARIABLE_LABEL`/`RECORDED_BEHAVIOR`** were
+added later by `14.metaphysical.measuring.instrument/metaphysical_variable_way_map_firebird25.sql`
+so a Way↔Level pair can also carry one or more concrete instrument/variable correspondences
+(reusing `GDX_PSY_INSTRUMENT`/`GDX_PSY_VARIABLE` tagged `VARIABLE_TYPE='METAPHYSICS'`, not a new
+table), the same free-text-label pattern `GDX_PSY_SEPT_LEVEL_PSY_MAP` already uses — nullable here
+(unlike that table) since the original 5 conceptual rows have no instrument/variable context to
+fill in. This also **redefined the unique constraint** to `(ID_WAY, ID_SEPTENARY_LEVEL,
+VARIABLE_LABEL)` (Firebird treats `NULL` as distinct in a unique index, so the original 5 rows
+keep working unchanged), because the old `(ID_WAY, ID_SEPTENARY_LEVEL)` constraint would otherwise
+block attaching more than one variable to the same Way. All 7 OT-7 variables (§4 Step 14) are
+linked this way to Way 5 / Buddhic via `ot7_way_map_dml_firebird25.sql`, with the Portuguese
+source text later translated to English in place by `ot7_translate_association_text.sql`.
+`NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/`NAME_INSTITUTION` are the same later addition described
+in §4 Step 3 (`confirmation_fields_association_maps_firebird25.sql`).
 
 ### Step 6 — `6.cardiac.coherence/` — Physiological data (ECG/HRV)
 
@@ -762,25 +902,36 @@ algorithmic classification and internal-device temperature only.
 
 ### Step 7 — `7.multidimensional.database/` — The Data Warehouse
 
-See the full deep dive in **§6**. Star schema (11 dimensions + 3 facts) unifying the 5 OLTP
-perspectives (steps 2–6) into one queryable point. Skills: none for the initial one-shot ETL
-(plain SQL); `GDX_SKILL_LOAD_NEW_STUDY_DW` for incremental, per-study loading.
+See the full deep dive in **§6**. Star schema (12 dimensions + 3 facts + 3 bridge tables)
+unifying the 5 OLTP perspectives (steps 2–6, plus Virtology from step 12) into one queryable
+point. Skills: none for the initial one-shot ETL (plain SQL); `GDX_SKILL_LOAD_NEW_STUDY_DW` for
+incremental, per-study loading (now including the virtue/chakra/way bridge tables — see §5).
 
-### Step 8 — `8.gdx.dashboards/` — 8 self-contained HTML charts
+### Step 8 — `8.gdx.dashboards/` — Self-contained HTML charts
 
 **Skill:** `GDX_SKILL_MAKE_DASHBOARS_DW`. Reads the DW (step 7), scoped by `--study <slug>`,
-and writes 8 standalone `.html` files (no server, no external CDN): a line chart (physiological
-response), a bar chart (score by septenary level), 4 heatmaps (instrument × level / cardiac
+and writes standalone `.html` files (no server, no external CDN): the default run produces 9
+charts 00–08 — a 2-panel line chart (mean response vs. EFA/CFA loadings), a physiological-response
+line chart, a bar chart (score by septenary level), 4 heatmaps (instrument × level / cardiac
 stress / chakra / Five Ways), and 2 "gradient portrait" figures (chakra silhouette, septenary
-constitution diagram). See §5 for the full flag/output reference and `Dashboards_DW_Explanation.md`
-for a chart-by-chart reading of the real numbers.
+constitution diagram). Two further chart types exist as separate entry points: chart **09**
+(`make_dashboard_09_respondent.js`) is a per-**respondent** profile — one file per participant,
+not an aggregate — and chart **10** (`make_master_panel.js`, also reachable as `--chart 10`) is a
+combined master panel assembling 00–09 plus a phase-by-phase pipeline retrospective (registration
+→ data collection → factor analysis → metaphysical/virtue associations → DW load → knowledge-graph
+export → link-prediction suggestions). See §5 for the full flag/output reference and
+`Dashboards_DW_Explanation.md` for a chart-by-chart reading of the real numbers.
 
 ### Step 9 — `9.knowledge.graph/` — Export to Neo4j
 
 See the full deep dive in **§7**. `GDX_SKILL_GODATAX_HUMAN7_BY_SPU` turns the entire in-scope
 Firebird schema (55 tables, 70 FKs) into a Neo4j property graph — one node label per table, one
 relationship type per FK — discovered live via `RDB$` catalog introspection, not a hand-written
-mapping. Scoped by `--study <slug>` since 2026-09-18.
+mapping. Scoped by `--study <slug>` since 2026-09-18. Two more skills live alongside it:
+`GDX_SKILL_CREATE_SPU_AGENT` guides (it cannot fully automate — Neo4j Aura has no management API
+for Agent configuration) setting up the project's Neo4j Aura Agent for step 11's LLM assistant;
+`GDX_SKILL_UPDATE_WEB` is a one-way push of the catalog/mapping tables (never participant data)
+from the local `13.onboarding.env/GODATAX7HPH.GDB` to the shared `firebird.godatax.com` database.
 
 ### Step 10 — `10.gdx.machine.learning/` — Two graph ML models
 
@@ -806,17 +957,149 @@ validated causal relationship, never diagnose). See §9.
 `Virtology_Knowledge_Base.md` captures (via an automated, explicitly-flagged-as-unverified fetch)
 Eduardo Casarotto's "Virtology" system — 33 ordered virtues, Humility declared as the
 foundation, plus two hypothesized primitive neural systems (SNO/SNE) the virtues are claimed to
-neutralize. `GDX_SKILL_LINK_SUGGESTIONS` uses this base, together with an author-written
-**variable→virtue** map (narrower than, and distinct from, the still-open virtue→neural-system
-question), to rank a study's lowest-scoring psychometric indicators and suggest which virtue
-addresses each — never inventing a suggestion for a variable with no map entry (reported as
-*"no suggestion (review)"*). See §10.
+neutralize. `GDX_SKILL_LINK_SUGGESTIONS` uses this base, together with the database-backed
+**variable→virtue** map `GDX_VT_VARIABLE_VIRTUE_MAP` (narrower than, and distinct from, the still-open
+virtue→neural-system question), to rank a study's lowest-scoring psychometric indicators and
+suggest which virtue addresses each — never inventing a suggestion for a variable with no map
+entry (reported as *"no suggestion (review)"*).
+
+```mermaid
+erDiagram
+    GDX_VT_VIRTUE ||--o{ GDX_VT_VARIABLE_VIRTUE_MAP : addresses
+    GDX_PSY_VARIABLE |o--o{ GDX_VT_VARIABLE_VIRTUE_MAP : "optionally resolves to"
+
+    GDX_VT_VIRTUE {
+        bigint ID_VIRTUE PK
+        smallint ORDER_NUM UK "1..33"
+        varchar NAME_PT UK
+        varchar NAME_EN
+    }
+    GDX_VT_VARIABLE_VIRTUE_MAP {
+        bigint ID_MAPPING PK
+        bigint ID_VIRTUE FK
+        bigint ID_VARIABLE FK "nullable"
+        varchar SAV_COLUMN UK "NOT NULL — unlike the other _MAP tables' free-text label"
+        varchar VARIABLE_LABEL
+        text RECORDED_BEHAVIOR
+        text JUSTIFICATION_DEFICIT
+        text JUSTIFICATION_STRENGTH
+        varchar CONFIDENCE_LEVEL
+        varchar SCALE_POLARITY "POSITIVE (default) | NEGATIVE"
+        integer NUMBER_CONFIRMATIONS
+        varchar CONFIRMATION_BY "nullable"
+        varchar NAME_INSTITUTION "nullable"
+    }
+    GDX_PSY_VARIABLE {
+        bigint ID_VARIABLE PK
+    }
+```
+
+Both tables live in `12.gdx.virtology/virtology_model_firebird25.sql` — the database-backed
+replacement for what used to be two hand-written, duplicate `virtue_knowledge.js` copies (one per
+skill below), including its own copy of the `NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/
+`NAME_INSTITUTION` trio for structural consistency with the other three `"_MAP"` tables (§4 Steps
+3–5), even though the source code never recorded a confirmation count (every pre-existing row was
+seeded to `NUMBER_CONFIRMATIONS=1`, the person who wrote `virtue_knowledge.js` counting as its
+first confirmer). `JUSTIFICATION_DEFICIT` and `JUSTIFICATION_STRENGTH` are kept as two separate
+columns, never collapsed to one, because `GDX_SKILL_LINK_SUGGESTIONS` and
+`GDX_SKILL_IDENTIFY_VIRTUES` read different framings of the same correspondence. `SCALE_POLARITY`
+is a later addition (`12.gdx.virtology/variable_virtue_map_polarity_firebird25.sql`): it lets a
+negative-pole variable (e.g. `EmocNeg`/Negative Emotions, the one row explicitly flagged
+`NEGATIVE`) invert which end of its scale counts as the deficit vs. the strength — see
+`GDX_SKILL_IDENTIFY_VIRTUES` below.
+
+Its mirror-image sibling,
+`GDX_SKILL_IDENTIFY_VIRTUES`, reads the same table's *strength* framing to report a study's 3
+strongest (polarity-aware) indicators as virtues already potentially present — screen-only, no
+file written. A third skill, `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR`
+(`14.metaphysical.measuring.instrument/`'s sibling pattern, applied to virtues), is how a new row
+is added to `GDX_VT_VARIABLE_VIRTUE_MAP` one variable at a time, interactively. See §10.
+
+### Step 13 — `13.onboarding.env/` — Standalone local Firebird bootstrap
+
+No Firebird Server/Guardian service, no `node-firebird`, no network wire protocol: this folder's
+one skill, `GDX_SKILL_UP_FIREBIRD_DB`, builds a brand-new local database file
+(`GODATAX7HPH.GDB`) by executing `godatax_human_full_ddl_no_gdx_ead_firebird25.sql` directly
+against `GDS32.DLL` via P/Invoke (the Firebird C API) — Firebird's 2.5.3 x86 client/engine
+library plus its runtime companions (`msvcr80.dll`, three ICU DLLs, `firebird.msg`) dropped
+alongside it in this same folder. `on.bording.txt` is the human checklist this automates; its own
+step "1.e" (creating the project's Neo4j Aura Agent) is what `GDX_SKILL_CREATE_SPU_AGENT` (step 9)
+mirrors as a runnable script. The resulting local `.GDB` is also the source database
+`GDX_SKILL_UPDATE_WEB` (step 9) pushes the catalog/mapping tables from, one-way, to the shared
+`firebird.godatax.com` database.
+
+### Step 14 — `14.metaphysical.measuring.instrument/` — OT-7 instrument + generic association skills
+
+Two things live here. First, `OT7_Instrumento_Metafisico.md` documents the **OT-7** metaphysical
+measuring instrument (its 7 variables already linked to Way 5 of Aquinas's Five Ways via
+`ot7_way_map_dml_firebird25.sql`). Second — and this is the bulk of the folder — two generic
+skills for recording **one interpretive correspondence at a time**, as an alternative to the
+batch-oriented loaders in folders 3 and 12:
+
+- `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS` — links one `GDX_PSY_VARIABLE` (psychometric or
+  metaphysical) to a Septenary level, a Way of Aquinas, or a Kundalini Chakra, interactively,
+  always asking for the recorded behavior, the justification, the confidence level, and
+  (mandatory) a named confirmer + institution. Introduces `GDX_PSY_CHAKRA_VAR_MAP` — a brand-new
+  table, since `GDX_PSY_CHAKRA` itself has no mapping columns of its own.
+- `GDX_SKILL_LIST_ASSOCIATIONS` — the read-only, framework-wide inventory of every correspondence
+  recorded anywhere (chakra↔level, Way↔level, variable↔level, variable↔chakra, variable↔virtue),
+  cross-referencing a variable that appears in more than one framework. Takes no `--study` flag —
+  these are catalog-level judgment calls, not per-study data.
+
+Both skills share a `NUMBER_CONFIRMATIONS`/`CONFIRMATION_BY`/`NAME_INSTITUTION` convention
+(`confirmation_fields_association_maps_firebird25.sql`) distinct from `CONFIDENCE_LEVEL`: it
+counts independent corroborations of a correspondence, not how confident the first author was.
+`GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` (step 12) is this pattern's Virtology-specific
+sibling, kept as a separate skill because `GDX_VT_VARIABLE_VIRTUE_MAP`'s shape genuinely differs
+(no instrument column, two justification columns, a `SCALE_POLARITY` column).
+
+### Step 15 — `15.environmental.anomalous.phenomena/` — `GDX_PH_*` schema (DDL only, no skill yet)
+
+`environmental_anomalous_phenomena_model_firebird25.sql` defines 15 new tables (`GDX_PH_LOCATION`,
+`SENSOR_TYPE`, `SENSOR`, `ENVIRONMENT_CONDITION`, `SESSION`, `EVENT`, `MEDIA_FILE`, `EVENT_TAG`,
+`OBSERVATION`, `ANALYSIS_RESULT`, `INTERPRETATION`, `SENSOR_CALIBRATION`, `USER`,
+`REFERENCE_DATA`, `EVENT_VAR_MAP`) for an instrumented environmental/anomalous-phenomena
+monitoring pipeline (locations → sensors → sessions → events/observations → analysis →
+interpretation), derived from four reference images under `GDX_CTP_H7/.../ph/` and documented in
+full in `GDXH7ph_Technical_Specification_for_Environmental_and_Anomalous_Phenomena.md`. This DDL
+has been **written and is ready to apply**, following every naming/trigger/sequence convention
+established elsewhere in the project (`GDX_PH_` prefix, `BIGINT` surrogate keys via `BEFORE
+INSERT` triggers, `HIGH/MEDIUM/LOW/SPECULATIVE` confidence domain reused on
+`GDX_PH_INTERPRETATION`) — but, as of this pass, **no onboarding/loader skill exists for it yet**,
+and it is not yet wired into the DW (step 7) or the knowledge-graph export (step 9). Every table
+carries a nullable `ID_PERSON` FK straight into `GDX_PSY_PERSON`, by explicit design decision, so
+that whenever this module is loaded, its sensor timeline can be correlated against the same
+person's psychometric/physiological/cardiac-coherence data (the stated purpose of the whole
+module — see the source images' own timeline diagram). See §12/§13 for how this changes (and
+doesn't change) the project's architecture diagram.
+
+### Step 16 — `16.hypotheses.non.fingo/` — mathematical-model layer (feature space today)
+
+This is a from-scratch, project-authored mathematical model defining eight functions F1–F8 over a
+per-person feature space `x(t) = [Ψ, Φ, N, B, A, C, E, M]` — normalization/comparability (F1), latent
+representations (F2), distance/similarity (F3), the Curvature Depth Index (F4, original and
+latent), reference baselines (individual/population/normative), temporal trajectories (F6),
+Knowledge Graph relations (F7), and the Virtology application layer (F8) — with an explicit,
+repeated epistemological caveat throughout: a metaphysical category (chakra, Thomistic Way,
+septenary level) never automatically becomes a numeric feature, and a statistical association is
+never presented as a causal or ontological one.
+
+Only F1 is implemented so far, by `F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE` (MFS, §5), against a brand-new
+`GDX_HNF_*` schema (`hypotheses_non_fingo_feature_space_model_firebird25.sql`, this folder):
+`GDX_HNF_PERSPECTIVE` (the 8-symbol catalog), `GDX_HNF_FEATURE_DICTIONARY` (a cross-domain
+pointer back to the real source of each characteristic — a `GDX_PSY_VARIABLE`, a
+`GDX_CC_HRV_WINDOW` column, …), `GDX_HNF_FEATURE_SPACE_RUN`/`GDX_HNF_FEATURE_RUN_MEMBER`
+(versioned run metadata) and `GDX_HNF_FEATURE_VALUE`/`GDX_HNF_NORMALIZATION_PARAM` (the assembled
+`x(t)`/`z(t)` values and their frozen normalization parameters). Each run is immutable and
+reproducible; only the two catalogs are insert-if-missing across runs/studies. F2–F8 are expected
+to land as additional skills in this same folder, each adding its own tables on top of
+`GDX_HNF_FEATURE_SPACE_RUN` rather than this skill being extended to cover them.
 
 ---
 
 ## 5. Skills Catalog — Full Reference
 
-14 skills exist today, grouped by the folder that owns them.
+25 skills exist today, grouped by the folder that owns them.
 
 ### `0.new.instrument/`
 
@@ -890,6 +1173,72 @@ same file is safe** (it skips the instrument instead of duplicating responses); 
 does **not** compute `GDX_PSY_VARIABLE_RESULT`/`CONSTRUCT_RESULT`/`INDICATOR_RESULT` — scoring
 raw responses is future work.
 
+#### `GDX_SKILL_GENERATE_GOOGLE_FORM`
+**Purpose:** Reads a study's instruments/items/alternatives back out of Firebird and creates a
+real Google Form (Forms API) — one section per instrument, one question per item — as a
+self-contained alternative to the `.xlsx` export above.
+**Trigger:** the user wants to collect a study's answers through a Google Form link instead of
+(or alongside) the `.xlsx` workflow.
+**Inputs:** `--study <slug>` (resolved via `intake.json`); a one-time Google OAuth consent
+(Desktop-app client; cached token after the first run — the Forms API has no service-account
+support for creating/reading Forms).
+**Outputs:** a real Google Form; `new_study_intake/<slug>/google_form_map.json` (every
+`questionId` mapped to the exact `GDX_PSY_*` ids it represents — the Forms-pipeline equivalent of
+the `.xlsx` pipeline's hidden META sheet); the form's edit/share links and instructions written
+into `GDX_PSY_INSTRUMENT.GOOGLE_FORM_INFO` for every instrument the form covers.
+**How it works:** resolves each instrument's `(NAME, VERSION)`, walks its items in order
+(`RADIO` question when alternatives exist, paragraph text otherwise), captures each question's
+Google-assigned `questionId`, writes the map file and the DB column.
+**Key rules:** a `RADIO` choice has no stable id of its own in the Forms API (only the question
+does) — `google_form_map.json`'s `alternativeMap` is what lets the sibling loader skill match an
+answer's literal text safely, within one already-identified item's small option list, never
+against the whole database; `--dry-run` touches neither Google nor Firebird.
+
+#### `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS`
+**Purpose:** Pulls every response from the Google Form the skill above created and inserts them
+into Firebird — the Forms-pipeline mirror of `GDX_SKILL_LOAD_NEW_STUDY_ANSWERS`.
+**Trigger:** after `GDX_SKILL_GENERATE_GOOGLE_FORM` has created the Form and participants have
+started answering it.
+**Inputs:** `--study <slug>` → `new_study_intake/<slug>/google_form_map.json` (never re-resolves
+by the question's visible text); the same cached Google OAuth token.
+**Outputs:** `GDX_PSY_PERSON` (found-or-inserted), `GDX_PSY_STUDY_PARTICIPANT`,
+`GDX_PSY_APPLICATION` (one per instrument with any answered question in a response),
+`GDX_PSY_ITEM_RESPONSE`.
+**How it works:** each item question is already uniquely identified by `questionId`; a `RADIO`
+answer's literal text is matched case-insensitively against that item's own exact-verbatim
+option list in `alternativeMap` — no match is reported under "UNMATCHED", not guessed.
+**Key rules:** a response missing Full Name or External Identifier is skipped entirely, never
+invented; does not compute `*_RESULT` scores (same boundary as its `.xlsx` counterpart); every
+inserted `GDX_PSY_APPLICATION` is tagged `GDX_SKILL_LOAD_GOOGLE_FORM_ANSWERS:<formId>:<responseId>`
+in `CONTEXT`, so re-running only picks up new responses, never duplicates.
+
+#### `GDX_SKILL_DELETE_STUDY`
+**Purpose:** Permanently deletes one study and everything exclusively tied to it, across
+Firebird (OLTP), the DW, and Neo4j, in one pass — the mirror image of the whole onboarding chain.
+**Trigger:** the user explicitly asks to delete/remove/purge a study and its data. **The single
+most destructive skill in the repository.**
+**Inputs:** `--study <ID_STUDY>` (the numeric id, not a slug).
+**Outputs:** none written — only deletions (plus a printed per-table deletion/preservation report).
+**How it works:**
+1. Computes a full exclusivity analysis first: a person, or an instrument's
+   `GDX_PSY_PSYCHOMETRIC_PROPERTY` rows, is only deleted if no *other* study has any tie to it —
+   checked live against the database, never assumed (a documented past bug used
+   `GDX_PSY_APPLICATION.ID_INSTRUMENT` for this and got it wrong for the historical study's
+   "umbrella" applications; the fix joins through `GDX_PSY_ITEM_RESPONSE → GDX_PSY_INSTRUMENT_ITEM`
+   instead).
+2. Deletes genuinely study-owned rows outright (`GDX_PSY_STUDY`, `STUDY_PARTICIPANT`,
+   `APPLICATION`, responses/results filtered by this study's applications, matching `DW_FACT_*`).
+3. Deletes the matching Neo4j nodes (`DETACH DELETE`, same `gdx_key` rule
+   `GDX_SKILL_GODATAX_HUMAN7_BY_SPU` used to write them) and this study's `8.gdx.dashboards`
+   HTML files (resolved by matching `intake.json`'s `study.title` to the slug in the filename —
+   never a filename-substring guess).
+**Key rules:** **never** deletes catalog data (instruments, items, alternatives, indicators,
+variables, constructs, phenomena) — reusable knowledge base by deliberate design, regardless of
+sharing; always runs as a dry run by default — real deletion additionally requires `--execute`
+**and** `--confirm-title "<exact TITLE>"`, a deliberate extra step so a wrong id or a habitual
+`--execute` cannot delete the wrong study; `--skip-neo4j`/`--skip-dashboards` opt out of those
+phases.
+
 ### `2.relational.model.psychometrics/`
 
 #### `GDX_SKILL_LOAD_RLT_MODEL_DB`
@@ -915,9 +1264,12 @@ skips it but nothing is ever deleted); `--only <1-8>` re-runs a single failed st
 **Purpose:** Runs CFA/EFA psychometric analyses sourced from the live database instead of the
 `.sav`, for all 11 instruments. Track A: re-runs the Career Adapt-Abilities Scale's CFA/EFA as an
 independent cross-check. Track B: runs both EFA and CFA for every other multi-item instrument,
-discovering item structure computationally since `GDX_PSY_INDICATOR_ITEM` is empty in this
-database. Track C: descriptive statistics only for the two single-item instruments (no factor
-analysis is mathematically possible with 1 item).
+discovering item structure computationally since `GDX_PSY_INDICATOR_ITEM` was empty in this
+database at the time this skill was built — since partially backfilled for 5 single-index/
+already-documented instruments by `study1_indicator_backfill_partial_firebird25.sql` (§4 Step 2),
+but Track B's own correlation-based discovery logic is unchanged and still runs independently of
+that table's contents. Track C: descriptive statistics only for the two single-item instruments
+(no factor analysis is mathematically possible with 1 item).
 **Trigger:** the user wants to (re)verify the `.sav`-sourced CAAS psychometric properties, or run
 factor analysis for instruments beyond CAAS ("all variables"/"all instruments").
 **Inputs:** Track A: `GDX_PSY_ITEM_RESPONSE`/`GDX_PSY_VARIABLE_RESULT` for `ID_INSTRUMENT=3`. Track
@@ -1003,18 +1355,26 @@ column match, or exact variable-name match).
 **Key rules:** never truncates/deletes anything (unlike the whole-database, one-shot
 `godatax_human_dw_etl_firebird25.sql`); never loads another study's rows; never computes
 `GDX_PSY_VARIABLE_RESULT`; a fact-grain collision `(person, item)`/`(person, variable)` against a
-*different* application is reported, never silently overwritten.
+*different* application is reported, never silently overwritten. Since the addition of
+`dw_virtue_chakra_way_bridges_firebird25.sql` (this folder), it also bootstraps `DW_DIM_VIRTUE`
+and mirrors every matching row of `GDX_VT_VARIABLE_VIRTUE_MAP`/`GDX_PSY_CHAKRA_VAR_MAP`/
+`GDX_TA_WAY_SEPT_MAP`'s variable extension into three new **bridge tables**
+(`DW_BRIDGE_VARIABLE_VIRTUE`/`_CHAKRA`/`_WAY`) — genuinely many-to-many junction tables (a
+variable can map to several virtues at once), not single FK columns, global/bootstrap-once like
+the other reference dimensions, never study-scoped.
 
 ### `8.gdx.dashboards/`
 
 #### `GDX_SKILL_MAKE_DASHBOARS_DW`
-**Purpose:** Generates 9 self-contained HTML charts from the DW, scoped to one study.
+**Purpose:** Generates self-contained HTML charts from the DW, scoped to one study — 9 aggregate
+charts by default, plus two further chart types reachable separately (see below).
 **Trigger:** the user asks for dashboards/charts/visualizations of a specific study.
 **Inputs:** `--study <slug>` (required); `--chart <code>` (optional, one of `00`-`08` — generates
-only that one chart, loading only its own queries, instead of all 9).
+only that one chart, loading only its own queries, instead of all 9 — or `10` for the master
+panel, see below).
 **Outputs:** up to 9 `.html` files named
 `dashboard_0N_<chart>__<slug>__<title-slug>__<YYYYMMDD-HHMMSS>.html` (never overwrites an
-earlier run).
+earlier run) from the default run.
 **How it works:** resolves the slug to `ID_STUDY`, then for each selected chart code runs its own
 query — charts 0 (top panel)/1–6/8 against `DW_FACT_*`/`DW_DIM_*` filtered on
 `DW_DIM_PERSON.ID_STUDY`; chart 0's bottom panel (and only that) against
@@ -1029,6 +1389,22 @@ mean response score participants actually gave against the mean EFA/CFA `\|`fact
 `GDX_PSY_PSYCHOMETRIC_PROPERTY` — two panels, not one shared axis, since the two quantities are on
 unrelated scales; only the Career Adapt-Abilities Scale has any EFA/CFA rows today, so every other
 instrument's bottom panel is empty by design, not a bug.
+
+**Two more chart types, separate entry points:**
+- **Chart 09 — per-respondent profile** (`make_dashboard_09_respondent.js`): one file **per
+  participant** (not an aggregate) — their own item-by-item answers, their subscale scores
+  plotted against the study's own mean/range, the Virtology virtue each variable is associated
+  with, and an explicit "no individual factor score exists yet" note rather than a fabricated
+  one. `--person <id-or-substring>` scopes to one participant; omitted, it writes one file for
+  every participant the study has. Reads `STATEMENT_TEXT` BLOBs one at a time, sequentially —
+  `node-firebird`'s `blobAsText` convenience option was found to hang past a few dozen blob rows
+  in one result set, a verified driver concurrency bug, not a SQL problem.
+- **Chart 10 — master panel** (`make_master_panel.js`, also reachable as `--chart 10` on the main
+  script): combines every chart 00–09 plus a phase-by-phase retrospective of the whole pipeline
+  for one study (registration → data collection → factor analysis → metaphysical/virtue
+  associations → DW load → Neo4j export, queried live → latest link-prediction suggestions, read
+  from its most recent report). Fully read-only; `--sample` is not supported here (it always
+  reads live Firebird/Neo4j/disk).
 
 ### `9.knowledge.graph/`
 
@@ -1053,6 +1429,47 @@ not truncate) — unlike the DW loader or the dashboards skill, which are one-se
 **Scale:** 55 tables, 70 FKs in scope; a scoped run for the one existing study writes ~141,700
 nodes / ~331,800 relationships — always `--dry-run` first, prefer `--tables`/`--limit` before a
 full run.
+
+#### `GDX_SKILL_CREATE_SPU_AGENT`
+**Purpose:** Guides creating (or confirming) the Neo4j Aura Agent that backs step 11's LLM
+assistant.
+**Trigger:** the user asks to set up, verify, or recreate the project's Neo4j Aura Agent.
+**Inputs:** live `NEO4J_*` connectivity; `11.gdx.llm.agent.mcp/prompt.instruction.txt` (read
+live, never duplicated/hardcoded).
+**Outputs:** none written to any database — only a connectivity check result and printed console
+guidance.
+**How it works:** Neo4j Aura has **no management API** to list, read, or create an Agent's
+configuration (console-UI-only) — so this skill does only what it honestly can: (1) verifies the
+underlying Aura *database* instance is reachable; (2) prints the exact Name/Description/Prompt/
+sharing-scope values to use, sourced live from `prompt.instruction.txt`; (3) asks the user,
+interactively, whether an Agent by that name already exists, and reflects that answer back —
+never fabricating "created"/"already exists" on its own.
+**Key rules:** never claims to have created or verified the Agent itself (the only Agent fact it
+reports is the user's own typed answer); never hardcodes the prompt text or Neo4j credentials; a
+failed connectivity check is a warning, not a hard stop — the console guidance still prints.
+
+#### `GDX_SKILL_UPDATE_WEB`
+**Purpose:** One-way push of the instrument/construct/variable/item catalog and every
+interpretive mapping table from the local `13.onboarding.env/GODATAX7HPH.GDB` to the shared
+`firebird.godatax.com` database.
+**Trigger:** the user asks to publish/sync/update the local instrument catalog to the web
+database.
+**Inputs:** `--tables=T1,T2,...` (optional, scoped run — validated against a fixed allowlist, a
+hard error if out of scope); both databases' connection settings.
+**Outputs:** upserted rows on the web database, by primary key, across a fixed, explicit
+allowlist (`CATALOG_TABLES` + `CONFIRMATION_TABLES` in `scripts/tables.js` — a prefix match would
+be unsafe here, unlike the sibling export skill above).
+**How it works:** for plain catalog tables, local content always overwrites web on a difference
+(no confirmation bookkeeping). For the four interpretive mapping tables
+(`GDX_PSY_SEPT_LEVEL_PSY_MAP`/`GDX_PSY_CHAKRA_VAR_MAP`/`GDX_TA_WAY_SEPT_MAP`/
+`GDX_VT_VARIABLE_VIRTUE_MAP`), content still syncs unconditionally, but `NUMBER_CONFIRMATIONS`
+only increments when the push's origin IP (auto-detected, or `GDX_SYNC_ORIGIN_IP` override)
+differs from the IP already on record — the same origin re-confirming never inflates the count.
+**Key rules:** **never** pushes anything that identifies or carries participant data
+(`GDX_PSY_STUDY*`, `GDX_PSY_PERSON`, every `GDX_PSY_*_RESULT`/`ITEM_RESPONSE`, all `GDX_CC_*`,
+`DW_DIM_PERSON`/`SESSION`, every `DW_FACT_*`) — enforced by an explicit denylist checked on every
+read/write, independent of the allowlist; never pulls web back to local (one-way only); never
+hardcodes credentials.
 
 ### `10.gdx.machine.learning/`
 
@@ -1105,7 +1522,154 @@ Virtology virtues, which one addresses each.
 lowest-to-highest average score for that study only, looks up each in `virtue_knowledge.js`.
 **Key rules:** never guesses a virtue — a variable with no map entry is reported
 *"no suggestion (review)"*; every report repeats the same interpretive-not-clinical caveat used
-throughout folders 3–5.
+throughout folders 3–5. Since 2026-10-15, both this skill and `GDX_SKILL_IDENTIFY_VIRTUES` read
+the correspondence live from Firebird's `GDX_VT_VARIABLE_VIRTUE_MAP` (not a hand-written
+`virtue_knowledge.js`, which is no longer read by either script) — a new row added anywhere is
+visible to both immediately, with no cross-file sync problem.
+
+#### `GDX_SKILL_IDENTIFY_VIRTUES`
+**Purpose:** The mirror image of the skill above — ranks a study's 3 **strongest** psychometric
+indicators and points to each one's virtue as a potential **strength already present**, not a
+treatment target.
+**Trigger:** the user asks which virtues a specific study's participants already show potential
+for, based on their strongest scores.
+**Inputs:** `--study <slug>` (required); the same `DW_FACT_PSY_VARIABLE_RESULT` join as the
+sibling skill; `GDX_VT_VARIABLE_VIRTUE_MAP`'s `JUSTIFICATION_STRENGTH` and `SCALE_POLARITY`
+columns.
+**Outputs:** none — prints straight to the terminal, no `--out` flag on purpose (the deliberate
+opposite of the sibling's file-writing behavior).
+**How it works:** ranks indicators **polarity-aware** since 2026-10-18 — a `NEGATIVE`-polarity
+variable's (e.g. Negative Emotions) *low* score, not its high one, counts as the strength;
+polarity is read from `SCALE_POLARITY` (set once, by `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR`,
+never guessed here — defaults to `POSITIVE` only when no correspondence is recorded at all).
+**Key rules:** never guesses a virtue (unmapped variable reported *"sem virtude identificada
+(revisar)"*); never writes to Firebird/Neo4j or to a file; repeats the same interpretive-not-
+clinical caveat as its sibling.
+
+#### `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR`
+**Purpose:** Interactively associates one `GDX_PSY_VARIABLE` to one of the 33 Virtology virtues,
+writing (or confirming, or correcting) a row in `GDX_VT_VARIABLE_VIRTUE_MAP` — one association at
+a time, never a batch.
+**Trigger:** the user wants to connect/map/link a specific variable to a virtue, or
+confirm/corroborate/correct an existing association.
+**Inputs:** `--variable`/`--variable-id`; `--virtue <1-33>`; `--behavior`;
+`--justification-deficit` **and** `--justification-strength` (both always asked, never one
+derived from the other); `--scale-polarity POSITIVE|NEGATIVE`; `--confidence` (default
+`SPECULATIVE`); `--confirmed-by` and `--institution` (mandatory on every insert/confirm).
+**Outputs:** one new, updated, or re-confirmed row in `GDX_VT_VARIABLE_VIRTUE_MAP`.
+**How it works:** resolves the variable's `SAV_COLUMN` live from `DW_DIM_VARIABLE` (mandatory,
+`NOT NULL`/`UNIQUE` on this table — refuses the insert rather than invent one if absent); checks
+for an existing association first (`--confirm <id>` to corroborate — `NUMBER_CONFIRMATIONS += 1`,
+content untouched; `--update <id>` to correct content without touching the confirmation count;
+`--allow-duplicate` for a genuine second row); always a confirmed `--dry-run` before a real write.
+**Key rules:** never invents the virtue, the behavior, either justification, the scale polarity,
+or the confirmer/institution — every one is a question to the user, not a default (notably,
+`--scale-polarity` has no accepted default from this script even though the column itself
+defaults to `POSITIVE` at the schema level); never touches the 33-virtue catalog itself; never
+runs DDL. The Virtology-specific sibling of `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`
+(§4 step 14), mirroring its interactive pattern exactly, kept separate because this table's shape
+(no instrument column, two justifications, a polarity column) genuinely differs from the other
+three `"_MAP"` tables.
+
+### `13.onboarding.env/`
+
+#### `GDX_SKILL_UP_FIREBIRD_DB`
+**Purpose:** Creates a local Firebird database file (`GODATAX7HPH.GDB`) from the full DDL script,
+with no Firebird Server/Guardian service and no wire protocol involved at all.
+**Trigger:** the user asks to (re)build the local database from the DDL, or to stand up a fresh
+onboarding database in this folder.
+**Inputs:** `godatax_human_full_ddl_no_gdx_ead_firebird25.sql`; `GDS32.DLL` plus its runtime
+companions (`msvcr80.dll`, `icuuc30.dll`/`icuin30.dll`/`icudt30.dll`, `firebird.msg`) in the same
+folder (Windows resolves a DLL's own dependencies from the directory it was loaded from — none of
+this works without all five sitting together).
+**Outputs:** the `.gdb` file itself (deleted and rebuilt with `-Force`; the script refuses to run
+against an existing file otherwise).
+**How it works:** a PowerShell script P/Invokes the Firebird C API directly (`Add-Type`, all
+`[DllImport]`s declared `StdCall` — declaring them `Cdecl` loads fine and even works for the
+first several dozen calls before crashing with no managed exception, a real calling-convention
+bug found during development), auto-relaunching itself under 32-bit PowerShell since `GDS32.DLL`
+is x86-only. `-DryRun` parses and counts statements by kind without touching anything.
+**Key rules:** on any failure mid-run, rolls back, detaches, and deletes the partially-created
+file (its own just-created artifact, never pre-existing user data) rather than leaving a corrupt
+database behind; no `.env` — every connection parameter (`-User`/`-Password`, default
+`SYSDBA`/`masterkey`) is a safe, overridable default for a throwaway local file, not a shared
+secret. Verified end-to-end against the 2026-10-19 DDL (427 statements: 55 sequences, 77 tables,
+50 check constraints, 114 FKs, 66 indexes, 55 triggers).
+
+### `14.metaphysical.measuring.instrument/`
+
+#### `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS`
+**Purpose:** Interactively associates one `GDX_PSY_VARIABLE` to a Septenary Constitution level, a
+Way of Thomas Aquinas, or a Kundalini Chakra — one association at a time, as opposed to
+`GDX_SKILL_LOAD_SEPT_MAPS_DB`'s whole-study batch.
+**Trigger:** the user wants to connect/map/link one specific variable (e.g. an OT-7 metaphysical
+variable, or any psychometric variable) to one of these three frameworks, or confirm/corroborate
+one that already exists.
+**Inputs:** `--variable`/`--variable-id`; `--target septenary|way|chakra` plus `--level <1-7>` /
+`--way <1-5>` / `--chakra <1-7>`; `--behavior`; `--justification`; `--confidence` (default
+`SPECULATIVE`); `--confirmed-by` and `--institution` (mandatory on every insert/confirm).
+**Outputs:** one new/updated/re-confirmed row in `GDX_PSY_SEPT_LEVEL_PSY_MAP`,
+`GDX_TA_WAY_SEPT_MAP`, or `GDX_PSY_CHAKRA_VAR_MAP` (a **new** table this skill's `--target
+chakra` depends on — `GDX_PSY_CHAKRA` itself has no mapping columns of its own; must be applied
+once before use).
+**How it works:** resolves the variable and the target catalog row live, echoing the resolved
+name back for confirmation; for `--target way`, never asks for a septenary level — it is read
+from that Way's own existing conceptual row, so a variable's Way association can never
+contradict the Way↔Level correspondence already on record; checks for an existing association
+first (`--confirm`/`--update`/`--allow-duplicate`, same three-way branch as its Virtology
+sibling); always a confirmed `--dry-run` before a real write.
+**Key rules:** never invents the level/way/chakra, the behavior, the justification, or the
+confirmer/institution; never touches the fixed catalogs themselves; never runs DDL. The general
+pattern `GDX_SKILL_ASSOCIATES_VIRTUE_TO_CONSTRUCTOR` (§5, `12.gdx.virtology/`) mirrors for the
+virtue-specific case.
+
+#### `GDX_SKILL_LIST_ASSOCIATIONS`
+**Purpose:** Read-only, framework-wide inventory of every interpretive correspondence recorded
+anywhere in the project — not scoped to a study.
+**Trigger:** the user asks what correspondences the framework has already made between its
+philosophical/esoteric models (or each other, or behavior/psychometric variables), or wants an
+audit of those judgment calls.
+**Inputs:** none beyond connection settings — no `--study` flag exists (passing one is a hard
+error): every source is a catalog/reference table, identical regardless of which study is being
+looked at.
+**Outputs:** `14.metaphysical.measuring.instrument/Framework_Associations_<timestamp>.md`,
+also printed to the console.
+**How it works:** reads five Firebird tables — `GDX_PSY_CHAKRA` (chakra↔level, 7 rows, the one
+table with neither `CONFIDENCE_LEVEL` nor `NUMBER_CONFIRMATIONS`), `GDX_PSY_CHAKRA_VAR_MAP`,
+`GDX_TA_WAY_SEPT_MAP`, `GDX_PSY_SEPT_LEVEL_PSY_MAP`, and `GDX_VT_VARIABLE_VIRTUE_MAP` ×
+`GDX_VT_VIRTUE` — cross-referencing by `.sav` column where a variable appears in more than one
+section (e.g. `ENGAGvigor`), and summing `NUMBER_CONFIRMATIONS` per section and overall.
+**Key rules:** never invents an association (every printed row is a real Firebird row); never
+writes to Firebird/Neo4j (Markdown report only); repeats the same no-empirical-validity caveat
+every correspondence table in the project already carries; has no knowledge file of its own — a
+new correspondence added anywhere is picked up automatically on the next run.
+
+### `16.hypotheses.non.fingo/`
+
+#### `F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE` (MFS)
+**Purpose:** Implements F1 of this project's multidimensional feature-space model — for one study,
+assembles a per-person feature space `x(t)` from every perspective with real operationalized
+data today (Ψ psychometrics, Φ physiology) and normalizes it into `z(t)` (z-score/min-max/robust).
+**Trigger:** the user asks to build/generate the feature space for a study, as the first step of
+this new mathematical model.
+**Inputs:** `--study <slug>` (required); `--normalization zscore|minmax|robust` (default
+`zscore`); `--include-graph` (also scans Neo4j, see below); `--intake-dir`; `--dry-run`.
+**Outputs:** new rows in `GDX_HNF_FEATURE_SPACE_RUN`, `GDX_HNF_FEATURE_RUN_MEMBER`,
+`GDX_HNF_FEATURE_VALUE` and `GDX_HNF_NORMALIZATION_PARAM` (one new, immutable run every
+execution); insert-if-missing rows in the shared `GDX_HNF_PERSPECTIVE`/`GDX_HNF_FEATURE_DICTIONARY`
+catalogs.
+**How it works:** reads `GDX_PSY_VARIABLE_RESULT`/`GDX_PSY_APPLICATION` and
+`GDX_CC_HRV_WINDOW`/`GDX_CC_SESSION`, preferring `DW_FACT_PSY_VARIABLE_RESULT`/
+`DW_FACT_CC_HRV_WINDOW` (step 7) instead when that study is already loaded into the DW (checked
+live); builds a dense per-(person, psychometric variable) matrix with explicit `IS_MISSING`
+flags, and a sparse per-real-session matrix for physiology; computes and freezes this run's own
+normalization parameters (`REFERENCE_SAMPLE='STUDY_SAMPLE'`); with `--include-graph`, also scans
+each person's `GDX_PSY_PERSON` node in Neo4j for extra numeric properties, but only reports them
+(never auto-catalogs a graph property into a perspective on its own).
+**Key rules:** never computes a latent embedding, a distance, a CDI, a baseline, or anything from
+F2–F8 (later skills in this folder); never turns a metaphysical category (M) into a feature;
+never imputes/zero-fills a missing value; never updates a past run in place; never writes to
+Neo4j.
 
 ---
 
@@ -1273,6 +1837,20 @@ date).
 `DW_FACT_PSY_VARIABLE_RESULT → DW_DIM_VARIABLE.ID_SEPTENARY_LEVEL → DW_DIM_SEPTENARY_LEVEL →
 (DW_DIM_CHAKRA / DW_DIM_FIVE_WAY)`. That single FK on `DW_DIM_VARIABLE` — not duplicated on the
 fact — is what lets one query relate a score to "its" chakra and "its" way of Aquinas at once.
+
+**Extension — the virtue/chakra/way bridges (`dw_virtue_chakra_way_bridges_firebird25.sql`,
+this folder):** not shown in the ER diagram above (added after it). A 13th dimension,
+`DW_DIM_VIRTUE` (mirroring `GDX_VT_VIRTUE`'s 33 rows), plus three pure junction tables —
+`DW_BRIDGE_VARIABLE_VIRTUE`, `DW_BRIDGE_VARIABLE_CHAKRA`, `DW_BRIDGE_VARIABLE_WAY` — each a
+composite-PK `(ID_VARIABLE, ID_<other>)` link with no surrogate key of its own, the same
+plain-junction shape as `GDX_PSY_INSTRUMENT_CONSTRUCT` elsewhere in the project. Bridges, not
+three more single FK columns on `DW_DIM_VARIABLE` (the way `ID_SEPTENARY_LEVEL` works), because
+these three correspondences are genuinely many-to-many in the live data — e.g. the IPIP-VIA
+"Forgiveness" variable already maps to three different virtues; a single FK column would
+silently drop every mapping past the first. Loaded by `GDX_SKILL_LOAD_NEW_STUDY_DW` alongside
+every other global/bootstrap-once dimension (never study-scoped), and picked up by
+`GDX_SKILL_GODATAX_HUMAN7_BY_SPU`'s `DW_BRIDGE_*`-aware introspection with no further code change
+there.
 
 ### Validated load (real numbers, `godatax.human`)
 
@@ -1555,14 +2133,19 @@ Several documents repeat, in different words, the same rules — worth naming on
 
 ---
 
-## 12. Proposed Architecture Extension — Environmental, Energetic & Anomalous Phenomena Sensing
+## 12. Architecture Extension — Environmental, Energetic & Anomalous Phenomena Sensing
 
 > Source: slides 84–90 of `GDX_CTP_H7/GDX_DOCUMENTS/GDX_HUMAN/GoDataXHuman7-Br2.odp`
-> ("Environmental, Energetic & Anomalous Phenomena Measurement"). **This is a designed but not
-> yet implemented extension** — no folder, schema, or skill exists for it in this repository
-> today. It is documented here, reconstructed from the slide deck's diagrams, together with
-> concrete recommendations for folding it into the existing `GDX_HUMAN` conventions if/when it is
-> built — the improvement pass the user asked for.
+> ("Environmental, Energetic & Anomalous Phenomena Measurement"). **Status as of this pass: the
+> relational schema has been written and is real** —
+> `15.environmental.anomalous.phenomena/environmental_anomalous_phenomena_model_firebird25.sql`
+> (15 tables, `GDX_PH_*` prefix) exists in this repository, following most of §12.6's own
+> recommendations below. **What is still missing**: no onboarding/loader skill, no `--study`
+> scoping column, and no wiring into the DW (step 7) or the knowledge-graph export (step 9) — so
+> this schema can be applied to a database today, but nothing in the pipeline reads or writes it
+> yet. The rest of this section (§12.1–§12.5) is kept as originally written, reconstructed from
+> the slide deck's diagrams; §12.6 is updated to show which of its four recommendations the real
+> DDL actually followed.
 
 ### 12.1 Concept
 
@@ -1773,57 +2356,62 @@ A 4-stage discipline for turning a raw signal into a labeled hypothesis, never s
    communication — hypothesis**) while keeping *measured* and *interpreted* explicitly separate
    — the same **"Measured ≠ Interpreted"** rule already enforced project-wide (§11).
 
-### 12.6 How this should integrate with the existing `GDX_HUMAN` architecture (improvements)
+### 12.6 How this integrates with the existing `GDX_HUMAN` architecture — recommended then, checked now
 
-The slide deck designs this as a standalone system. To make it a first-class citizen of
-`GDX_HUMAN` rather than a parallel silo, four changes are recommended before implementation,
-each grounded in a convention this repository already validated elsewhere:
+The slide deck designed this as a standalone system. Four changes were originally recommended to
+make it a first-class citizen of `GDX_HUMAN` rather than a parallel silo; the real DDL
+(`15.environmental.anomalous.phenomena/environmental_anomalous_phenomena_model_firebird25.sql`)
+now exists, so each recommendation below is checked against what was actually built:
 
-1. **Rename to the project's schema convention.** Every existing schema uses an
-   `UPPER_SNAKE_CASE` name with a domain prefix (`GDX_PSY_*`, `GDX_TA_*`, `GDX_CC_*`, `DW_*`).
-   The proposed tables should become `GDX_ENV_LOCATION`, `GDX_ENV_SENSOR_TYPE`, `GDX_ENV_SENSOR`,
-   `GDX_ENV_CONDITION`, `GDX_ENV_SESSION`, `GDX_ENV_EVENT`, `GDX_ENV_MEDIA_FILE`,
-   `GDX_ENV_EVENT_TAG`, `GDX_ENV_OBSERVATION`, `GDX_ENV_ANALYSIS_RESULT`,
-   `GDX_ENV_INTERPRETATION`, `GDX_ENV_SENSOR_CALIBRATION`, `GDX_ENV_REFERENCE_DATA` — with
-   `BIGINT` surrogate keys assigned by a `SEQ_GDX_ENV_*` sequence + `BEFORE INSERT` trigger, the
-   same Firebird 2.5 pattern every other schema in this repository already uses (never a
-   framework-generated auto-increment id).
-2. **Link back to the single central person, optionally.** Add a nullable `ID_PERSON BIGINT`
-   (FK to `DW_DIM_PERSON`, the same pattern §6 documents for `GDX_CC_PERSON`) on
-   `GDX_ENV_SESSION`, so an environmental-sensing session that happens to involve a specific
-   study participant can be correlated with that person's psychometric and cardiac-coherence
-   profile — nullable because many sessions (e.g. unattended site monitoring) have no single
-   person to attach.
-3. **Add `ID_STUDY` for `--study` scoping.** Give `GDX_ENV_SESSION` a nullable `ID_STUDY BIGINT`
-   so a future `GDX_SKILL_LOAD_ENV_SESSIONS_DB` and an extended
-   `GDX_SKILL_GODATAX_HUMAN7_BY_SPU` (its own `SKILL.md` already states it "never hardcodes a
-   table" — adding the `GDX_ENV_*` prefix to its scope list is the only change needed) can scope
-   this data exactly the way every other skill built since 2026-09-17 already does (§11).
+1. **Rename to the project's schema convention.** ✅ *Followed, with a different prefix than
+   recommended.* Every table uses `UPPER_SNAKE_CASE` with `BIGINT` surrogate keys assigned by a
+   `SEQ_GDX_PH_*` sequence + `BEFORE INSERT` trigger — the same Firebird 2.5 pattern every other
+   schema uses. The chosen prefix is **`GDX_PH_`** (Environmental/**Ph**enomena), not the
+   `GDX_ENV_*` this section originally suggested — `GDX_PH_LOCATION`, `SENSOR_TYPE`, `SENSOR`,
+   `ENVIRONMENT_CONDITION`, `SESSION`, `EVENT`, `MEDIA_FILE`, `EVENT_TAG`, `OBSERVATION`,
+   `ANALYSIS_RESULT`, `INTERPRETATION`, `SENSOR_CALIBRATION`, `USER`, `REFERENCE_DATA`, plus one
+   table not in the original slides at all, `GDX_PH_EVENT_VAR_MAP` (added per a later,
+   separate instruction, keyed on `GDX_PH_EVENT`).
+2. **Link back to the single central person.** ✅ *Followed, more broadly than recommended.* A
+   nullable `ID_PERSON BIGINT` FK straight into `GDX_PSY_PERSON` was added not just to
+   `GDX_PH_SESSION` as originally suggested, but to **all 15 tables** — including pure
+   catalog/configuration ones (`GDX_PH_LOCATION`, `SENSOR_TYPE`, `SENSOR`, `USER`,
+   `REFERENCE_DATA`) where it isn't strictly required by the data's own meaning, by explicit
+   design decision, mirroring how `GDX_PSY_STUDY_PARTICIPANT`/`APPLICATION` link participant
+   data to `GDX_PSY_PERSON` elsewhere — just extended here to the whole module. Nullable
+   everywhere, never `NOT NULL` (a baseline/unattended session may have no single person).
+3. **Add `ID_STUDY` for `--study` scoping.** ❌ **Not done.** `GDX_PH_SESSION` has no `ID_STUDY`
+   column, and no skill exists yet to load data into this schema or scope it per study — this is
+   the main remaining gap before this module can plug into the rest of the pipeline the way every
+   other `--study`-scoped skill does (§11).
 4. **Reuse the project's confidence/classification pattern instead of inventing a new one.**
-   `GDX_ENV_INTERPRETATION.confidence_level` should be the same
-   `HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE` enum already used by
-   `GDX_PSY_SEPT_LEVEL_PSY_MAP.CONFIDENCE_LEVEL` and `GDX_TA_WAY_SEPT_MAP.CONFIDENCE_LEVEL` —
-   the slides' own "Measured ≠ Interpreted" mantra (§12.5) is exactly the discipline this project
-   already enforces everywhere else; reusing the pattern is more consistent than inventing a
-   parallel one.
+   ✅ *Followed.* `GDX_PH_INTERPRETATION.CONFIDENCE_LEVEL` reuses the exact same
+   `HIGH`/`MEDIUM`/`LOW`/`SPECULATIVE` domain as `GDX_PSY_SEPT_LEVEL_PSY_MAP.CONFIDENCE_LEVEL`
+   and `GDX_TA_WAY_SEPT_MAP.CONFIDENCE_LEVEL`.
 
-With those four changes, this extension would plug in as **Step 13** in the pipeline (§13),
-feeding the DW (a new `DW_FACT_GDX_ENV_EVENT` grain) and the knowledge graph (automatically, via
-the existing introspection-based export) with no redesign of either.
+**What is still needed before this plugs into Step 7/9**: an `ID_STUDY` column (or an equivalent
+scoping path) on `GDX_PH_SESSION`; a loader/onboarding skill (there is none yet — see §4 Step
+15); and, once that scoping exists, adding the `GDX_PH_*` prefix to
+`GDX_SKILL_GODATAX_HUMAN7_BY_SPU`'s scope list (that skill's own `SKILL.md` already states it
+"never hardcodes a table" — this would be the only code change needed there) and a new DW fact
+grain (`DW_FACT_GDX_PH_EVENT`, say) analogous to the three that already exist.
 
 ---
 
 ## 13. Logical Architecture Diagram
 
 Updated from `GDX_Human_Logical_Architecture-en.drawio` (2026-09-15) to reflect the current state
-of the repository — step 0's four skills are implemented (not planned), both ML models in step
-10 are implemented and validated (not a roadmap item), and the proposed step 13 from §12 is added
-as a dashed, not-yet-implemented extension.
+of the repository as of 2026-11-06 — step 0's skills (now 7, including the Google Forms
+alternative pipeline and `GDX_SKILL_DELETE_STUDY`) are implemented, both ML models in step 10
+are implemented and validated, folders 13 (standalone local-Firebird bootstrap + web sync) and 14
+(generic, interactive variable↔framework association skills) are added as their own layer, and
+step 15 moves from "proposed" to "schema implemented, not yet wired in" (see §12.6) — still a
+dashed link into the DW, since no loader/`--study` scoping exists for it yet.
 
 ```mermaid
 flowchart TB
     subgraph L1["ACQUISITION LAYER — Instrument & Raw Data"]
-        S0["0 · New Instrument Onboarding<br/>4 skills, fully implemented"]
+        S0["0 · New Instrument Onboarding<br/>7 skills, fully implemented"]
         S1["1 · SPSS Source Data<br/>423 respondents · 159 variables"]
         SENSOR["Medical Sensor<br/>ECG / RR / HRV wearable"]
     end
@@ -1834,22 +2422,27 @@ flowchart TB
         S4["4 · Kundalini Chakras<br/>GDX_PSY_CHAKRA"]
         S5["5 · Five Ways of Aquinas<br/>GDX_TA_WAY"]
         S6["6 · Cardiac Coherence<br/>GDX_CC_*"]
+        S14["14 · Metaphysical Measuring Instrument<br/>OT-7 + generic association skills"]
     end
 
     subgraph L3["INTEGRATION LAYER"]
-        S7["7 · Data Warehouse<br/>11 dimensions + 3 facts"]
+        S7["7 · Data Warehouse<br/>12 dimensions + 3 facts + 3 bridges"]
         S9["9 · Knowledge Graph, Neo4j<br/>55 tables to nodes, 70 FKs to edges"]
     end
 
     subgraph L4["ANALYTICS & CONSUMPTION LAYER"]
-        S8["8 · Dashboards<br/>8 self-contained HTML charts"]
+        S8["8 · Dashboards<br/>11 chart types, self-contained HTML"]
         S10["10 · Machine Learning<br/>Link Prediction + Community Detection"]
         S11["11 · GDX Human Agent, LLM<br/>Neo4j-grounded chatbot"]
-        S12["12 · Virtology<br/>33 virtues to link suggestions"]
+        S12["12 · Virtology<br/>33 virtues · suggestions · strengths"]
     end
 
-    subgraph L5["PROPOSED EXTENSION — not yet implemented, see Section 12"]
-        S13["13 · Environmental & Anomalous<br/>Phenomena Sensing"]
+    subgraph L0b["INFRASTRUCTURE — local bootstrap & publishing"]
+        S13["13 · Onboarding Env<br/>local Firebird (GDS32.DLL) + web sync"]
+    end
+
+    subgraph L5["SCHEMA IMPLEMENTED, NOT YET WIRED IN — see Section 12.6"]
+        S15["15 · Environmental & Anomalous<br/>Phenomena Sensing — GDX_PH_*, 15 tables"]
     end
 
     S0 -.->|catalog| S2
@@ -1858,27 +2451,36 @@ flowchart TB
     S2 -->|GDX_SKILL_LOAD_SEPT_MAPS_DB| S3
     S3 --> S4
     S3 --> S5
+    S2 -->|GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS| S14
+    S14 -.-> S3
+    S14 -.-> S4
+    S14 -.-> S5
     S2 --> S7
     S3 --> S7
     S4 --> S7
     S5 --> S7
     S6 --> S7
+    S12 --> S7
     S2 -.-> S9
     S6 -.->|GDX_SKILL_GODATAX_HUMAN7_BY_SPU| S9
     S7 -->|DW to graph| S9
     S7 -->|GDX_SKILL_MAKE_DASHBOARS_DW| S8
-    S7 -->|GDX_SKILL_LINK_SUGGESTIONS| S12
+    S7 -->|GDX_SKILL_LINK_SUGGESTIONS / IDENTIFY_VIRTUES| S12
     S9 -->|FastRP + Louvain| S10
     S9 -->|Cypher queries| S11
     S10 -.->|reviewed suggestions, human review| S3
-    S6 -.-> S13
-    S13 -.->|future GDX_ENV_* schema| S7
+    S13 -.->|GDX_SKILL_UP_FIREBIRD_DB| S2
+    S13 -->|GDX_SKILL_UPDATE_WEB, one-way| S13W[("firebird.godatax.com<br/>(shared web DB)")]
+    S9 -.->|GDX_SKILL_CREATE_SPU_AGENT, console-guided| S11
+    S6 -.-> S15
+    S15 -.->|no --study scoping, no loader skill yet| S7
 ```
 
 **Legend:** solid arrow = implemented data flow; dashed arrow = schema introspection, human-review
-feedback, or a not-yet-implemented link. Methodological note (unchanged from the original
-diagram): the septenary/chakra/Five-Ways/virtology correspondences are interpretive, qualitative
-readings — see §11 and the `*_Mapping.md` files in each folder.
+feedback, console-guided (not API-automatable) setup, or a not-yet-wired-in link. Methodological
+note (unchanged from the original diagram): the septenary/chakra/Five-Ways/virtology
+correspondences are interpretive, qualitative readings — see §11 and the `*_Mapping.md` files in
+each folder.
 
 ---
 
@@ -1892,5 +2494,9 @@ readings — see §11 and the `*_Mapping.md` files in each folder.
 | Understand the philosophical bridges | `3.septenary.constitution/SPSS_Septenary_Constitution_Mapping.md` (read first — the others reference it) |
 | See the study's real numbers as charts | `8.gdx.dashboards/Dashboards_DW_Explanation.md` |
 | Understand the graph and the ML models | `9.knowledge.graph/GoDataX_Human_7_Knowledge_Graph.md` + `10.gdx.machine.learning/Septenary_Link_Prediction_and_Community_Detection.md` |
+| Stand up a local Firebird database with no server | `13.onboarding.env/on.bording.txt` + `GDX_SKILL_UP_FIREBIRD_DB/SKILL.md` |
+| Understand the OT-7 metaphysical instrument / add one association at a time | `14.metaphysical.measuring.instrument/OT7_Instrumento_Metafisico.md` + `GDX_SKILL_ASSOCIATE_CONSTRUCT_DIMENSIOS/SKILL.md` |
+| Audit every interpretive correspondence the framework has made | `14.metaphysical.measuring.instrument/.claude/skills/GDX_SKILL_LIST_ASSOCIATIONS/SKILL.md` (writes `Framework_Associations_<timestamp>.md`) |
+| Understand the environmental/anomalous-phenomena schema (not yet wired into the pipeline) | `15.environmental.anomalous.phenomena/GDXH7ph_Technical_Specification_for_Environmental_and_Anomalous_Phenomena.md` + `environmental_anomalous_phenomena_model_firebird25.sql` |
 | Run any automation | the `SKILL.md` of the specific skill, inside `<folder>/.claude/skills/<name>/` |
 | See the original (pre-update) architecture diagram | `GDX_CTP_H7/GDX_DOCUMENTS/GDX_HUMAN/GDX_Human_Logical_Architecture-en.drawio` |

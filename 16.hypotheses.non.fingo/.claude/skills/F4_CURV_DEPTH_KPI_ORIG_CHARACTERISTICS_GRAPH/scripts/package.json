@@ -1,0 +1,14 @@
+{
+  "name": "f4-curv-depth-kpi-orig-characteristics-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read-only HTML dashboard for the F4_CURV_DEPTH_KPI_ORIG_CHARACTERISTICS (F4) skill: renders the real GDX_HNF_CDI_* rows (CDI distribution histogram, per-feature RMS contribution ranking, and representative per-person difference profiles) as a standalone page, over the Firebird wire protocol (no native client library needed). Never writes to the database.",
+  "main": "generate_curvature_depth_graph.js",
+  "scripts": {
+    "generate": "node generate_curvature_depth_graph.js",
+    "sample": "node generate_curvature_depth_graph.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

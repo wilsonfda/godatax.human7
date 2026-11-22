@@ -1,0 +1,15 @@
+{
+  "name": "f1-gdx-skill-multidimensional-feature-space",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader/writer for the F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE (MFS) skill: assembles and normalizes one study's per-person feature space (F1) from the relational/BI sources already in GDX_HUMAN7, optionally cross-checking Neo4j, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_multidimensional_feature_space.js",
+  "scripts": {
+    "generate": "node generate_multidimensional_feature_space.js",
+    "dry-run": "node generate_multidimensional_feature_space.js --dry-run"
+  },
+  "dependencies": {
+    "node-firebird": "^2.16.0",
+    "neo4j-driver": "^6.2.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "f3-gdx-skill-distance-similarity-profiles-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chart renderer for F3_GDX_SKILL_DISTANCE_SIMILARITY_PROFILES_GRAPH: reads the real GDX_HNF_DISTANCE_* tables F3_GDX_SKILL_DISTANCE_SIMILARITY_PROFILES already wrote (plus the upstream GDX_HNF_FEATURE_VALUE/GDX_HNF_LATENT_VALUE rows needed for real per-person coordinates) and writes a standalone HTML page with constant-Mahalanobis-distance ellipses and an association scatter, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_distance_similarity_graph.js",
+  "scripts": {
+    "generate": "node generate_distance_similarity_graph.js",
+    "sample": "node generate_distance_similarity_graph.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

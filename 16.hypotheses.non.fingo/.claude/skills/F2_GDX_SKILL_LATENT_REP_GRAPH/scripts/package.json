@@ -1,0 +1,14 @@
+{
+  "name": "f2-gdx-skill-latent-rep-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders the GDX_HNF_LATENT_* tables (written by F2_GDX_SKILL_LATENT_REPRESENTATIONS) as a standalone HTML page, one 2D latent-projection scatter card per method (PCA with loading arrows, autoencoder, UMAP), over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_latent_rep_graph.js",
+  "scripts": {
+    "generate": "node generate_latent_rep_graph.js",
+    "sample": "node generate_latent_rep_graph.js --sample --study sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

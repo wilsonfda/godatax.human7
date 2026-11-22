@@ -30,9 +30,10 @@ every step either skips cleanly or asks before overwriting anything:
      ANTHROPIC_API_KEY is already set in your environment.
 
   4. Clone the repository
-     Shows the default destination (a GoDataX\GDX_HUMAN7 folder under your
-     user profile) and asks you to confirm it or type a different path.
-     Then clones https://github.com/wilsonfda/godatax.human7.git there.
+     Shows the default destination (a GoDataX\GDX_HUMAN7 folder next to
+     wherever OnBoard_GDXH7ph.ps1 itself is being run from) and asks you to
+     confirm it or type a different path. Then clones
+     https://github.com/wilsonfda/godatax.human7.git there.
      Refuses to clone over an existing, non-empty, non-git folder -- it
      will never overwrite work that is already there.
 

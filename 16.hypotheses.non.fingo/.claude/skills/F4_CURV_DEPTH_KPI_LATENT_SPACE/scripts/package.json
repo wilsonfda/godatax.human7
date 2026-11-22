@@ -1,0 +1,14 @@
+{
+  "name": "f4-curv-depth-kpi-latent-space",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader/writer for the F4_CURV_DEPTH_KPI_LATENT_SPACE (F4-alternative) skill: computes the Curvature Depth Index in latent space (CDIh, unweighted and weighted) between a person's own fitted representation h(t) (F2_GDX_SKILL_LATENT_REPRESENTATIONS's own output) and an explicit, frozen reference pinned to the same fitted coordinate system, and records the result into the GDX_HNF_CDIH_* tables, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_curvature_depth_index_latent.js",
+  "scripts": {
+    "generate": "node generate_curvature_depth_index_latent.js",
+    "sample": "node generate_curvature_depth_index_latent.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "f4-curv-depth-kpi-orig-characteristics",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DB reader/writer for the F4_CURV_DEPTH_KPI_ORIG_CHARACTERISTICS (F4) skill: computes the Curvature Depth Index (CDIx, unweighted and weighted) between a person's own observed, normalized profile z(t) (F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE's own output) and an explicit, frozen reference profile, and records the result into the GDX_HNF_CDI_* tables, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_curvature_depth_index.js",
+  "scripts": {
+    "generate": "node generate_curvature_depth_index.js",
+    "sample": "node generate_curvature_depth_index.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

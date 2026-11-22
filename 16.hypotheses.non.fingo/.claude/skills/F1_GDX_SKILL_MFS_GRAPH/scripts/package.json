@@ -1,0 +1,14 @@
+{
+  "name": "f1-gdx-skill-mfs-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders the GDX_HNF_* feature-space tables (written by F1_GDX_SKILL_MULTIDIMENSIONAL_FEATURE_SPACE) as a standalone HTML reference-curve-and-observations-in-z-scale page, one card per feature, over the Firebird wire protocol (no native client library needed).",
+  "main": "generate_mfs_graph.js",
+  "scripts": {
+    "generate": "node generate_mfs_graph.js",
+    "sample": "node generate_mfs_graph.js --sample --study sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}
