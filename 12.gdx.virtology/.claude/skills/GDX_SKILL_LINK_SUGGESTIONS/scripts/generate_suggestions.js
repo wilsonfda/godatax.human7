@@ -44,6 +44,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const OUT_DIR = path.join(__dirname, '..', '..', '..', '..'); // .claude/skills/<name>/scripts -> 12.gdx.virtology
 
@@ -282,6 +283,17 @@ function timestampForFilename(d) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const now = new Date();
 

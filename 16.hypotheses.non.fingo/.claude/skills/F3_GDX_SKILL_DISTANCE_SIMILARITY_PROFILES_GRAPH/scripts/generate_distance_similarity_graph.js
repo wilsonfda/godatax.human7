@@ -55,6 +55,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 const {
   pageShell, renderMahalanobisEllipseCard, renderAssociationScatterCard, renderNotAvailableCard,
   hookTooltips, pearsonR,
@@ -456,6 +457,17 @@ function buildPageHtml({ studyTitle, study, ellipseResult, associationResult, sa
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
   const timestamp = timestampForFilename(new Date());

@@ -71,6 +71,7 @@ const path = require('path');
 const { spawn } = require('child_process');
 const Firebird = require('node-firebird');
 const { PCA } = require('ml-pca');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const IMPLEMENTED_METHODS = ['PCA', 'AUTOENCODER', 'UMAP'];
 const DIMENSION_LABEL_PREFIX = { PCA: 'PC', AUTOENCODER: 'LATENT_', UMAP: 'UMAP_' };
@@ -420,6 +421,17 @@ function buildSampleMatrix() {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   if (args.sample) {

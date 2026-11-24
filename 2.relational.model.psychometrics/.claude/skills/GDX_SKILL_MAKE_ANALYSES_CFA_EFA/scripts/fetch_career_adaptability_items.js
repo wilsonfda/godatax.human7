@@ -34,6 +34,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const ID_INSTRUMENT = 3; // Career Adapt-Abilities Scale (CAAS)
 const N_ITEMS = 28;
@@ -140,6 +141,17 @@ function writeCsv(filePath, header, rows) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   loadDotEnvIfPresent(path.join(__dirname, '..', '.env'));
 

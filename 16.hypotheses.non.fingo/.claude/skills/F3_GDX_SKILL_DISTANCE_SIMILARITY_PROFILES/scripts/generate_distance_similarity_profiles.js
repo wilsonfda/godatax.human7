@@ -69,6 +69,7 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const { Matrix, SingularValueDecomposition, inverse } = require('ml-matrix');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const METRICS = ['EUCLIDEAN', 'RMS', 'MAHALANOBIS'];
 const CONDITION_NUMBER_THRESHOLD = 1e8;
@@ -517,6 +518,17 @@ function printPairwiseMatrix(personIds, distanceFn) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   if (args.sample) {

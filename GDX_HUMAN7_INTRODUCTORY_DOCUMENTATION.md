@@ -362,6 +362,10 @@ Several documents repeat, in different ways, the same principles — worth namin
   `--dry-run`, an "already loaded" guard (to avoid duplication), and never deletes data — even
   when "fixing" something (see the Physical-level gap case in `Dashboards_DW_Explanation.md`
   §11, resolved by reading already-existing real responses, not by inserting a made-up number).
+- **Account registration gate.** Before doing any real work, every skill's entry script (folders
+  0–16) checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on the
+  shared `firebird.godatax.com` database (`_shared/account_gate/`) — see
+  `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11 for the full design.
 
 ## 7. Where to go next
 

@@ -5,6 +5,8 @@ description: Given a study slug produced by GDX_SKILL_NEW_STUDY/GDX_SKILL_RECORD
 
 # GDX_SKILL_LOAD_NEW_STUDY_DW
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 Loads **one study at a time** into the DW (`godatax_human_dw_model_firebird25.sql`, this folder),
 identified by the same slug the rest of the "onboard a new study" family uses. It sits after every
 other skill that can feed the DW:

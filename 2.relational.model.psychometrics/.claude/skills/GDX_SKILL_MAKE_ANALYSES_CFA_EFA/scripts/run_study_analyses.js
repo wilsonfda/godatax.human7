@@ -40,6 +40,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 function parseArgs(argv) {
   const args = { study: null, intakeDir: null };
@@ -115,6 +116,17 @@ function runStep(label, cmd, cmdArgs) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   loadDotEnvIfPresent(path.join(__dirname, '..', '.env'));
 

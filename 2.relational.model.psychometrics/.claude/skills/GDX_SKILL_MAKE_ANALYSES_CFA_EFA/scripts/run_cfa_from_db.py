@@ -19,11 +19,20 @@ Run from this skill's scripts/ folder, after stage 1:
 
 import argparse
 import os
+import subprocess
+import sys
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from semopy import Model, calc_stats
+
+_gate = Path(__file__).resolve().parents[5] / "_shared" / "account_gate" / "check_account_registration.js"
+_result = subprocess.run(["node", str(_gate)], capture_output=True, text=True)
+if _result.returncode != 0:
+    sys.stderr.write(_result.stderr or _result.stdout)
+    sys.exit(_result.returncode)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_ITEMS_CSV = os.path.join(HERE, '..', 'data', 'career_adaptability_items.csv')

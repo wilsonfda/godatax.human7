@@ -56,6 +56,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 function parseArgs(argv) {
   const args = { instrument: null, variable: null, items: null, study: null, intakeDir: null, dryRun: false };
@@ -107,6 +108,17 @@ async function resolveStudyId(db, studyTitle, studySlug) {
 function mean(xs) { return xs.reduce((a, b) => a + b, 0) / xs.length; }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   const options = {

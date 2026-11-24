@@ -24,6 +24,7 @@ const path = require('path');
 const Firebird = require('node-firebird');
 let neo4j = null;
 try { neo4j = require('neo4j-driver'); } catch (e) { /* only required if not --skip-neo4j */ }
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 function parseArgs(argv) {
   const args = { study: null, execute: false, confirmTitle: null, skipNeo4j: false, skipDashboards: false, dashboardsDir: null };
@@ -152,6 +153,18 @@ async function deleteScoped(ctx, { table, pkCols, whereSql, note }) {
 }
 
 async function main() {
+  // account-registration gate -- see _shared/account_gate
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const willExecute = args.execute && !!args.confirmTitle;
 

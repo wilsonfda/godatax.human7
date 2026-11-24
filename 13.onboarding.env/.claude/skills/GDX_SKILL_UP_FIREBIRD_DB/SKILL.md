@@ -7,6 +7,8 @@ description: Creates a local Firebird database file (GoDataX7Hph.gdb) in 13.on.b
 
 Runs `godatax_human_full_ddl_no_gdx_ead_firebird25.sql` against a brand-new **local** Firebird database file, using only `GDS32.DLL` in this same folder — no Firebird Windows service, no `node-firebird`, no host/port.
 
+This skill otherwise has no network dependency (GDS32.DLL direct, no Firebird server), but it still runs the repo-wide account-registration gate first (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11), which does require reaching `firebird.godatax.com`.
+
 ## Usage
 
 ```powershell

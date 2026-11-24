@@ -46,6 +46,7 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const ExcelJS = require('exceljs');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 function parseArgs(argv) {
   const args = { study: null, intakeDir: null, outDir: null, excludeItemOrders: new Set() };
@@ -294,6 +295,18 @@ function buildMetaSheet(workbook, meta) {
 }
 
 async function main() {
+  // account-registration gate -- see _shared/account_gate
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const intakeDir = resolveIntakeDir(args);
   const intake = loadIntake(intakeDir, args.study);

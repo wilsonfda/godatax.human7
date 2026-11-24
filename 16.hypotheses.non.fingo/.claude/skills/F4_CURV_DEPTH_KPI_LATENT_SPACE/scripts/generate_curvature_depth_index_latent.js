@@ -106,6 +106,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const REFERENCE_TYPES = ['LATENT_COHORT', 'POPULATION_REFERENCE', 'PERSONAL_BASELINE'];
 
@@ -485,6 +486,17 @@ function runSample() {
  * Main.
  * ------------------------------------------------------------------------------------------- */
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   if (args.sample) { runSample(); return; }

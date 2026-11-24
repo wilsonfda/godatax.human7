@@ -152,6 +152,11 @@ folder's F1 schema) before this skill's first run.
 
 ## Running it
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is
+registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and
+`GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) -- not registered tells you to register at the GoDataX.Com
+portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 ```bash
 cd 16.hypotheses.non.fingo/.claude/skills/F2_GDX_SKILL_LATENT_REPRESENTATIONS/scripts
 npm install                                                            # once, installs ml-pca + node-firebird

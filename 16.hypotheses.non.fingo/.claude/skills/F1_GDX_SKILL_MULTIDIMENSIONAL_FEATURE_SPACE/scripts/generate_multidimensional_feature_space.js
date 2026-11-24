@@ -86,6 +86,7 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const neo4j = require('neo4j-driver');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const HRV_COLUMNS = [
   'MEAN_RR_MS', 'MEAN_HEART_RATE_BPM', 'RMSSD_MS', 'SDNN_MS',
@@ -501,6 +502,17 @@ async function ensureFeature(db, dryRun, summary, cache, def) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const intake = loadIntake(args);
   const studyTitle = intake.study && intake.study.title;

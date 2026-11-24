@@ -5,6 +5,8 @@ description: Exports one study's slice of the GDX_HUMAN relational schema (2.rel
 
 # GDX_SKILL_GODATAX_HUMAN7_BY_SPU
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 Turns one study's slice of the `GDX_HUMAN` relational schema into a Neo4j property graph, the same way `GDX_SPU_LAYER/*NEO4J Export.py` turns the SPU tables into a knowledge graph elsewhere in this repo -- except nothing here is hand-mapped table by table. Structure (which tables, which columns, which foreign keys) is discovered live from Firebird's `RDB$` system catalog (`scripts/introspect.js`), so any table added under one of the 6 prefixes below is picked up automatically the next time this skill runs. See `9.knowledge.graph/GoDataX_Human_7_Knowledge_Graph.md` for the full design rationale, including why this graph exists (the training substrate for the ML models `10.gdx.machine.learning` builds).
 
 ## Scope

@@ -32,6 +32,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const REQUIRED_TABLES = [
   'GDX_PSY_STUDY', 'GDX_PSY_INSTRUMENT', 'GDX_PSY_CONSTRUCT', 'GDX_PSY_VARIABLE',
@@ -233,6 +234,17 @@ async function runFile(db, filePath, dryRun, skip) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   // scripts/ -> GDX_SKILL_LOAD_RLT_MODEL_DB -> skills -> .claude -> 2.relational.model.psychometrics
   const dir = args.dir || path.join(__dirname, '..', '..', '..', '..');

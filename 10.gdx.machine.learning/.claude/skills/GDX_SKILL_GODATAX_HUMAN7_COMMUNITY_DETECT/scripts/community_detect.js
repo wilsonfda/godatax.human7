@@ -31,6 +31,7 @@
 const fs = require('fs');
 const path = require('path');
 const neo4j = require('neo4j-driver');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const OUT_DIR = path.join(__dirname, '..', '..', '..', '..'); // .claude/skills/<name>/scripts -> 10.gdx.machine.learning
 const GRAPH_NAME = 'gdx-community-detect';
@@ -76,6 +77,17 @@ function requireEnv(name) {
 function toNum(v) { return v && typeof v.toNumber === 'function' ? v.toNumber() : v; }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const intake = loadIntake(args);
   const studyTitle = intake.study && intake.study.title;

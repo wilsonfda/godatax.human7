@@ -51,6 +51,7 @@ const path = require('path');
 const Firebird = require('node-firebird');
 const neo4j = require('neo4j-driver');
 const { introspectSchema } = require('./introspect');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const BATCH_SIZE = 1000;
 
@@ -256,6 +257,17 @@ async function exportRelationshipsForFk(neoSession, childTable, fk, childRows) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   const fbOptions = {

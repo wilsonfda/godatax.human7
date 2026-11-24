@@ -18,6 +18,16 @@ import json
 import re
 import sys
 
+# account-registration gate -- see _shared/account_gate
+import subprocess
+from pathlib import Path
+
+_gate = Path(__file__).resolve().parents[5] / "_shared" / "account_gate" / "check_account_registration.js"
+_result = subprocess.run(["node", str(_gate)], capture_output=True, text=True)
+if _result.returncode != 0:
+    sys.stderr.write(_result.stderr or _result.stdout)
+    sys.exit(_result.returncode)
+
 MAX_LEN = {
     "study.title": 200,
     "study.objective": 1000,

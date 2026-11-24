@@ -64,6 +64,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 // Cosmetic only (column naming / SQL METHOD text) -- matches the original
 // .sav column prefixes documented in
@@ -256,6 +257,17 @@ function popcount(x) {
 function round(x) { return Math.round(x * 1e6) / 1e6; }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   loadDotEnvIfPresent(path.join(__dirname, '..', '.env'));
 

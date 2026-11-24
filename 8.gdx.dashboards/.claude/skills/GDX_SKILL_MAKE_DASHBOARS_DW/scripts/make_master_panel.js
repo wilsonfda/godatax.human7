@@ -33,6 +33,7 @@ const path = require('path');
 const Firebird = require('node-firebird');
 const neo4j = require('neo4j-driver');
 const { pageShell, esc } = require('./chart_lib');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const DASHBOARD_SPECS = [
   { code: '00', base: 'dashboard_00_means_psychometric_responses', title: 'Means: Psychometric Responses', skills: 'GDX_SKILL_MAKE_ANALYSES_CFA_EFA + GDX_SKILL_MAKE_DASHBOARS_DW' },
@@ -425,6 +426,17 @@ async function generateMasterPanel(args) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   await generateMasterPanel(args);
 }

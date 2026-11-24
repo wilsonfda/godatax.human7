@@ -192,6 +192,8 @@ in the chosen target table (none of the three tables has a `UNIQUE` on
 - **Never hardcodes Firebird credentials.** Same `.env`/`.env.example`
   pattern as every sibling skill.
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 ## Running it
 
 ```

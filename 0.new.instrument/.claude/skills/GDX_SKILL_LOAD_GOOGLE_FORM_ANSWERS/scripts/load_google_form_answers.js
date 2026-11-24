@@ -46,6 +46,7 @@ const path = require('path');
 const Firebird = require('node-firebird');
 const { google } = require('googleapis');
 const { getAuthorizedClient, requireEnv } = require('./google_auth');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const RESPONSES_SCOPES = ['https://www.googleapis.com/auth/forms.responses.readonly'];
 
@@ -132,6 +133,18 @@ function extractAnswerText(answer) {
 }
 
 async function main() {
+  // account-registration gate -- see _shared/account_gate
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const intakeDir = resolveIntakeDir(args);
   const map = loadFormMap(intakeDir, args.study);

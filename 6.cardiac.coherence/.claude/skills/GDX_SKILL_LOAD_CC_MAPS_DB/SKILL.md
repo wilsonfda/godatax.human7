@@ -5,6 +5,8 @@ description: Given a study slug produced by GDX_SKILL_NEW_STUDY/GDX_SKILL_RECORD
 
 # GDX_SKILL_LOAD_CC_MAPS_DB
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 Links cardiac-coherence data collection (`6.cardiac.coherence/`) to a psychometric study
 (`2.relational.model.psychometrics/`), for **one study at a time**, identified by the same slug
 `GDX_SKILL_NEW_STUDY` used for its intake file. Fits into the same onboarding pipeline as

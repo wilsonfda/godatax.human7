@@ -53,6 +53,7 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const ExcelJS = require('exceljs');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 /** Confirmed scoring formulas: ID_INSTRUMENT -> [{ variable, name, items, method?, reverseMax? }].
  * `items` entries are ITEM_ORDER values (not ID_ITEM), each either a plain number (not
@@ -385,6 +386,18 @@ function readAnswers(workbook, sheetName) {
 }
 
 async function main() {
+  // account-registration gate -- see _shared/account_gate
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   const workbook = new ExcelJS.Workbook();

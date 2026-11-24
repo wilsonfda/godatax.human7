@@ -24,12 +24,20 @@ Defaults match the current GDX_HUMAN layout:
 import argparse
 import math
 import os
+import subprocess
 import sys
+from pathlib import Path
 
 import pyreadstat
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import catalog
+
+_gate = Path(__file__).resolve().parents[5] / "_shared" / "account_gate" / "check_account_registration.js"
+_result = subprocess.run(["node", str(_gate)], capture_output=True, text=True)
+if _result.returncode != 0:
+    sys.stderr.write(_result.stderr or _result.stdout)
+    sys.exit(_result.returncode)
 
 REPO_ROOT_HINT = os.path.join("GDX_HUMAN", "1.output.ibm.spss.statistics")
 DEFAULT_SAV = os.path.join("GDX_HUMAN", "1.output.ibm.spss.statistics", "PLANILHAPOSDOC11SET SO CADETES.sav")

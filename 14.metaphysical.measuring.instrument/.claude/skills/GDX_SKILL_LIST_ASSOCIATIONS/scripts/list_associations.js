@@ -57,6 +57,7 @@
 const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const OUTPUT_DIR = path.join(__dirname, '..', '..', '..', '..');
 
@@ -432,6 +433,17 @@ function buildReport({ chakraRows, chakraVarRows, wayRows, wayVarRows, psyRows, 
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const now = new Date();
   const timestamp = now.toISOString();

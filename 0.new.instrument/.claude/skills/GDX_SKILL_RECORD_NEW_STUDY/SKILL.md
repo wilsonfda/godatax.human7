@@ -38,6 +38,12 @@ studies and instruments in it** — it never knows in advance what the next free
   so a genuine duplicate (same `NAME` + `VERSION`) is deliberately left to fail loudly on Firebird's
   own `UNIQUE` constraint rather than being silently skipped.
 
+Before doing any real work, both `generate_new_study_scripts.py` and `execute_new_study.js` check
+that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on
+`firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) --
+not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com`
+unreachable stops with a no-connection error.
+
 ## Step 1 — generate
 
 ```

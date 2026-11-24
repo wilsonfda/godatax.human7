@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const Firebird = require('node-firebird');
 const { parseStatements } = require('./execute_load.js');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 function parseArgs(argv) {
   const args = { file: null, dryRun: false, force: false };
@@ -62,6 +63,17 @@ async function preflight(db, statements, force) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
   const filePath = path.resolve(args.file);
   const statements = parseStatements(fs.readFileSync(filePath, 'utf8'));

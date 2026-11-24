@@ -62,6 +62,8 @@ curious why that skill's method section reads very differently.
   Fully read-only, same as `GDX_SKILL_GODATAX_HUMAN7_LINK_PRED`.
 - **Never connects to Firebird.**
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 ## Running it
 
 ```

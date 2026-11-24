@@ -85,6 +85,7 @@
  */
 
 const Firebird = require('node-firebird');
+const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
 const VALID_TARGETS = ['septenary', 'way', 'chakra'];
 const VALID_CONFIDENCE = ['HIGH', 'MEDIUM', 'LOW', 'SPECULATIVE'];
@@ -466,6 +467,17 @@ async function doConfirm(db, args) {
 }
 
 async function main() {
+  try {
+    await assertAccountRegistered();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(
+      err instanceof AccountNotRegisteredError ? 2 :
+      err instanceof NoInternetConnectionError ? 3 :
+      err instanceof AccountEmailUnknownError ? 4 : 1
+    );
+  }
+
   const args = parseArgs(process.argv);
 
   const options = {

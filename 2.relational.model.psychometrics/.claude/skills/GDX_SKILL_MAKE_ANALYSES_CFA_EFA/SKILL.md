@@ -5,6 +5,8 @@ description: Runs CFA/EFA psychometric analyses sourced from a live Firebird dat
 
 # GDX_SKILL_MAKE_ANALYSES_CFA_EFA
 
+Before doing any real work, every entry-point script in this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 Three tracks, all writing `GDX_PSY_PSYCHOMETRIC_PROPERTY` rows from raw item responses read live
 from Firebird instead of a `.sav` file. Together they cover all 11 instruments.
 

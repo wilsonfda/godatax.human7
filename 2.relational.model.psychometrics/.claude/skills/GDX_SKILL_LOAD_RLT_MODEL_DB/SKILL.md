@@ -5,6 +5,8 @@ description: Reads the GDX_HUMAN psychometrics .sav file, dynamically (re)genera
 
 # GDX_SKILL_LOAD_RLT_MODEL_DB
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 Two-stage skill for the GDX_HUMAN psychometrics relational model:
 
 1. **Generate** (Python) — reads `GDX_HUMAN/1.output.ibm.spss.statistics/PLANILHAPOSDOC11SET SO CADETES.sav` fresh every time and writes `01_load_study.sql` … `08_adjust_sequences.sql` into `GDX_HUMAN/2.relational.model.psychometrics/`, matching the tables in `psychometrics_model_firebird25.sql` and the mapping in `SPSS_to_Firebird_Mapping.md`.

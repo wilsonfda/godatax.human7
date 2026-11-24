@@ -141,6 +141,14 @@ NEO4J_URI=neo4j+s://xxxxxxxx.databases.neo4j.io
 NEO4J_USERNAME=
 NEO4J_PASSWORD=
 NEO4J_DATABASE=
+
+# Firebird web target (firebird.godatax.com) — used by GDX_SKILL_UPDATE_WEB (§7) AND, as of the
+# account registration gate (§11), by every skill's entry script via _shared/account_gate/
+GDX_WEB_FB_HOST=firebird.godatax.com
+GDX_WEB_FB_PORT=3050
+GDX_WEB_FB_DATABASE=/firebird/godatax.gdb
+GDX_WEB_FB_USER=
+GDX_WEB_FB_PASSWORD=
 ```
 
 `.env` files are gitignored everywhere (`.gitignore` explicitly keeps `.env.example` while
@@ -162,6 +170,8 @@ node <script>.js [--study <slug>]             # apply it — confirm with a huma
 - `--study <slug>` scopes a run to one study (see §4.0 and §11) and is required by every skill
   built or updated since 2026-09-17/18 (dashboards, DW loader, knowledge-graph export, link
   suggestions).
+- `GDX_WEB_FB_*` must be exported before running **any** skill (see §11, account registration
+  gate) — every entry script checks `GDX_EAD_USERS.EMAIL` on `firebird.godatax.com` first.
 - Read-only analysis skills (the two `10.gdx.machine.learning` ML skills) never touch Firebird —
   only Neo4j.
 
@@ -2130,6 +2140,20 @@ Several documents repeat, in different words, the same rules — worth naming on
   incremental loader, knowledge-graph export, link suggestions) resolves the same
   `new_study_intake/<slug>/intake.json` → `GDX_PSY_STUDY.ID_STUDY` chain, so a second study never
   silently blends into a chart, a DW load, or a report meant for the first one.
+- **Account registration gate.** Every skill's entry script, in every numbered folder that has
+  one (0 through 16), calls the shared `_shared/account_gate/check_account_registration.js`
+  before doing any real work. It reads the email of the Claude Code account logged in on this
+  machine (`~/.claude.json` → `oauthAccount.emailAddress`) and looks it up in `GDX_EAD_USERS.EMAIL`
+  on the shared `firebird.godatax.com` database (same `GDX_WEB_FB_*` credential
+  `GDX_SKILL_UPDATE_WEB` already uses — see §5/§7). Three outcomes: email found → the skill
+  proceeds normally; email not found → the skill stops and tells the user to register at the
+  GoDataX.Com portal; `firebird.godatax.com` unreachable → the skill stops with a "no internet
+  connection" error instead of silently proceeding or hanging (a 10s connect timeout forces this).
+  Centralized in one Node.js module instead of duplicated per skill — Python and PowerShell entry
+  scripts shell out to it (`node check_account_registration.js`) rather than reimplementing the
+  Firebird lookup in a second language. This is a project-specific access-control decision, not a
+  data-integrity rule like the others in this list — see `_shared/account_gate/` for the full
+  implementation.
 
 ---
 

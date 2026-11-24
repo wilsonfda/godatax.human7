@@ -93,6 +93,15 @@ if ([Environment]::Is64BitProcess) {
 }
 
 # ---------------------------------------------------------------------
+# 0b. Account-registration gate (repo-wide precondition, not DryRun-skippable)
+# ---------------------------------------------------------------------
+$gate = Join-Path $PSScriptRoot "..\..\..\..\..\_shared\account_gate\check_account_registration.js"
+& node $gate
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+# ---------------------------------------------------------------------
 # 1. Resolve paths
 # ---------------------------------------------------------------------
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

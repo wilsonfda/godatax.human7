@@ -102,6 +102,8 @@ Septenary Constitution, Psychometrics, and Virtology all meet.
   `SPSS_Septenary_Constitution_Mapping.md`, `five_ways_septenary_map_firebird25.sql`,
   and `chakras_model_firebird25.sql`.
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 ## Running it
 
 ```

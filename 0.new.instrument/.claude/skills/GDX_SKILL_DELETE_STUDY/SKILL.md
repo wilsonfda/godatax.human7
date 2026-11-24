@@ -125,6 +125,11 @@ guessing -- it never deletes by filename substring or by any heuristic weaker th
 
 ## Running it
 
+Before doing any real work, this skill checks that the logged-in Claude account's email is
+registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and
+`GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) -- not registered tells you to register at the GoDataX.Com
+portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 ```
 cd 0.new.instrument/.claude/skills/GDX_SKILL_DELETE_STUDY/scripts
 npm install                 # once, installs node-firebird + neo4j-driver

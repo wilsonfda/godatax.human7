@@ -5,6 +5,8 @@ description: Generates 9 self-contained HTML charts (a small-multiples response-
 
 # GDX_SKILL_MAKE_DASHBOARS_DW
 
+Before doing any real work, every entry-point script in this skill (`make_dashboards.js`, `make_dashboard_09_respondent.js`, `make_master_panel.js`) checks that the logged-in Claude account's email is registered in `GDX_EAD_USERS` on `firebird.godatax.com` (see `_shared/account_gate/` and `GDX_HUMAN7_DEVELOPMENT_KIT.md` §11) — not registered tells you to register at the GoDataX.Com portal, and `firebird.godatax.com` unreachable stops with a no-connection error.
+
 Reads `7.multidimensional.database` (see `GoDataX_Human_7_DW.md`) and writes 9 standalone `.html` chart files, each openable directly in a browser — no server, no external CDN, no native dependency (pure `node-firebird` wire-protocol connection, same as the other two `GDX_SKILL_*` skills in `GDX_HUMAN`).
 
 ## Scoped to one study
