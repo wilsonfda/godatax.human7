@@ -91,7 +91,7 @@ out with a clear message otherwise. In `--sample` mode, a missing
 `intake.json` is not an error: the report just falls back to a generic
 "Sample Study" title.
 
-Output: `12.gdx.virtology/Link_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`
+Output: `12.gdx.virtology/output/Link_Suggestions_<study-slug>_<YYYYMMDD_HHMMSS>.md`
 (one file per run — old runs are never overwritten, so a history of
 analyses accumulates naturally in the folder, one thread per study).
 

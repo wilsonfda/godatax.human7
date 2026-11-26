@@ -841,7 +841,7 @@ async function main() {
     return;
   }
 
-  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
+  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..', 'output');
   fs.mkdirSync(outDir, { recursive: true });
 
   const selectedCodes = args.chart ? [args.chart] : CHART_CODES;

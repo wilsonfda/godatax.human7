@@ -75,7 +75,7 @@ const path = require('path');
 const neo4j = require('neo4j-driver');
 const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
-const OUT_DIR = path.join(__dirname, '..', '..', '..', '..'); // .claude/skills/<name>/scripts -> 10.gdx.machine.learning
+const OUT_DIR = path.join(__dirname, '..', '..', '..', '..', 'output'); // .claude/skills/<name>/scripts -> 10.gdx.machine.learning/output
 const GRAPH_NAME = 'gdx-link-pred';
 const PIPELINE_NAME = 'gdx-link-pred-pipeline';
 const EMBEDDING_DIM = 32;
@@ -492,6 +492,7 @@ async function main() {
       const pad = (n) => String(n).padStart(2, '0');
       const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
       const fileName = `Link_Prediction_${args.study}_${ts}.md`;
+      fs.mkdirSync(OUT_DIR, { recursive: true });
       fs.writeFileSync(path.join(OUT_DIR, fileName), report, 'utf8');
       console.log(`Written: ${path.join(OUT_DIR, fileName)}`);
     } else {

@@ -1,8 +1,8 @@
 # OT-7 — Purpose Orientation | Registered Metaphysical Instrument
 
 > Consolidates the OT-7 metaphysical instrument proposal from the project's two source documents
-> — `Orientacao_a_Finalidade_Trivium_Quadrivium_OT7.pdf` (working document, 2026-09-26, already
-> present in this same folder) and the GDX H7ph book/scientific article (`Beyond the Labyrinth
+> — `artifacts/Orientacao_a_Finalidade_Trivium_Quadrivium_OT7.pdf` (working document, 2026-09-26,
+> already present in this same folder's `artifacts/` subfolder) and the GDX H7ph book/scientific article (`Beyond the Labyrinth
 > v2.docx`) — and documents how that proposal was actually registered in the database (study,
 > instrument, variables, items) and linked to the Septenary Constitution and to Aquinas's Five Ways.
 > Written manually on 2026-10-09 from the real load into the local Firebird database
@@ -190,7 +190,7 @@ Two design decisions in the schema extension (detailed in the DDL header):
 
 | File | Role |
 |---|---|
-| `Orientacao_a_Finalidade_Trivium_Quadrivium_OT7.pdf` | Original conceptual document (primary source of this proposal) |
+| `artifacts/Orientacao_a_Finalidade_Trivium_Quadrivium_OT7.pdf` | Original conceptual document (primary source of this proposal) |
 | `metaphysical_variable_way_map_firebird25.sql` | DDL — extends `GDX_TA_WAY_SEPT_MAP` with instrument/variable fields |
 | `ot7_way_map_dml_firebird25.sql` | DML — the 7 OT-7 ↔ Five Ways association rows |
 | `0.new.instrument/new_study_intake/ot7-orientacao-finalidade/intake.json` | Full intake (study, instrument, 7 variables, 7 items) consumed by `GDX_SKILL_RECORD_NEW_STUDY` |

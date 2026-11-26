@@ -57,9 +57,10 @@ underscore, then the study's slug/code — e.g.
 `GDX_SKILL_EXPORT_NEW_STUDY_Pilot_Study_of_Workplace_Resilience_in_Remote_Teams__workplace-resilience-pilot.xlsx`.
 The double-underscore separator is deliberate: slugs are always lowercase and hyphen-separated (see
 `GDX_SKILL_NEW_STUDY`'s slug rule), so they can never contain `__`, which keeps the boundary
-unambiguous for anyone reading the filename. It is written straight into `0.new.instrument/` (one
-flat folder for every study's questionnaire, easy to find -- not buried under that study's own
-`new_study_intake/<slug>/` subfolder) unless `--out-dir` is given.
+unambiguous for anyone reading the filename. It is written into this folder's own `output/`
+subfolder (`0.new.instrument/output/`, one flat folder for every study's questionnaire, easy to
+find -- not buried under that study's own `new_study_intake/<slug>/` subfolder) unless
+`--out-dir` is given.
 
 ## Running it
 
@@ -76,7 +77,7 @@ node export_new_study.js --study <slug>
 ```
 
 `--intake-dir <path>` overrides the default `new_study_intake/<slug>/` location it reads `intake.json`
-from; `--out-dir <dir>` writes the `.xlsx` somewhere other than the default `0.new.instrument/`;
+from; `--out-dir <dir>` writes the `.xlsx` somewhere other than the default `0.new.instrument/output/`;
 `--exclude-item-orders <n,n,...>` drops
 specific items (by `ITEM_ORDER`, comma-separated) from every instrument sheet they'd otherwise
 appear on -- for items whose `STATEMENT_TEXT` is a placeholder like

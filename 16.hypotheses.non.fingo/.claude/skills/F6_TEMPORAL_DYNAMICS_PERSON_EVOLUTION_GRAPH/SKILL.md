@@ -59,7 +59,7 @@ Options:
 - `--study <slug>` required outside `--sample` -- the same slug F1/F4/F6 use.
 - `--trajectory-run-id <id>` optional. A specific `GDX_HNF_TRAJECTORY_RUN.ID_TRAJECTORY_RUN`
   instead of the study's latest.
-- `--out-dir <path>` optional. Defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional. Defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (run, subject, session/step counts) and logs it, writing no
   file.
@@ -74,6 +74,15 @@ Implemented and validated end-to-end against this project's own study 1 (423 cad
 `CC_SESSION:1001`-`1005`) -- every session's own real timestamp and `CDIx` value, and every
 step's real `DELTA_CDI`/velocity, matched exactly against the underlying `GDX_HNF_TRAJECTORY_*`
 rows.
+
+A real bug was found and fixed during a later validation pass (while building this folder's own
+`F7_RELATIONSHIPS_PERSPECTIVES_GRAPH`, which hit the identical symptom): the Firebird connection
+was missing `blobAsText: true`, so `CAUSAL_CAVEAT_NOTE` (a `BLOB` column) came back as a lazy
+fetch-callback function rather than its real text, and that function's own source code leaked
+into the rendered page's meta line. Fixed by adding `blobAsText: true` to this script's own
+connection options (the same option `_shared/account_gate/check_account_registration.js` already
+uses for its own BLOB-free but otherwise identical connection) -- confirmed by re-rendering and
+checking the meta line shows the real note text, not JavaScript source.
 
 ## What this skill will never do
 

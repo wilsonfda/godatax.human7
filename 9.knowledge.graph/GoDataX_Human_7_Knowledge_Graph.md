@@ -239,6 +239,6 @@ section for the exact flags.
   its own `SKILL.md` for flags, the full scoped/global table list, and
   connection setup.
 - `GoDataX_Human_7_Knowledge_Graph.md` — this file.
-- `bloom-visualisation.svg` — a Neo4j Bloom rendering of the graph (from an
+- `artifacts/bloom-visualisation.svg` — a Neo4j Bloom rendering of the graph (from an
   earlier exploratory pass; regenerate after a real write to reflect the
   current, study-scoped data).

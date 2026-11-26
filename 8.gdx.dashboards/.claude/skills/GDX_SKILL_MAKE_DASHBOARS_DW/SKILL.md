@@ -72,7 +72,8 @@ Firebird connection for that case. Omit `--chart` to generate all 9 charts (`00`
 before this flag existed -- `10` is **never** included in that default run; it only runs when
 asked for explicitly, since it depends on charts `00`–`09` already existing on disk to embed.
 
-Output defaults to `8.gdx.dashboards/` (pass `--out-dir <path>` to change it), with filenames shaped
+Output defaults to this folder's own `output/` subfolder (`8.gdx.dashboards/output/`, pass
+`--out-dir <path>` to change it), with filenames shaped
 `dashboard_0N_<chart>__<study-slug>__<study-title-slug>__<YYYYMMDD-HHMMSS>.html` — see "Output
 filenames" below. A chart is skipped (not written) if its query returns no rows for this study —
 check the console output before assuming all 9 exist (e.g. chart 1 and chart 4 both depend on

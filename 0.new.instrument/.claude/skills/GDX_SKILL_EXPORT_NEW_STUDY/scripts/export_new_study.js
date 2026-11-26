@@ -33,7 +33,7 @@
  *
  * Output filename: GDX_SKILL_EXPORT_NEW_STUDY_<StudyTitle>__<slug>.xlsx
  * (skill name + human-readable study title + the study's slug/code), written
- * next to the intake.json unless --out-dir is given.
+ * into this folder's own output/ subfolder unless --out-dir is given.
  *
  * Usage:
  *   node export_new_study.js --study <slug> [--intake-dir <path>] [--out-dir <dir>]
@@ -84,7 +84,7 @@ function requireEnv(name) {
   return v;
 }
 
-/** GDX_HUMAN/0.new.instrument/ itself, resolved relative to this script
+/** GDX_HUMAN/0.new.instrument/output/, resolved relative to this script
  * (0.new.instrument/.claude/skills/GDX_SKILL_EXPORT_NEW_STUDY/scripts) -- the
  * default place the .xlsx is written, so every study's questionnaire lands in
  * one flat, easy-to-find folder instead of buried under its own
@@ -92,7 +92,7 @@ function requireEnv(name) {
  * study's title and slug (see outputFileName()), so this stays unambiguous
  * even with many studies' files sitting side by side. --out-dir overrides. */
 function resolveDefaultOutDir() {
-  return path.join(__dirname, '..', '..', '..', '..');
+  return path.join(__dirname, '..', '..', '..', '..', 'output');
 }
 
 /** GDX_HUMAN/0.new.instrument/new_study_intake/<slug>/intake.json, resolved

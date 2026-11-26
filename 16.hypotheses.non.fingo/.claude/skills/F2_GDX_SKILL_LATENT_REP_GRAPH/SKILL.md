@@ -94,7 +94,7 @@ node generate_latent_rep_graph.js --study <slug>                      # real run
 - `--top-loadings <n>` optional, default `8` -- how many PCA feature-loading arrows to draw (by
   combined magnitude on the two plotted dimensions). Every loading still appears in that card's
   table regardless.
-- `--out-dir <path>` optional, defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional, defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything and logs each method's availability, writing no file.
 - `--sample` renders from small, explicitly-labeled embedded sample data covering all three card

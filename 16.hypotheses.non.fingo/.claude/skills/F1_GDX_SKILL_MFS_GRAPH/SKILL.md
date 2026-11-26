@@ -101,7 +101,7 @@ node generate_mfs_graph.js --study <slug>                       # real run: writ
 - `--feature <text>` optional -- only features whose `FEATURE_CODE` contains this text
   (case-insensitive), e.g. `--feature "CC.HRV"` for the physiological perspective only, or
   `--feature "PSY.VAR."` for the psychometric perspective only.
-- `--out-dir <path>` optional, defaults to this folder (`16.hypotheses.non.fingo/`), mirroring
+- `--out-dir <path>` optional, defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`), mirroring
   `8.gdx.dashboards` writing its own charts into its own folder.
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (features in scope, observation counts, the output filename)

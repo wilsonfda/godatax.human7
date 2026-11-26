@@ -406,7 +406,7 @@ async function main() {
     console.log(`Study "${studyTitle}" (ID_STUDY=${studyId}): ${instruments.length} instrument(s), ${variables.length} variable(s), ` +
       `${participants.length} participant(s) to generate (${args.person ? 'filtered by --person' : 'all'}).`);
 
-    const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
+    const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..', 'output');
     fs.mkdirSync(outDir, { recursive: true });
     const timestamp = timestampForFilename(new Date());
 

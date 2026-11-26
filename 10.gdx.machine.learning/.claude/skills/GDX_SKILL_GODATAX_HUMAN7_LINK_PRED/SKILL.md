@@ -136,7 +136,7 @@ node link_prediction.js --study <slug>                # real run, writes the rep
 node link_prediction.js --study <slug> --top 5        # top 5 candidates per variable, per target (level AND virtue), instead of 3
 ```
 
-Output: `10.gdx.machine.learning/Link_Prediction_<study-slug>_<YYYYMMDD_HHMMSS>.md` (one file
+Output: `10.gdx.machine.learning/output/Link_Prediction_<study-slug>_<YYYYMMDD_HHMMSS>.md` (one file
 per run, old runs never overwritten) — now with a "Ranked level suggestions" section and a
 "Ranked virtue suggestions" section.
 

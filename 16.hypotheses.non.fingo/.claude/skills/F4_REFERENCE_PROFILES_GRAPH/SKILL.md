@@ -84,7 +84,7 @@ Options:
 - `--baseline-estimator mean|median` default `mean`.
 - `--feature <text>` optional, same convention as this folder's other skills (e.g. `--feature
   "CC."` to scope to the repeated-session physiological features that actually qualify today).
-- `--out-dir <path>` optional. Defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional. Defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (subject, run, features in/out of scope, session counts) and
   logs it, writing no file.

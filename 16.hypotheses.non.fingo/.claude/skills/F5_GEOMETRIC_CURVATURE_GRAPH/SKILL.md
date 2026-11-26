@@ -78,7 +78,7 @@ Options:
   kind.
 - `--gains <a1,a2,...>` optional, default `1,2,5`. Card 1's gains. Every value must be `> 0`.
 - `--sigma <s>` optional, default `1`, `s > 0`. Card 2's curve width.
-- `--out-dir <path>` optional. Defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional. Defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (source run, person count, representative persons) and logs
   it, writing no file.

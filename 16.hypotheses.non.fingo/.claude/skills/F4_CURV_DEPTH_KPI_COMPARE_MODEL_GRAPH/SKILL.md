@@ -103,7 +103,7 @@ node generate_curvature_depth_compare_graph.js --study <slug> --compare-run-id <
   `F4_CURV_DEPTH_KPI_COMPARE_MODEL` use.
 - `--compare-run-id <id>` optional -- a specific `GDX_HNF_CDI_COMPARE_RUN.ID_COMPARE_RUN` instead
   of the study's latest. Errors if that run belongs to a different study.
-- `--out-dir <path>` optional, defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional, defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (resolved run, paired count, representative persons, Pearson r,
   output filename) and logs it, writing no file.

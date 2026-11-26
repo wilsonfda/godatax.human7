@@ -74,7 +74,7 @@ node community_detect.js --study <slug> --dry-run     # print the report, write 
 node community_detect.js --study <slug>                # real run, writes the report
 ```
 
-Output: `10.gdx.machine.learning/Community_Detection_<study-slug>_<YYYYMMDD_HHMMSS>.md` (one
+Output: `10.gdx.machine.learning/output/Community_Detection_<study-slug>_<YYYYMMDD_HHMMSS>.md` (one
 file per run, old runs never overwritten).
 
 ## Files in this skill

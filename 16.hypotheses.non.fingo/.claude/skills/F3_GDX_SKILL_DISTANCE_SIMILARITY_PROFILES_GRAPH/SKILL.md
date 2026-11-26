@@ -113,7 +113,7 @@ node generate_distance_similarity_graph.js --study <slug>               # real r
   `1,2,3`.
 - `--assoc-dim-a <order>` / `--assoc-dim-b <order>` which two dimensions card 2 plots. Default:
   auto-selected (see "Card 2" above).
-- `--out-dir <path>` optional, defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional, defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (resolved dimensions, chosen pair, person counts) and logs it,
   writing no file.

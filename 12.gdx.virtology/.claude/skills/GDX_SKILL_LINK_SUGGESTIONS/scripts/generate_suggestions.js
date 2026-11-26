@@ -46,7 +46,7 @@ const path = require('path');
 const Firebird = require('node-firebird');
 const { assertAccountRegistered, AccountNotRegisteredError, NoInternetConnectionError, AccountEmailUnknownError } = require('../../../../../_shared/account_gate/check_account_registration');
 
-const OUT_DIR = path.join(__dirname, '..', '..', '..', '..'); // .claude/skills/<name>/scripts -> 12.gdx.virtology
+const OUT_DIR = path.join(__dirname, '..', '..', '..', '..', 'output'); // .claude/skills/<name>/scripts -> 12.gdx.virtology/output
 
 function parseArgs(argv) {
   const args = { top: 8, sample: false, dryRun: false, study: null, intakeDir: null };
@@ -371,6 +371,7 @@ async function main() {
 
   const fileName = `Treatment_Suggestions_${args.study}_${timestampForFilename(now)}.md`;
   const filePath = path.join(OUT_DIR, fileName);
+  fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(filePath, report, 'utf8');
   console.log(`Written: ${filePath}`);
 }

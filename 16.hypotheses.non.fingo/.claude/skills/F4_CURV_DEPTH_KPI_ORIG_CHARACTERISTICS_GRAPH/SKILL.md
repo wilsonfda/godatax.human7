@@ -91,7 +91,7 @@ node generate_curvature_depth_graph.js --study <slug>               # real run: 
   `GDX_PSY_STUDY.ID_STUDY` via `new_study_intake/<slug>/intake.json`'s `study.title`.
 - `--cdi-run-id <id>` optional -- a specific `GDX_HNF_CDI_RUN.ID_CDI_RUN` instead of the study's
   latest. Errors if that run belongs to a different study.
-- `--out-dir <path>` optional, defaults to this folder (`16.hypotheses.non.fingo/`).
+- `--out-dir <path>` optional, defaults to this folder's own `output/` subfolder (`16.hypotheses.non.fingo/output/`).
 - `--intake-dir <path>` optional override of the default `new_study_intake/<slug>/` location.
 - `--dry-run` computes everything (resolved run, feature/person counts, representative persons,
   output filename) and logs it, writing no file.

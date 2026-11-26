@@ -678,5 +678,5 @@ remain:
   — the script that **creates** the relational model (15 `GDX_PH_*` tables),
   already applied to the project's Firebird database; the basis for the
   persistence specified in §12.
-- `C:\Wilson\GoDataX\GDX_HUMAN7\15.environmental.anomalous.phenomena\ph_tables.png`
+- `C:\Wilson\GoDataX\GDX_HUMAN7\15.environmental.anomalous.phenomena\artifacts\ph_tables.png`
   — reference diagram of the relational model (same content as slide 109).

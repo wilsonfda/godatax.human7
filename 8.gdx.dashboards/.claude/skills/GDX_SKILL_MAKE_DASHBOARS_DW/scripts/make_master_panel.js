@@ -13,7 +13,7 @@
  *
  *   --study <slug>         REQUIRED. Same slug every other Phase-7+ skill uses.
  *   --out-dir <dir>        where to write the master panel (default: this folder's own
- *                          8.gdx.dashboards/, same as every other dashboard file).
+ *                          8.gdx.dashboards/output/, same as every other dashboard file).
  *   --dashboards-dir <dir> where to look for the already-generated dashboard_00..09 files for this
  *                          study (default: same as --out-dir). The most recent file per base name
  *                          is used (by the timestamp embedded in its filename); dashboard_09 is
@@ -404,7 +404,7 @@ async function generateMasterPanel(args) {
   const reportPath = findLatestLinkPredictionReport(mlDir, args.study);
   const phase9 = reportPath ? extractLinkPredictionSections(reportPath, phase1_2.variables.map((v) => v.NAME)) : null;
 
-  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
+  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..', 'output');
   const dashboardsDir = args.dashboardsDir || outDir;
   const dashboardFiles = findDashboardFiles(dashboardsDir, args.study);
 

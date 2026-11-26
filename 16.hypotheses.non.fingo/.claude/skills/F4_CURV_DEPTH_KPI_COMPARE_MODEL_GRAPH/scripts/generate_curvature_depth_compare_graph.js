@@ -259,7 +259,7 @@ async function main() {
   }
 
   const args = parseArgs(process.argv);
-  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
+  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..', 'output');
   const timestamp = timestampForFilename(new Date());
 
   if (args.sample) {

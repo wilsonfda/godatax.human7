@@ -257,7 +257,7 @@ async function main() {
   }
 
   const args = parseArgs(process.argv);
-  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..');
+  const outDir = args.outDir || path.join(__dirname, '..', '..', '..', '..', 'output');
   const timestamp = timestampForFilename(new Date());
 
   if (args.sample) {
@@ -294,6 +294,11 @@ async function main() {
     // _shared/account_gate/check_account_registration.js for why this is pinned rather than
     // auto-negotiated.
     pluginName: Firebird.AUTH_PLUGIN_LEGACY,
+    // Without this, node-firebird hands back a lazy blob-fetch callback function instead of the
+    // real text for any BLOB column read in a SELECT (here, GDX_HNF_TRAJECTORY_RUN.CAUSAL_
+    // CAVEAT_NOTE) -- this script displays that note directly, so it needs the real string, not
+    // a callback whose own source code would otherwise leak into the rendered page.
+    blobAsText: true,
     lowercase_keys: false,
     role: null,
     pageSize: 4096,
