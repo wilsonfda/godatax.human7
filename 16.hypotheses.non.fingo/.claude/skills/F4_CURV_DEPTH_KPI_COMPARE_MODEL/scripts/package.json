@@ -1,0 +1,14 @@
+{
+  "name": "f4-curv-depth-kpi-compare-model",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pairs the real GDX_HNF_CDI_VALUE (CDIx, written by F4_CURV_DEPTH_KPI_ORIG_CHARACTERISTICS) and GDX_HNF_CDIH_VALUE (CDIh, written by F4_CURV_DEPTH_KPI_LATENT_SPACE) rows for one chosen CDI run and one chosen CDIh run of the same study, by ID_PERSON, and freezes the result into GDX_HNF_CDI_COMPARE_RUN / GDX_HNF_CDI_COMPARE_VALUE. Never computes CDIx or CDIh itself, never computes a derived statistic (Pearson r, rank) -- that is this skill's GRAPH sibling's job at render time.",
+  "main": "generate_curvature_depth_compare.js",
+  "scripts": {
+    "generate": "node generate_curvature_depth_compare.js",
+    "sample": "node generate_curvature_depth_compare.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

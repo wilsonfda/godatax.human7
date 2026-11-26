@@ -1,0 +1,14 @@
+{
+  "name": "f4-reference-profiles-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders this folder's 'first m real sessions establish a constant reference, compared with later real sessions' figure for one real subject of one study, as a standalone HTML page, one chart card per feature. Reads GDX_HNF_FEATURE_VALUE (F1) directly and recomputes the baseline live -- never reads or duplicates GDX_HNF_CDI_REFERENCE_VALUE, which may have been built with a different session count.",
+  "main": "generate_reference_profiles_graph.js",
+  "scripts": {
+    "generate": "node generate_reference_profiles_graph.js",
+    "sample": "node generate_reference_profiles_graph.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

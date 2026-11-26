@@ -1,0 +1,14 @@
+{
+  "name": "f5-geometric-curvature-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders two of this folder's own figures for one study, as a standalone HTML page: section 9.1's 'three graphic depths parametrized by CDI' and section 9.3's Gaussian dip curve, over the same real CDI population and the same three representative persons. Reads GDX_HNF_CDI_VALUE/GDX_HNF_CDIH_VALUE directly and applies the graphic gains and sigma live, at render time -- never requires or reads a pre-existing GDX_HNF_VISDEPTH_RUN/GDX_HNF_DEPTHCURVE_RUN, and never computes or displays a true Riemannian scalar curvature.",
+  "main": "generate_geometric_curvature_graph.js",
+  "scripts": {
+    "generate": "node generate_geometric_curvature_graph.js",
+    "sample": "node generate_geometric_curvature_graph.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

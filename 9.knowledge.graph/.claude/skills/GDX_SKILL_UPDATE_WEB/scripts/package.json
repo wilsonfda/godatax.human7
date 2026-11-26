@@ -1,0 +1,17 @@
+{
+  "name": "gdx-skill-update-web",
+  "version": "1.0.0",
+  "description": "Pushes the GDX_HUMAN instrument/construct/variable catalog, the septenary/chakra/Five-Ways/virtue reference tables, and the mapping tables between them from the local GODATAX7HPH.GDB to the shared firebird.godatax.com database -- never touches participant data.",
+  "main": "sync_web.js",
+  "scripts": {
+    "sync": "node sync_web.js",
+    "dry-run": "node sync_web.js --dry-run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}

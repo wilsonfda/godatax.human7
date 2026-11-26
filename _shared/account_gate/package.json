@@ -1,0 +1,16 @@
+{
+  "name": "gdx-shared-account-gate",
+  "version": "1.0.0",
+  "description": "Central account-registration gate (GDX_EAD_USERS.EMAIL on firebird.godatax.com) called by every skill's entry script across this repo. See check_account_registration.js.",
+  "main": "check_account_registration.js",
+  "scripts": {
+    "check": "node check_account_registration.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "node-firebird": "^2.16.0"
+  }
+}

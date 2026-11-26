@@ -1,0 +1,14 @@
+{
+  "name": "f6-temporal-dynamics-person-evolution",
+  "version": "1.0.0",
+  "private": true,
+  "description": "For one real subject, evaluates this folder's own RMS-distance CDIx shape (already validated by F4_CURV_DEPTH_KPI_ORIG_CHARACTERISTICS) once per real session instead of once, turning a sequence of real points into a trajectory: CDIx(t_s) per session, DELTA_CDI and a discrete velocity approximation between real, adjacent sessions. Reuses an already-built GDX_HNF_CDI_REFERENCE_SET (never builds its own reference) and never attributes a real CDIx change to a cause (CAUSAL_CLAIM_MADE is schema-CHECKed to always be 0).",
+  "main": "generate_temporal_dynamics.js",
+  "scripts": {
+    "generate": "node generate_temporal_dynamics.js",
+    "sample": "node generate_temporal_dynamics.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

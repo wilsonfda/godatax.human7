@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDIx vs. CDIh -- Predictors of Adaptability to Military Higher Education</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .viz-root {
+    color-scheme: light;
+    --surface: #fcfcfb; --page: #f9f9f7;
+    --ink: #0b0b0b; --ink-secondary: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --axis: #c3c2b7;
+    width: 100%; max-width: 1040px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d;
+      --ink: #ffffff; --ink-secondary: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d;
+    --ink: #ffffff; --ink-secondary: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+  }
+  body { background: var(--page); color: var(--ink); }
+  h1 { font-size: 19px; font-weight: 600; margin: 0 0 4px; color: var(--ink); }
+  .subtitle { font-size: 13px; color: var(--ink-secondary); margin: 0 0 10px; max-width: 760px; line-height: 1.5; }
+  .meta { font-size: 11.5px; color: var(--muted); margin: 0 0 18px; max-width: 760px; line-height: 1.6; }
+  .warning-banner {
+    font-size: 12.5px; color: var(--ink-secondary); background: var(--surface);
+    border: 1px solid var(--grid); border-left: 3px solid var(--axis); border-radius: 8px;
+    padding: 10px 14px; margin: 0 0 18px; max-width: 760px; line-height: 1.55;
+  }
+  .toggle-row { display: flex; justify-content: flex-end; margin: 0 2px 10px; width: 100%; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--ink-secondary); background: transparent;
+    border: 1px solid var(--grid); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle-btn:hover { border-color: var(--axis); color: var(--ink); }
+  .chart-card {
+    background: var(--surface); border-radius: 12px; padding: 18px 20px 14px;
+    border: 1px solid var(--grid); overflow-x: auto; margin-bottom: 18px; width: 100%;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--ink); margin: 0 0 2px; }
+  .card-subtitle { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+  .card-note { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; line-height: 1.5; }
+  svg { display: block; max-width: 100%; height: auto; font-family: inherit; }
+  .axis-label { fill: var(--muted); font-size: 11px; }
+  .bar-label { fill: var(--ink-secondary); font-size: 11px; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 2px 4px; font-size: 12px; color: var(--ink-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 16px; height: 0; border-top: 2px solid; flex: none; }
+  .legend-swatch.dashed { border-top-style: dashed; }
+  .legend-swatch.fill { width: 12px; height: 12px; border-top: none; border-radius: 2px; }
+  .panel-row { display: flex; flex-wrap: wrap; gap: 18px; }
+  .panel-half { flex: 1 1 380px; min-width: 0; }
+  .panel-title { font-size: 12.5px; font-weight: 600; color: var(--ink-secondary); margin: 0 0 6px; }
+  .tooltip {
+    position: fixed; pointer-events: none; background: var(--ink); color: var(--surface);
+    font-size: 12px; padding: 6px 9px; border-radius: 6px; line-height: 1.45;
+    opacity: 0; transform: translate(-50%, -100%); transition: opacity 0.08s;
+    z-index: 10; white-space: nowrap;
+  }
+  table.data-table { border-collapse: collapse; font-size: 12px; width: 100%; margin-top: 10px; display: none; }
+  table.data-table.visible { display: table; }
+  table.data-table th, table.data-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  table.data-table th { color: var(--muted); font-weight: 600; }
+  table.data-table td { color: var(--ink-secondary); }
+  .chart-svg.hidden-by-table { display: none; }
+  .empty-note { font-size: 13px; color: var(--muted); padding: 8px 2px 4px; }
+  
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h1>CDIx vs. CDIh -- Predictors of Adaptability to Military Higher Education</h1>
+  <p class="subtitle">CDIx (original normalized feature space) and CDIh (fitted latent space) are both RMS displacements from an explicit reference, but computed in two different spaces under two different runs. Every value plotted below is a real <code>GDX_HNF_CDI_COMPARE_VALUE</code> row for this study, already paired by person by <code>F4_CURV_DEPTH_KPI_COMPARE_MODEL</code>. Pearson r, ranks and the three representative persons below are computed at render time, from these already-frozen rows, and are never themselves persisted.</p>
+  <p class="meta">Study: Predictors of Adaptability to Military Higher Education (slug &quot;1&quot;)<br>Compare run: 1_CDICOMPARE_3x4_2026-11-22T15-32-59-652Z (ID_COMPARE_RUN=2), generated 2026-11-22 15:32:59 UTC.<br>CDIx run: 1_CDI_UNWEIGHTED_2026-11-20T20-27-03-133Z, weighting=UNWEIGHTED, reference=PERSONAL_BASELINE (&quot;1_PERSONAL_BASELINE_2026-11-20T20-27-03-049Z&quot;).<br>CDIh run: 1_CDIH_WEIGHTED_2026-11-21T12-34-03-451Z, METHOD=PCA, weighting=WEIGHTED, reference=LATENT_COHORT (&quot;1_CDIH_LATENT_COHORT_2026-11-21T12-14-44-762Z&quot;).<br>Paired persons: 422. Excluded (CDIx run only): 0. Excluded (CDIh run only): 0.</p>
+  <div class="warning-banner">
+    This project's own design document introduces this comparison with a single <em>fictitious</em>
+    pair of numbers and the caption <em>"Figura &mdash; Compara&ccedil;&atilde;o puramente fict&iacute;cia de
+    &iacute;ndices em dois espa&ccedil;os; valores n&atilde;o s&atilde;o uma avalia&ccedil;&atilde;o de desempenho"</em>
+    (&sect;7.1). Every value on this page is real and paired from this study's own database rows,
+    but the same warning applies in full: CDIx and CDIh live in two different, generally
+    non-comparable spaces and scales. A smaller or larger value in one space is <strong>never</strong>
+    evidence of improvement, anomaly, or algorithm superiority, and this page is
+    <strong>not a performance evaluation</strong> of either space or method.
+  </div>
+  <div class="toggle-row"><button class="toggle-btn" id="toggle-view">Show tables</button></div>
+  
+    <div class="chart-card">
+      <p class="card-title">Paired distributions across this study's own two spaces</p>
+      <p class="card-subtitle">CDIx run "1_CDI_UNWEIGHTED_2026-11-20T20-27-03-133Z" (reference "PERSONAL_BASELINE -- 1_PERSONAL_BASELINE_2026-11-20T20-27-03-049Z") vs. CDIh run "1_CDIH_WEIGHTED_2026-11-21T12-34-03-451Z" (reference "LATENT_COHORT -- 1_CDIH_LATENT_COHORT_2026-11-21T12-14-44-762Z") &middot; n=422 persons present in both runs. Each panel keeps its own axis -- the two distributions are never overlaid on one shared scale.</p>
+      <div class="panel-row">
+        <div class="panel-half">
+          <p class="panel-title">CDIx &mdash; n=422, mean=1.242, median=1.190</p>
+          <svg class="chart-svg" viewBox="0 0 440 260" role="img" aria-label="Histogram, CDIx value (normalized feature space)">
+        <line class="grid-line" x1="42" x2="424" y1="218.00" y2="218.00"/>
+    <text class="axis-label" x="36" y="222.00" text-anchor="end">0</text>
+<line class="grid-line" x1="42" x2="424" y1="148.67" y2="148.67"/>
+    <text class="axis-label" x="36" y="152.67" text-anchor="end">50</text>
+<line class="grid-line" x1="42" x2="424" y1="79.33" y2="79.33"/>
+    <text class="axis-label" x="36" y="83.33" text-anchor="end">100</text>
+<line class="grid-line" x1="42" x2="424" y1="10.00" y2="10.00"/>
+    <text class="axis-label" x="36" y="14.00" text-anchor="end">150</text>
+        <line class="baseline" x1="42" x2="424" y1="218.00" y2="218.00"/>
+        <rect class="bar" data-tip="[0.000, 0.215)<br>1 person(s)" x="43.00" y="216.61" width="25.29" height="1.39" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[0.215, 0.429)<br>0 person(s)" x="70.29" y="218.00" width="25.29" height="0.00" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[0.429, 0.644)<br>4 person(s)" x="97.57" y="212.45" width="25.29" height="5.55" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[0.644, 0.858)<br>28 person(s)" x="124.86" y="179.17" width="25.29" height="38.83" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[0.858, 1.073)<br>111 person(s)" x="152.14" y="64.08" width="25.29" height="153.92" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[1.073, 1.288)<br>117 person(s)" x="179.43" y="55.76" width="25.29" height="162.24" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[1.288, 1.502)<br>74 person(s)" x="206.71" y="115.39" width="25.29" height="102.61" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[1.502, 1.717)<br>53 person(s)" x="234.00" y="144.51" width="25.29" height="73.49" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[1.717, 1.931)<br>21 person(s)" x="261.29" y="188.88" width="25.29" height="29.12" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[1.931, 2.146)<br>10 person(s)" x="288.57" y="204.13" width="25.29" height="13.87" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[2.146, 2.361)<br>2 person(s)" x="315.86" y="215.23" width="25.29" height="2.77" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[2.361, 2.575)<br>0 person(s)" x="343.14" y="218.00" width="25.29" height="0.00" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[2.575, 2.790)<br>0 person(s)" x="370.43" y="218.00" width="25.29" height="0.00" fill="#2a78d6" opacity="0.85"/>
+<rect class="bar" data-tip="[2.790, 3.004)<br>1 person(s)" x="397.71" y="216.61" width="25.29" height="1.39" fill="#2a78d6" opacity="0.85"/>
+        <line x1="199.96" x2="199.96" y1="10" y2="218" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="193.28" x2="193.28" y1="10" y2="218" stroke-width="1.5" stroke-dasharray="2,3" stroke="#2a78d6" opacity="0.55"/>
+        <text class="axis-label" x="42.00" y="236" text-anchor="middle">0.00</text>
+<text class="axis-label" x="105.58" y="236" text-anchor="middle">0.50</text>
+<text class="axis-label" x="169.15" y="236" text-anchor="middle">1.00</text>
+<text class="axis-label" x="232.73" y="236" text-anchor="middle">1.50</text>
+<text class="axis-label" x="296.30" y="236" text-anchor="middle">2.00</text>
+<text class="axis-label" x="359.88" y="236" text-anchor="middle">2.50</text>
+<text class="axis-label" x="423.45" y="236" text-anchor="middle">3.00</text>
+        <text class="axis-label" x="233.00" y="254" text-anchor="middle">CDIx value (normalized feature space)</text>
+      </svg>
+        </div>
+        <div class="panel-half">
+          <p class="panel-title">CDIh &mdash; n=422, mean=1.572, median=1.352</p>
+          <svg class="chart-svg" viewBox="0 0 440 260" role="img" aria-label="Histogram, CDIh value (latent space, PCA)">
+        <line class="grid-line" x1="42" x2="424" y1="218.00" y2="218.00"/>
+    <text class="axis-label" x="36" y="222.00" text-anchor="end">0</text>
+<line class="grid-line" x1="42" x2="424" y1="148.67" y2="148.67"/>
+    <text class="axis-label" x="36" y="152.67" text-anchor="end">50</text>
+<line class="grid-line" x1="42" x2="424" y1="79.33" y2="79.33"/>
+    <text class="axis-label" x="36" y="83.33" text-anchor="end">100</text>
+<line class="grid-line" x1="42" x2="424" y1="10.00" y2="10.00"/>
+    <text class="axis-label" x="36" y="14.00" text-anchor="end">150</text>
+        <line class="baseline" x1="42" x2="424" y1="218.00" y2="218.00"/>
+        <rect class="bar" data-tip="[0.398, 0.826)<br>56 person(s)" x="43.00" y="140.35" width="25.29" height="77.65" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[0.826, 1.254)<br>120 person(s)" x="70.29" y="51.60" width="25.29" height="166.40" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[1.254, 1.682)<br>101 person(s)" x="97.57" y="77.95" width="25.29" height="140.05" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[1.682, 2.110)<br>51 person(s)" x="124.86" y="147.28" width="25.29" height="70.72" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[2.110, 2.537)<br>41 person(s)" x="152.14" y="161.15" width="25.29" height="56.85" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[2.537, 2.965)<br>22 person(s)" x="179.43" y="187.49" width="25.29" height="30.51" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[2.965, 3.393)<br>19 person(s)" x="206.71" y="191.65" width="25.29" height="26.35" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[3.393, 3.821)<br>7 person(s)" x="234.00" y="208.29" width="25.29" height="9.71" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[3.821, 4.249)<br>2 person(s)" x="261.29" y="215.23" width="25.29" height="2.77" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[4.249, 4.677)<br>2 person(s)" x="288.57" y="215.23" width="25.29" height="2.77" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[4.677, 5.104)<br>0 person(s)" x="315.86" y="218.00" width="25.29" height="0.00" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[5.104, 5.532)<br>0 person(s)" x="343.14" y="218.00" width="25.29" height="0.00" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[5.532, 5.960)<br>0 person(s)" x="370.43" y="218.00" width="25.29" height="0.00" fill="#eb6834" opacity="0.85"/>
+<rect class="bar" data-tip="[5.960, 6.388)<br>1 person(s)" x="397.71" y="216.61" width="25.29" height="1.39" fill="#eb6834" opacity="0.85"/>
+        <line x1="116.86" x2="116.86" y1="10" y2="218" stroke="var(--axis)" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <line x1="102.83" x2="102.83" y1="10" y2="218" stroke-width="1.5" stroke-dasharray="2,3" stroke="#eb6834" opacity="0.55"/>
+        <text class="axis-label" x="80.38" y="236" text-anchor="middle">1.00</text>
+<text class="axis-label" x="144.16" y="236" text-anchor="middle">2.00</text>
+<text class="axis-label" x="207.93" y="236" text-anchor="middle">3.00</text>
+<text class="axis-label" x="271.71" y="236" text-anchor="middle">4.00</text>
+<text class="axis-label" x="335.49" y="236" text-anchor="middle">5.00</text>
+<text class="axis-label" x="399.26" y="236" text-anchor="middle">6.00</text>
+        <text class="axis-label" x="233.00" y="254" text-anchor="middle">CDIh value (latent space, PCA)</text>
+      </svg>
+        </div>
+      </div>
+      <table class="data-table" id="paired-hist-table"><thead><tr><th>#</th><th>CDIx</th><th>CDIh</th></tr></thead>
+        <tbody><tr><td>1</td><td>0.000</td><td>1.174</td></tr><tr><td>2</td><td>0.911</td><td>0.816</td></tr><tr><td>3</td><td>1.095</td><td>2.252</td></tr><tr><td>4</td><td>0.993</td><td>1.115</td></tr><tr><td>5</td><td>0.677</td><td>1.432</td></tr><tr><td>6</td><td>0.890</td><td>0.534</td></tr><tr><td>7</td><td>0.997</td><td>0.718</td></tr><tr><td>8</td><td>1.230</td><td>0.696</td></tr><tr><td>9</td><td>1.345</td><td>1.557</td></tr><tr><td>10</td><td>1.072</td><td>0.660</td></tr><tr><td>11</td><td>1.108</td><td>2.136</td></tr><tr><td>12</td><td>1.443</td><td>1.589</td></tr><tr><td>13</td><td>0.955</td><td>1.238</td></tr><tr><td>14</td><td>1.194</td><td>0.570</td></tr><tr><td>15</td><td>2.096</td><td>2.958</td></tr><tr><td>16</td><td>1.075</td><td>1.261</td></tr><tr><td>17</td><td>1.256</td><td>0.751</td></tr><tr><td>18</td><td>1.960</td><td>2.396</td></tr><tr><td>19</td><td>1.150</td><td>0.598</td></tr><tr><td>20</td><td>3.004</td><td>6.388</td></tr><tr><td>21</td><td>1.045</td><td>1.340</td></tr><tr><td>22</td><td>0.809</td><td>0.921</td></tr><tr><td>23</td><td>1.506</td><td>2.210</td></tr><tr><td>24</td><td>1.093</td><td>1.224</td></tr><tr><td>25</td><td>1.015</td><td>1.185</td></tr><tr><td>26</td><td>1.437</td><td>1.129</td></tr><tr><td>27</td><td>0.787</td><td>0.853</td></tr><tr><td>28</td><td>1.162</td><td>2.226</td></tr><tr><td>29</td><td>1.787</td><td>2.103</td></tr><tr><td>30</td><td>1.136</td><td>1.037</td></tr><tr><td>31</td><td>0.944</td><td>0.527</td></tr><tr><td>32</td><td>1.325</td><td>1.300</td></tr><tr><td>33</td><td>0.976</td><td>1.561</td></tr><tr><td>34</td><td>0.858</td><td>1.129</td></tr><tr><td>35</td><td>1.148</td><td>1.395</td></tr><tr><td>36</td><td>1.425</td><td>1.735</td></tr><tr><td>37</td><td>1.120</td><td>0.933</td></tr><tr><td>38</td><td>1.090</td><td>0.851</td></tr><tr><td>39</td><td>1.489</td><td>1.269</td></tr><tr><td>40</td><td>1.532</td><td>1.359</td></tr><tr><td>41</td><td>1.207</td><td>1.759</td></tr><tr><td>42</td><td>1.377</td><td>1.484</td></tr><tr><td>43</td><td>0.905</td><td>0.482</td></tr><tr><td>44</td><td>1.067</td><td>1.102</td></tr><tr><td>45</td><td>1.490</td><td>1.966</td></tr><tr><td>46</td><td>1.141</td><td>0.679</td></tr><tr><td>47</td><td>1.187</td><td>1.050</td></tr><tr><td>48</td><td>0.894</td><td>0.651</td></tr><tr><td>49</td><td>1.165</td><td>1.159</td></tr><tr><td>50</td><td>0.935</td><td>0.666</td></tr><tr><td>51</td><td>0.915</td><td>0.935</td></tr><tr><td>52</td><td>1.260</td><td>1.062</td></tr><tr><td>53</td><td>1.042</td><td>1.186</td></tr><tr><td>54</td><td>1.145</td><td>2.150</td></tr><tr><td>55</td><td>1.013</td><td>1.176</td></tr><tr><td>56</td><td>1.443</td><td>0.751</td></tr><tr><td>57</td><td>0.955</td><td>1.484</td></tr><tr><td>58</td><td>1.110</td><td>0.813</td></tr><tr><td>59</td><td>1.109</td><td>1.720</td></tr><tr><td>60</td><td>1.336</td><td>1.111</td></tr><tr><td>61</td><td>1.287</td><td>0.996</td></tr><tr><td>62</td><td>1.899</td><td>2.788</td></tr><tr><td>63</td><td>1.149</td><td>0.910</td></tr><tr><td>64</td><td>1.264</td><td>0.835</td></tr><tr><td>65</td><td>0.847</td><td>0.907</td></tr><tr><td>66</td><td>0.866</td><td>0.978</td></tr><tr><td>67</td><td>1.159</td><td>1.672</td></tr><tr><td>68</td><td>0.883</td><td>0.636</td></tr><tr><td>69</td><td>1.593</td><td>1.443</td></tr><tr><td>70</td><td>1.652</td><td>2.949</td></tr><tr><td>71</td><td>1.353</td><td>2.331</td></tr><tr><td>72</td><td>1.352</td><td>2.979</td></tr><tr><td>73</td><td>1.152</td><td>1.267</td></tr><tr><td>74</td><td>1.145</td><td>1.988</td></tr><tr><td>75</td><td>0.808</td><td>0.877</td></tr><tr><td>76</td><td>0.966</td><td>0.719</td></tr><tr><td>77</td><td>1.042</td><td>1.180</td></tr><tr><td>78</td><td>0.797</td><td>0.901</td></tr><tr><td>79</td><td>0.914</td><td>1.068</td></tr><tr><td>80</td><td>1.311</td><td>1.048</td></tr><tr><td>81</td><td>0.970</td><td>2.287</td></tr><tr><td>82</td><td>1.177</td><td>1.335</td></tr><tr><td>83</td><td>1.073</td><td>1.947</td></tr><tr><td>84</td><td>1.245</td><td>2.005</td></tr><tr><td>85</td><td>1.321</td><td>2.427</td></tr><tr><td>86</td><td>1.079</td><td>1.302</td></tr><tr><td>87</td><td>0.840</td><td>0.541</td></tr><tr><td>88</td><td>0.936</td><td>0.685</td></tr><tr><td>89</td><td>1.196</td><td>2.600</td></tr><tr><td>90</td><td>0.995</td><td>0.472</td></tr><tr><td>91</td><td>1.256</td><td>2.430</td></tr><tr><td>92</td><td>1.203</td><td>1.162</td></tr><tr><td>93</td><td>1.034</td><td>1.064</td></tr><tr><td>94</td><td>1.525</td><td>1.378</td></tr><tr><td>95</td><td>0.836</td><td>0.680</td></tr><tr><td>96</td><td>0.851</td><td>1.086</td></tr><tr><td>97</td><td>1.213</td><td>1.722</td></tr><tr><td>98</td><td>0.933</td><td>1.600</td></tr><tr><td>99</td><td>1.148</td><td>1.700</td></tr><tr><td>100</td><td>0.802</td><td>0.877</td></tr><tr><td>101</td><td>0.894</td><td>1.200</td></tr><tr><td>102</td><td>0.981</td><td>0.873</td></tr><tr><td>103</td><td>0.800</td><td>0.931</td></tr><tr><td>104</td><td>1.004</td><td>1.656</td></tr><tr><td>105</td><td>0.960</td><td>1.124</td></tr><tr><td>106</td><td>1.422</td><td>2.581</td></tr><tr><td>107</td><td>1.038</td><td>0.824</td></tr><tr><td>108</td><td>1.299</td><td>1.886</td></tr><tr><td>109</td><td>1.102</td><td>0.991</td></tr><tr><td>110</td><td>1.553</td><td>1.562</td></tr><tr><td>111</td><td>1.034</td><td>1.804</td></tr><tr><td>112</td><td>1.938</td><td>3.462</td></tr><tr><td>113</td><td>1.772</td><td>1.665</td></tr><tr><td>114</td><td>1.829</td><td>2.211</td></tr><tr><td>115</td><td>1.433</td><td>1.373</td></tr><tr><td>116</td><td>0.814</td><td>0.737</td></tr><tr><td>117</td><td>1.083</td><td>1.749</td></tr><tr><td>118</td><td>0.751</td><td>0.779</td></tr><tr><td>119</td><td>1.070</td><td>1.435</td></tr><tr><td>120</td><td>1.300</td><td>1.315</td></tr><tr><td>121</td><td>0.981</td><td>0.904</td></tr><tr><td>122</td><td>1.162</td><td>0.829</td></tr><tr><td>123</td><td>1.519</td><td>1.337</td></tr><tr><td>124</td><td>1.343</td><td>1.220</td></tr><tr><td>125</td><td>1.560</td><td>2.155</td></tr><tr><td>126</td><td>1.405</td><td>2.381</td></tr><tr><td>127</td><td>1.295</td><td>0.987</td></tr><tr><td>128</td><td>0.868</td><td>0.580</td></tr><tr><td>129</td><td>1.296</td><td>1.129</td></tr><tr><td>130</td><td>1.355</td><td>1.221</td></tr><tr><td>131</td><td>1.136</td><td>1.180</td></tr><tr><td>132</td><td>0.923</td><td>0.566</td></tr><tr><td>133</td><td>1.082</td><td>0.935</td></tr><tr><td>134</td><td>1.402</td><td>1.308</td></tr><tr><td>135</td><td>0.933</td><td>1.497</td></tr><tr><td>136</td><td>1.201</td><td>1.393</td></tr><tr><td>137</td><td>1.146</td><td>0.723</td></tr><tr><td>138</td><td>1.450</td><td>1.938</td></tr><tr><td>139</td><td>0.948</td><td>1.510</td></tr><tr><td>140</td><td>1.264</td><td>1.454</td></tr><tr><td>141</td><td>1.593</td><td>2.276</td></tr><tr><td>142</td><td>1.139</td><td>1.351</td></tr><tr><td>143</td><td>2.201</td><td>4.504</td></tr><tr><td>144</td><td>1.508</td><td>1.420</td></tr><tr><td>145</td><td>1.054</td><td>0.922</td></tr><tr><td>146</td><td>0.988</td><td>0.715</td></tr><tr><td>147</td><td>1.228</td><td>1.388</td></tr><tr><td>148</td><td>1.756</td><td>1.776</td></tr><tr><td>149</td><td>1.164</td><td>1.328</td></tr><tr><td>150</td><td>1.830</td><td>3.041</td></tr><tr><td>151</td><td>1.043</td><td>1.929</td></tr><tr><td>152</td><td>1.050</td><td>2.186</td></tr><tr><td>153</td><td>0.872</td><td>0.978</td></tr><tr><td>154</td><td>0.978</td><td>1.029</td></tr><tr><td>155</td><td>0.987</td><td>1.152</td></tr><tr><td>156</td><td>0.926</td><td>0.760</td></tr><tr><td>157</td><td>1.753</td><td>3.494</td></tr><tr><td>158</td><td>1.093</td><td>0.938</td></tr><tr><td>159</td><td>1.095</td><td>1.568</td></tr><tr><td>160</td><td>1.652</td><td>2.259</td></tr><tr><td>161</td><td>0.906</td><td>2.412</td></tr><tr><td>162</td><td>0.914</td><td>1.565</td></tr><tr><td>163</td><td>1.442</td><td>1.323</td></tr><tr><td>164</td><td>1.280</td><td>1.968</td></tr><tr><td>165</td><td>1.219</td><td>1.595</td></tr><tr><td>166</td><td>1.992</td><td>1.957</td></tr><tr><td>167</td><td>1.693</td><td>2.592</td></tr><tr><td>168</td><td>1.960</td><td>3.372</td></tr><tr><td>169</td><td>1.662</td><td>2.687</td></tr><tr><td>170</td><td>1.941</td><td>3.056</td></tr><tr><td>171</td><td>1.237</td><td>2.267</td></tr><tr><td>172</td><td>1.413</td><td>1.562</td></tr><tr><td>173</td><td>1.252</td><td>1.737</td></tr><tr><td>174</td><td>1.693</td><td>3.114</td></tr><tr><td>175</td><td>1.059</td><td>1.570</td></tr><tr><td>176</td><td>1.545</td><td>2.915</td></tr><tr><td>177</td><td>1.154</td><td>1.106</td></tr><tr><td>178</td><td>1.177</td><td>2.583</td></tr><tr><td>179</td><td>1.032</td><td>0.849</td></tr><tr><td>180</td><td>1.144</td><td>0.965</td></tr><tr><td>181</td><td>1.185</td><td>1.246</td></tr><tr><td>182</td><td>1.006</td><td>0.992</td></tr><tr><td>183</td><td>1.654</td><td>1.557</td></tr><tr><td>184</td><td>1.808</td><td>3.179</td></tr><tr><td>185</td><td>1.400</td><td>1.928</td></tr><tr><td>186</td><td>1.804</td><td>2.304</td></tr><tr><td>187</td><td>0.942</td><td>0.864</td></tr><tr><td>188</td><td>1.124</td><td>2.914</td></tr><tr><td>189</td><td>0.862</td><td>1.373</td></tr><tr><td>190</td><td>1.531</td><td>2.018</td></tr><tr><td>191</td><td>1.668</td><td>3.339</td></tr><tr><td>192</td><td>1.267</td><td>1.845</td></tr><tr><td>193</td><td>1.565</td><td>2.195</td></tr><tr><td>194</td><td>1.239</td><td>1.973</td></tr><tr><td>195</td><td>1.164</td><td>1.479</td></tr><tr><td>196</td><td>1.146</td><td>1.494</td></tr><tr><td>197</td><td>1.651</td><td>3.544</td></tr><tr><td>198</td><td>1.628</td><td>2.272</td></tr><tr><td>199</td><td>1.037</td><td>2.394</td></tr><tr><td>200</td><td>1.021</td><td>1.448</td></tr><tr><td>201</td><td>1.474</td><td>1.294</td></tr><tr><td>202</td><td>1.207</td><td>1.493</td></tr><tr><td>203</td><td>1.306</td><td>1.473</td></tr><tr><td>204</td><td>1.649</td><td>1.642</td></tr><tr><td>205</td><td>1.035</td><td>1.022</td></tr><tr><td>206</td><td>1.063</td><td>0.772</td></tr><tr><td>207</td><td>1.481</td><td>3.069</td></tr><tr><td>208</td><td>1.256</td><td>2.283</td></tr><tr><td>209</td><td>1.371</td><td>3.632</td></tr><tr><td>210</td><td>1.478</td><td>2.486</td></tr><tr><td>211</td><td>1.001</td><td>0.678</td></tr><tr><td>212</td><td>0.996</td><td>0.923</td></tr><tr><td>213</td><td>1.549</td><td>2.566</td></tr><tr><td>214</td><td>1.025</td><td>1.177</td></tr><tr><td>215</td><td>1.424</td><td>1.416</td></tr><tr><td>216</td><td>0.919</td><td>1.330</td></tr><tr><td>217</td><td>0.624</td><td>1.200</td></tr><tr><td>218</td><td>0.700</td><td>1.058</td></tr><tr><td>219</td><td>1.104</td><td>2.001</td></tr><tr><td>220</td><td>1.313</td><td>1.300</td></tr><tr><td>221</td><td>1.416</td><td>2.066</td></tr><tr><td>222</td><td>1.555</td><td>2.158</td></tr><tr><td>223</td><td>0.887</td><td>0.881</td></tr><tr><td>224</td><td>1.057</td><td>1.154</td></tr><tr><td>225</td><td>1.206</td><td>1.002</td></tr><tr><td>226</td><td>1.080</td><td>1.139</td></tr><tr><td>227</td><td>1.547</td><td>1.054</td></tr><tr><td>228</td><td>1.423</td><td>2.308</td></tr><tr><td>229</td><td>1.596</td><td>2.592</td></tr><tr><td>230</td><td>1.019</td><td>0.811</td></tr><tr><td>231</td><td>1.410</td><td>3.353</td></tr><tr><td>232</td><td>0.701</td><td>1.127</td></tr><tr><td>233</td><td>1.582</td><td>1.731</td></tr><tr><td>234</td><td>1.211</td><td>1.064</td></tr><tr><td>235</td><td>1.114</td><td>0.930</td></tr><tr><td>236</td><td>1.661</td><td>2.936</td></tr><tr><td>237</td><td>1.240</td><td>1.833</td></tr><tr><td>238</td><td>0.635</td><td>0.728</td></tr><tr><td>239</td><td>0.870</td><td>1.336</td></tr><tr><td>240</td><td>0.810</td><td>0.593</td></tr><tr><td>241</td><td>0.915</td><td>1.112</td></tr><tr><td>242</td><td>0.930</td><td>1.055</td></tr><tr><td>243</td><td>1.191</td><td>1.296</td></tr><tr><td>244</td><td>1.331</td><td>1.790</td></tr><tr><td>245</td><td>0.982</td><td>0.625</td></tr><tr><td>246</td><td>1.408</td><td>1.370</td></tr><tr><td>247</td><td>1.222</td><td>0.640</td></tr><tr><td>248</td><td>1.453</td><td>1.626</td></tr><tr><td>249</td><td>1.130</td><td>1.471</td></tr><tr><td>250</td><td>1.304</td><td>1.895</td></tr><tr><td>251</td><td>0.972</td><td>0.958</td></tr><tr><td>252</td><td>1.007</td><td>0.661</td></tr><tr><td>253</td><td>1.642</td><td>1.868</td></tr><tr><td>254</td><td>0.972</td><td>2.081</td></tr><tr><td>255</td><td>1.139</td><td>0.805</td></tr><tr><td>256</td><td>1.375</td><td>2.194</td></tr><tr><td>257</td><td>0.780</td><td>0.706</td></tr><tr><td>258</td><td>1.066</td><td>1.150</td></tr><tr><td>259</td><td>1.269</td><td>0.956</td></tr><tr><td>260</td><td>0.908</td><td>0.636</td></tr><tr><td>261</td><td>1.519</td><td>1.311</td></tr><tr><td>262</td><td>1.528</td><td>2.284</td></tr><tr><td>263</td><td>1.000</td><td>0.972</td></tr><tr><td>264</td><td>1.571</td><td>2.393</td></tr><tr><td>265</td><td>1.153</td><td>0.958</td></tr><tr><td>266</td><td>1.061</td><td>1.127</td></tr><tr><td>267</td><td>1.366</td><td>3.015</td></tr><tr><td>268</td><td>1.158</td><td>1.152</td></tr><tr><td>269</td><td>1.226</td><td>1.301</td></tr><tr><td>270</td><td>1.009</td><td>0.878</td></tr><tr><td>271</td><td>0.919</td><td>1.263</td></tr><tr><td>272</td><td>0.995</td><td>1.013</td></tr><tr><td>273</td><td>1.028</td><td>1.084</td></tr><tr><td>274</td><td>1.157</td><td>1.112</td></tr><tr><td>275</td><td>1.100</td><td>1.051</td></tr><tr><td>276</td><td>1.333</td><td>1.411</td></tr><tr><td>277</td><td>1.282</td><td>0.617</td></tr><tr><td>278</td><td>0.789</td><td>0.901</td></tr><tr><td>279</td><td>1.387</td><td>1.698</td></tr><tr><td>280</td><td>1.246</td><td>1.417</td></tr><tr><td>281</td><td>0.883</td><td>0.676</td></tr><tr><td>282</td><td>1.189</td><td>1.278</td></tr><tr><td>283</td><td>1.141</td><td>1.282</td></tr><tr><td>284</td><td>0.900</td><td>1.128</td></tr><tr><td>285</td><td>1.822</td><td>2.834</td></tr><tr><td>286</td><td>0.968</td><td>1.315</td></tr><tr><td>287</td><td>1.248</td><td>1.268</td></tr><tr><td>288</td><td>0.781</td><td>0.852</td></tr><tr><td>289</td><td>1.065</td><td>1.860</td></tr><tr><td>290</td><td>0.813</td><td>0.702</td></tr><tr><td>291</td><td>1.341</td><td>2.718</td></tr><tr><td>292</td><td>0.900</td><td>0.926</td></tr><tr><td>293</td><td>1.558</td><td>3.102</td></tr><tr><td>294</td><td>1.479</td><td>2.312</td></tr><tr><td>295</td><td>1.278</td><td>3.103</td></tr><tr><td>296</td><td>0.817</td><td>1.312</td></tr><tr><td>297</td><td>1.231</td><td>1.719</td></tr><tr><td>298</td><td>1.905</td><td>1.770</td></tr><tr><td>299</td><td>1.378</td><td>1.674</td></tr><tr><td>300</td><td>1.456</td><td>1.484</td></tr><tr><td>301</td><td>0.875</td><td>0.643</td></tr><tr><td>302</td><td>1.213</td><td>0.908</td></tr><tr><td>303</td><td>0.937</td><td>0.621</td></tr><tr><td>304</td><td>0.999</td><td>0.851</td></tr><tr><td>305</td><td>1.264</td><td>1.461</td></tr><tr><td>306</td><td>0.750</td><td>0.717</td></tr><tr><td>307</td><td>1.490</td><td>2.598</td></tr><tr><td>308</td><td>1.755</td><td>2.702</td></tr><tr><td>309</td><td>0.968</td><td>1.127</td></tr><tr><td>310</td><td>1.206</td><td>0.926</td></tr><tr><td>311</td><td>1.430</td><td>1.203</td></tr><tr><td>312</td><td>0.974</td><td>0.398</td></tr><tr><td>313</td><td>1.181</td><td>0.811</td></tr><tr><td>314</td><td>0.986</td><td>0.547</td></tr><tr><td>315</td><td>1.539</td><td>1.953</td></tr><tr><td>316</td><td>1.094</td><td>2.067</td></tr><tr><td>317</td><td>2.107</td><td>2.473</td></tr><tr><td>318</td><td>1.267</td><td>0.790</td></tr><tr><td>319</td><td>1.417</td><td>3.145</td></tr><tr><td>320</td><td>0.736</td><td>0.909</td></tr><tr><td>321</td><td>1.500</td><td>1.324</td></tr><tr><td>322</td><td>1.314</td><td>1.275</td></tr><tr><td>323</td><td>1.255</td><td>1.872</td></tr><tr><td>324</td><td>1.593</td><td>2.712</td></tr><tr><td>325</td><td>0.869</td><td>0.849</td></tr><tr><td>326</td><td>1.048</td><td>1.587</td></tr><tr><td>327</td><td>1.392</td><td>1.812</td></tr><tr><td>328</td><td>1.477</td><td>2.255</td></tr><tr><td>329</td><td>0.617</td><td>0.897</td></tr><tr><td>330</td><td>1.630</td><td>1.921</td></tr><tr><td>331</td><td>1.001</td><td>1.207</td></tr><tr><td>332</td><td>1.836</td><td>3.849</td></tr><tr><td>333</td><td>1.597</td><td>1.650</td></tr><tr><td>334</td><td>1.436</td><td>1.861</td></tr><tr><td>335</td><td>1.563</td><td>2.450</td></tr><tr><td>336</td><td>1.290</td><td>1.371</td></tr><tr><td>337</td><td>1.459</td><td>2.153</td></tr><tr><td>338</td><td>1.392</td><td>1.397</td></tr><tr><td>339</td><td>1.623</td><td>1.656</td></tr><tr><td>340</td><td>1.202</td><td>1.281</td></tr><tr><td>341</td><td>1.517</td><td>2.962</td></tr><tr><td>342</td><td>1.184</td><td>1.228</td></tr><tr><td>343</td><td>1.382</td><td>3.324</td></tr><tr><td>344</td><td>1.555</td><td>1.483</td></tr><tr><td>345</td><td>0.802</td><td>1.353</td></tr><tr><td>346</td><td>1.223</td><td>1.179</td></tr><tr><td>347</td><td>0.794</td><td>1.053</td></tr><tr><td>348</td><td>1.355</td><td>1.136</td></tr><tr><td>349</td><td>1.050</td><td>0.651</td></tr><tr><td>350</td><td>2.033</td><td>3.310</td></tr><tr><td>351</td><td>1.197</td><td>1.040</td></tr><tr><td>352</td><td>1.856</td><td>1.796</td></tr><tr><td>353</td><td>1.165</td><td>2.024</td></tr><tr><td>354</td><td>1.804</td><td>3.058</td></tr><tr><td>355</td><td>1.400</td><td>1.780</td></tr><tr><td>356</td><td>1.758</td><td>2.994</td></tr><tr><td>357</td><td>1.709</td><td>2.733</td></tr><tr><td>358</td><td>1.516</td><td>1.879</td></tr><tr><td>359</td><td>1.267</td><td>1.022</td></tr><tr><td>360</td><td>0.635</td><td>0.928</td></tr><tr><td>361</td><td>1.542</td><td>2.619</td></tr><tr><td>362</td><td>1.677</td><td>2.073</td></tr><tr><td>363</td><td>1.188</td><td>1.023</td></tr><tr><td>364</td><td>2.257</td><td>3.776</td></tr><tr><td>365</td><td>1.640</td><td>2.177</td></tr><tr><td>366</td><td>1.449</td><td>1.368</td></tr><tr><td>367</td><td>1.016</td><td>1.413</td></tr><tr><td>368</td><td>0.985</td><td>0.873</td></tr><tr><td>369</td><td>1.191</td><td>2.135</td></tr><tr><td>370</td><td>1.025</td><td>1.553</td></tr><tr><td>371</td><td>1.519</td><td>2.808</td></tr><tr><td>372</td><td>1.057</td><td>0.972</td></tr><tr><td>373</td><td>1.196</td><td>1.331</td></tr><tr><td>374</td><td>1.497</td><td>1.624</td></tr><tr><td>375</td><td>0.867</td><td>1.248</td></tr><tr><td>376</td><td>1.702</td><td>3.058</td></tr><tr><td>377</td><td>1.361</td><td>1.119</td></tr><tr><td>378</td><td>0.964</td><td>0.807</td></tr><tr><td>379</td><td>1.359</td><td>1.725</td></tr><tr><td>380</td><td>0.983</td><td>0.834</td></tr><tr><td>381</td><td>1.239</td><td>0.884</td></tr><tr><td>382</td><td>1.836</td><td>1.784</td></tr><tr><td>383</td><td>0.985</td><td>0.635</td></tr><tr><td>384</td><td>1.419</td><td>1.663</td></tr><tr><td>385</td><td>1.676</td><td>3.138</td></tr><tr><td>386</td><td>0.997</td><td>0.871</td></tr><tr><td>387</td><td>1.871</td><td>3.431</td></tr><tr><td>388</td><td>1.086</td><td>1.257</td></tr><tr><td>389</td><td>1.758</td><td>4.383</td></tr><tr><td>390</td><td>1.459</td><td>1.663</td></tr><tr><td>391</td><td>2.097</td><td>3.695</td></tr><tr><td>392</td><td>0.830</td><td>1.060</td></tr><tr><td>393</td><td>1.226</td><td>1.717</td></tr><tr><td>394</td><td>1.109</td><td>1.202</td></tr><tr><td>395</td><td>1.146</td><td>1.478</td></tr><tr><td>396</td><td>1.106</td><td>0.797</td></tr><tr><td>397</td><td>1.829</td><td>3.856</td></tr><tr><td>398</td><td>1.632</td><td>2.419</td></tr><tr><td>399</td><td>1.144</td><td>1.060</td></tr><tr><td>400</td><td>1.835</td><td>2.386</td></tr><tr><td>401</td><td>1.044</td><td>1.422</td></tr><tr><td>402</td><td>0.885</td><td>0.818</td></tr><tr><td>403</td><td>1.100</td><td>1.337</td></tr><tr><td>404</td><td>1.474</td><td>1.609</td></tr><tr><td>405</td><td>1.394</td><td>1.068</td></tr><tr><td>406</td><td>1.003</td><td>0.525</td></tr><tr><td>407</td><td>1.270</td><td>1.293</td></tr><tr><td>408</td><td>2.125</td><td>2.322</td></tr><tr><td>409</td><td>1.560</td><td>1.387</td></tr><tr><td>410</td><td>0.823</td><td>0.917</td></tr><tr><td>411</td><td>1.101</td><td>1.351</td></tr><tr><td>412</td><td>1.059</td><td>1.457</td></tr><tr><td>413</td><td>1.144</td><td>1.256</td></tr><tr><td>414</td><td>0.995</td><td>0.877</td></tr><tr><td>415</td><td>1.424</td><td>2.225</td></tr><tr><td>416</td><td>1.415</td><td>1.568</td></tr><tr><td>417</td><td>1.139</td><td>1.794</td></tr><tr><td>418</td><td>1.546</td><td>1.418</td></tr><tr><td>419</td><td>1.634</td><td>1.985</td></tr><tr><td>420</td><td>1.086</td><td>0.848</td></tr><tr><td>421</td><td>0.968</td><td>1.360</td></tr><tr><td>422</td><td>1.255</td><td>2.390</td></tr></tbody></table>
+    </div>
+
+    <div class="chart-card">
+      <p class="card-title">CDIx vs. CDIh, real paired persons (n=422)</p>
+      <p class="card-subtitle">One point per person present in both runs. Pearson r = 0.730. This tests whether the two indices are statistically <em>associated</em> across this sample -- it is not a test of whether they are the same quantity, and not a causal claim.</p>
+      <svg class="chart-svg" viewBox="0 0 560 420" role="img" aria-label="Scatter of CDIx vs CDIh, Pearson r = 0.730">
+        <line class="grid-line" x1="56" x2="540" y1="374.00" y2="374.00"/>
+    <text class="axis-label" x="48" y="378.00" text-anchor="end">0.00</text>
+<line class="grid-line" x1="56" x2="540" y1="322.57" y2="322.57"/>
+    <text class="axis-label" x="48" y="326.57" text-anchor="end">1.00</text>
+<line class="grid-line" x1="56" x2="540" y1="271.14" y2="271.14"/>
+    <text class="axis-label" x="48" y="275.14" text-anchor="end">2.00</text>
+<line class="grid-line" x1="56" x2="540" y1="219.71" y2="219.71"/>
+    <text class="axis-label" x="48" y="223.71" text-anchor="end">3.00</text>
+<line class="grid-line" x1="56" x2="540" y1="168.29" y2="168.29"/>
+    <text class="axis-label" x="48" y="172.29" text-anchor="end">4.00</text>
+<line class="grid-line" x1="56" x2="540" y1="116.86" y2="116.86"/>
+    <text class="axis-label" x="48" y="120.86" text-anchor="end">5.00</text>
+<line class="grid-line" x1="56" x2="540" y1="65.43" y2="65.43"/>
+    <text class="axis-label" x="48" y="69.43" text-anchor="end">6.00</text>
+<line class="grid-line" x1="56" x2="540" y1="14.00" y2="14.00"/>
+    <text class="axis-label" x="48" y="18.00" text-anchor="end">7.00</text><text class="axis-label" x="56.00" y="394" text-anchor="middle">0.00</text>
+<text class="axis-label" x="125.14" y="394" text-anchor="middle">0.50</text>
+<text class="axis-label" x="194.29" y="394" text-anchor="middle">1.00</text>
+<text class="axis-label" x="263.43" y="394" text-anchor="middle">1.50</text>
+<text class="axis-label" x="332.57" y="394" text-anchor="middle">2.00</text>
+<text class="axis-label" x="401.71" y="394" text-anchor="middle">2.50</text>
+<text class="axis-label" x="470.86" y="394" text-anchor="middle">3.00</text>
+<text class="axis-label" x="540.00" y="394" text-anchor="middle">3.50</text>
+        <line class="baseline" x1="56" x2="540" y1="374.00" y2="374.00"/>
+        <line class="baseline" x1="56" x2="56" y1="14" y2="374.00"/>
+        <circle class="dot" data-tip="Person #784<br>CDIx = 0.000<br>CDIh = 1.174" cx="56.00" cy="313.60" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #786<br>CDIx = 0.911<br>CDIh = 0.816" cx="182.01" cy="332.02" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #788<br>CDIx = 1.095<br>CDIh = 2.252" cx="207.45" cy="258.17" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #789<br>CDIx = 0.993<br>CDIh = 1.115" cx="193.33" cy="316.67" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #792<br>CDIx = 0.677<br>CDIh = 1.432" cx="149.68" cy="300.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #793<br>CDIx = 0.890<br>CDIh = 0.534" cx="179.06" cy="346.51" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #795<br>CDIx = 0.997<br>CDIh = 0.718" cx="193.87" cy="337.06" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #797<br>CDIx = 1.230<br>CDIh = 0.696" cx="226.08" cy="338.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #800<br>CDIx = 1.345<br>CDIh = 1.557" cx="241.98" cy="293.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #802<br>CDIx = 1.072<br>CDIh = 0.660" cx="204.30" cy="340.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #804<br>CDIx = 1.108<br>CDIh = 2.136" cx="209.23" cy="264.13" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #806<br>CDIx = 1.443<br>CDIh = 1.589" cx="255.54" cy="292.31" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #807<br>CDIx = 0.955<br>CDIh = 1.238" cx="188.03" cy="310.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #810<br>CDIx = 1.194<br>CDIh = 0.570" cx="221.09" cy="344.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #811<br>CDIx = 2.096<br>CDIh = 2.958" cx="345.87" cy="221.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #814<br>CDIx = 1.075<br>CDIh = 1.261" cx="204.66" cy="309.17" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #816<br>CDIx = 1.256<br>CDIh = 0.751" cx="229.68" cy="335.40" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #817<br>CDIx = 1.960<br>CDIh = 2.396" cx="327.03" cy="250.78" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #819<br>CDIx = 1.150<br>CDIh = 0.598" cx="214.96" cy="343.24" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #822<br>CDIx = 3.004<br>CDIh = 6.388" cx="471.45" cy="45.48" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #824<br>CDIx = 1.045<br>CDIh = 1.340" cx="200.49" cy="305.07" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #826<br>CDIx = 0.809<br>CDIh = 0.921" cx="167.94" cy="326.62" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #827<br>CDIx = 1.506<br>CDIh = 2.210" cx="264.29" cy="260.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #830<br>CDIx = 1.093<br>CDIh = 1.224" cx="207.18" cy="311.05" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #832<br>CDIx = 1.015<br>CDIh = 1.185" cx="196.37" cy="313.05" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #834<br>CDIx = 1.437<br>CDIh = 1.129" cx="254.73" cy="315.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #836<br>CDIx = 0.787<br>CDIh = 0.853" cx="164.87" cy="330.16" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #838<br>CDIx = 1.162<br>CDIh = 2.226" cx="216.68" cy="259.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #839<br>CDIx = 1.787<br>CDIh = 2.103" cx="303.07" cy="265.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #842<br>CDIx = 1.136<br>CDIh = 1.037" cx="213.11" cy="320.69" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #844<br>CDIx = 0.944<br>CDIh = 0.527" cx="186.49" cy="346.90" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #846<br>CDIx = 1.325<br>CDIh = 1.300" cx="239.18" cy="307.16" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #847<br>CDIx = 0.976<br>CDIh = 1.561" cx="190.91" cy="293.70" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #849<br>CDIx = 0.858<br>CDIh = 1.129" cx="174.66" cy="315.94" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #852<br>CDIx = 1.148<br>CDIh = 1.395" cx="214.70" cy="302.28" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #854<br>CDIx = 1.425<br>CDIh = 1.735" cx="253.10" cy="284.75" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #856<br>CDIx = 1.120<br>CDIh = 0.933" cx="210.94" cy="326.00" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #857<br>CDIx = 1.090<br>CDIh = 0.851" cx="206.73" cy="330.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #859<br>CDIx = 1.489<br>CDIh = 1.269" cx="261.97" cy="308.73" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #861<br>CDIx = 1.532<br>CDIh = 1.359" cx="267.80" cy="304.10" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #864<br>CDIx = 1.207<br>CDIh = 1.759" cx="222.92" cy="283.55" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #865<br>CDIx = 1.377<br>CDIh = 1.484" cx="246.43" cy="297.69" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #867<br>CDIx = 0.905<br>CDIh = 0.482" cx="181.18" cy="349.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #870<br>CDIx = 1.067<br>CDIh = 1.102" cx="203.49" cy="317.31" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #871<br>CDIx = 1.490<br>CDIh = 1.966" cx="262.02" cy="272.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #873<br>CDIx = 1.141<br>CDIh = 0.679" cx="213.75" cy="339.07" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #876<br>CDIx = 1.187<br>CDIh = 1.050" cx="220.11" cy="319.99" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #878<br>CDIx = 0.894<br>CDIh = 0.651" cx="179.68" cy="340.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #879<br>CDIx = 1.165<br>CDIh = 1.159" cx="217.07" cy="314.39" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #881<br>CDIx = 0.935<br>CDIh = 0.666" cx="185.24" cy="339.77" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #884<br>CDIx = 0.915<br>CDIh = 0.935" cx="182.57" cy="325.90" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #886<br>CDIx = 1.260<br>CDIh = 1.062" cx="230.26" cy="319.39" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #887<br>CDIx = 1.042<br>CDIh = 1.186" cx="200.11" cy="312.99" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #890<br>CDIx = 1.145<br>CDIh = 2.150" cx="214.27" cy="263.43" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #892<br>CDIx = 1.013<br>CDIh = 1.176" cx="196.04" cy="313.51" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #894<br>CDIx = 1.443<br>CDIh = 0.751" cx="255.56" cy="335.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #896<br>CDIx = 0.955<br>CDIh = 1.484" cx="188.12" cy="297.67" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #897<br>CDIx = 1.110<br>CDIh = 0.813" cx="209.48" cy="332.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #900<br>CDIx = 1.109<br>CDIh = 1.720" cx="209.36" cy="285.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #902<br>CDIx = 1.336<br>CDIh = 1.111" cx="240.70" cy="316.89" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #904<br>CDIx = 1.287<br>CDIh = 0.996" cx="234.02" cy="322.80" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #905<br>CDIx = 1.899<br>CDIh = 2.788" cx="318.67" cy="230.63" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #907<br>CDIx = 1.149<br>CDIh = 0.910" cx="214.89" cy="327.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #910<br>CDIx = 1.264<br>CDIh = 0.835" cx="230.77" cy="331.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #911<br>CDIx = 0.847<br>CDIh = 0.907" cx="173.15" cy="327.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #915<br>CDIx = 0.866<br>CDIh = 0.978" cx="175.75" cy="323.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #918<br>CDIx = 1.159<br>CDIh = 1.672" cx="216.32" cy="288.01" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #920<br>CDIx = 0.883<br>CDIh = 0.636" cx="178.14" cy="341.28" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #922<br>CDIx = 1.593<br>CDIh = 1.443" cx="276.35" cy="299.81" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #923<br>CDIx = 1.652<br>CDIh = 2.949" cx="284.47" cy="222.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #925<br>CDIx = 1.353<br>CDIh = 2.331" cx="243.17" cy="254.10" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #927<br>CDIx = 1.352<br>CDIh = 2.979" cx="242.92" cy="220.81" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #929<br>CDIx = 1.152<br>CDIh = 1.267" cx="215.36" cy="308.84" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #931<br>CDIx = 1.145<br>CDIh = 1.988" cx="214.32" cy="271.76" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #933<br>CDIx = 0.808<br>CDIh = 0.877" cx="167.79" cy="328.88" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #935<br>CDIx = 0.966<br>CDIh = 0.719" cx="189.65" cy="337.05" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #938<br>CDIx = 1.042<br>CDIh = 1.180" cx="200.09" cy="313.30" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #939<br>CDIx = 0.797<br>CDIh = 0.901" cx="166.17" cy="327.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #942<br>CDIx = 0.914<br>CDIh = 1.068" cx="182.43" cy="319.10" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #944<br>CDIx = 1.311<br>CDIh = 1.048" cx="237.32" cy="320.11" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #946<br>CDIx = 0.970<br>CDIh = 2.287" cx="190.09" cy="256.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #947<br>CDIx = 1.177<br>CDIh = 1.335" cx="218.81" cy="305.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #949<br>CDIx = 1.073<br>CDIh = 1.947" cx="204.40" cy="273.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #954<br>CDIx = 1.245<br>CDIh = 2.005" cx="228.19" cy="270.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #957<br>CDIx = 1.321<br>CDIh = 2.427" cx="238.62" cy="249.19" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #960<br>CDIx = 1.079<br>CDIh = 1.302" cx="205.19" cy="307.02" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #962<br>CDIx = 0.840<br>CDIh = 0.541" cx="172.22" cy="346.20" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #964<br>CDIx = 0.936<br>CDIh = 0.685" cx="185.49" cy="338.79" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #966<br>CDIx = 1.196<br>CDIh = 2.600" cx="221.45" cy="240.27" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #967<br>CDIx = 0.995<br>CDIh = 0.472" cx="193.61" cy="349.74" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #970<br>CDIx = 1.256<br>CDIh = 2.430" cx="229.72" cy="249.04" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #972<br>CDIx = 1.203<br>CDIh = 1.162" cx="222.40" cy="314.26" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #974<br>CDIx = 1.034<br>CDIh = 1.064" cx="198.95" cy="319.28" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #975<br>CDIx = 1.525<br>CDIh = 1.378" cx="266.95" cy="303.11" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #978<br>CDIx = 0.836<br>CDIh = 0.680" cx="171.54" cy="339.04" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #979<br>CDIx = 0.851<br>CDIh = 1.086" cx="173.67" cy="318.14" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #981<br>CDIx = 1.213<br>CDIh = 1.722" cx="223.76" cy="285.46" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #983<br>CDIx = 0.933<br>CDIh = 1.600" cx="185.06" cy="291.73" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #986<br>CDIx = 1.148<br>CDIh = 1.700" cx="214.80" cy="286.58" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #988<br>CDIx = 0.802<br>CDIh = 0.877" cx="166.96" cy="328.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #989<br>CDIx = 0.894<br>CDIh = 1.200" cx="179.58" cy="312.30" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #991<br>CDIx = 0.981<br>CDIh = 0.873" cx="191.71" cy="329.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #993<br>CDIx = 0.800<br>CDIh = 0.931" cx="166.65" cy="326.10" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #995<br>CDIx = 1.004<br>CDIh = 1.656" cx="194.80" cy="288.86" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #998<br>CDIx = 0.960<br>CDIh = 1.124" cx="188.77" cy="316.20" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1000<br>CDIx = 1.422<br>CDIh = 2.581" cx="252.61" cy="241.25" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1001<br>CDIx = 1.038<br>CDIh = 0.824" cx="199.50" cy="331.63" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1003<br>CDIx = 1.299<br>CDIh = 1.886" cx="235.59" cy="277.01" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1006<br>CDIx = 1.102<br>CDIh = 0.991" cx="208.36" cy="323.06" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1007<br>CDIx = 1.553<br>CDIh = 1.562" cx="270.69" cy="293.66" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1010<br>CDIx = 1.034<br>CDIh = 1.804" cx="198.98" cy="281.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1012<br>CDIx = 1.938<br>CDIh = 3.462" cx="324.06" cy="195.97" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1014<br>CDIx = 1.772<br>CDIh = 1.665" cx="300.98" cy="288.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1015<br>CDIx = 1.829<br>CDIh = 2.211" cx="308.89" cy="260.31" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1017<br>CDIx = 1.433<br>CDIh = 1.373" cx="254.11" cy="303.39" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1022<br>CDIx = 0.814<br>CDIh = 0.737" cx="168.61" cy="336.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1024<br>CDIx = 1.083<br>CDIh = 1.749" cx="205.76" cy="284.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1026<br>CDIx = 0.751<br>CDIh = 0.779" cx="159.83" cy="333.93" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1028<br>CDIx = 1.070<br>CDIh = 1.435" cx="203.92" cy="300.19" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1029<br>CDIx = 1.300<br>CDIh = 1.315" cx="235.72" cy="306.39" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1032<br>CDIx = 0.981<br>CDIh = 0.904" cx="191.69" cy="327.53" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1034<br>CDIx = 1.162<br>CDIh = 0.829" cx="216.73" cy="331.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1036<br>CDIx = 1.519<br>CDIh = 1.337" cx="266.08" cy="305.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1038<br>CDIx = 1.343<br>CDIh = 1.220" cx="241.74" cy="311.26" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1040<br>CDIx = 1.560<br>CDIh = 2.155" cx="271.70" cy="263.17" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1042<br>CDIx = 1.405<br>CDIh = 2.381" cx="250.27" cy="251.55" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1044<br>CDIx = 1.295<br>CDIh = 0.987" cx="235.10" cy="323.26" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1045<br>CDIx = 0.868<br>CDIh = 0.580" cx="176.03" cy="344.15" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1048<br>CDIx = 1.296<br>CDIh = 1.129" cx="235.20" cy="315.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1050<br>CDIx = 1.355<br>CDIh = 1.221" cx="243.31" cy="311.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1052<br>CDIx = 1.136<br>CDIh = 1.180" cx="213.02" cy="313.33" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1054<br>CDIx = 0.923<br>CDIh = 0.566" cx="183.70" cy="344.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1055<br>CDIx = 1.082<br>CDIh = 0.935" cx="205.58" cy="325.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1057<br>CDIx = 1.402<br>CDIh = 1.308" cx="249.93" cy="306.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1060<br>CDIx = 0.933<br>CDIh = 1.497" cx="184.98" cy="297.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1061<br>CDIx = 1.201<br>CDIh = 1.393" cx="222.06" cy="302.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1063<br>CDIx = 1.146<br>CDIh = 0.723" cx="214.47" cy="336.79" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1066<br>CDIx = 1.450<br>CDIh = 1.938" cx="256.54" cy="274.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1068<br>CDIx = 0.948<br>CDIh = 1.510" cx="187.13" cy="296.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1070<br>CDIx = 1.264<br>CDIh = 1.454" cx="230.85" cy="299.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1072<br>CDIx = 1.593<br>CDIh = 2.276" cx="276.34" cy="256.93" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1074<br>CDIx = 1.139<br>CDIh = 1.351" cx="213.50" cy="304.50" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1078<br>CDIx = 2.201<br>CDIh = 4.504" cx="360.38" cy="142.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1080<br>CDIx = 1.508<br>CDIh = 1.420" cx="264.54" cy="300.96" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1081<br>CDIx = 1.054<br>CDIh = 0.922" cx="201.71" cy="326.56" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1084<br>CDIx = 0.988<br>CDIh = 0.715" cx="192.64" cy="337.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1085<br>CDIx = 1.228<br>CDIh = 1.388" cx="225.75" cy="302.62" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1088<br>CDIx = 1.756<br>CDIh = 1.776" cx="298.86" cy="282.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1090<br>CDIx = 1.164<br>CDIh = 1.328" cx="216.91" cy="305.70" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1091<br>CDIx = 1.830<br>CDIh = 3.041" cx="309.02" cy="217.63" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1094<br>CDIx = 1.043<br>CDIh = 1.929" cx="200.19" cy="274.78" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1096<br>CDIx = 1.050<br>CDIh = 2.186" cx="201.22" cy="261.58" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1098<br>CDIx = 0.872<br>CDIh = 0.978" cx="176.64" cy="323.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1099<br>CDIx = 0.978<br>CDIh = 1.029" cx="191.20" cy="321.09" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1102<br>CDIx = 0.987<br>CDIh = 1.152" cx="192.52" cy="314.75" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1103<br>CDIx = 0.926<br>CDIh = 0.760" cx="184.02" cy="334.91" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1106<br>CDIx = 1.753<br>CDIh = 3.494" cx="298.42" cy="194.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1108<br>CDIx = 1.093<br>CDIh = 0.938" cx="207.21" cy="325.76" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1109<br>CDIx = 1.095<br>CDIh = 1.568" cx="207.44" cy="293.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1112<br>CDIx = 1.652<br>CDIh = 2.259" cx="284.50" cy="257.83" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1114<br>CDIx = 0.906<br>CDIh = 2.412" cx="181.32" cy="249.96" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1115<br>CDIx = 0.914<br>CDIh = 1.565" cx="182.33" cy="293.53" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1119<br>CDIx = 1.442<br>CDIh = 1.323" cx="255.39" cy="305.94" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1121<br>CDIx = 1.280<br>CDIh = 1.968" cx="232.96" cy="272.76" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1123<br>CDIx = 1.219<br>CDIh = 1.595" cx="224.59" cy="291.98" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1125<br>CDIx = 1.992<br>CDIh = 1.957" cx="331.47" cy="273.33" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1127<br>CDIx = 1.693<br>CDIh = 2.592" cx="290.12" cy="240.70" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1129<br>CDIx = 1.960<br>CDIh = 3.372" cx="326.98" cy="200.61" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1131<br>CDIx = 1.662<br>CDIh = 2.687" cx="285.77" cy="235.81" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1133<br>CDIx = 1.941<br>CDIh = 3.056" cx="324.46" cy="216.83" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1136<br>CDIx = 1.237<br>CDIh = 2.267" cx="227.12" cy="257.40" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1137<br>CDIx = 1.413<br>CDIh = 1.562" cx="251.45" cy="293.66" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1140<br>CDIx = 1.252<br>CDIh = 1.737" cx="229.07" cy="284.66" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1141<br>CDIx = 1.693<br>CDIh = 3.114" cx="290.08" cy="213.86" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1144<br>CDIx = 1.059<br>CDIh = 1.570" cx="202.46" cy="293.26" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1145<br>CDIx = 1.545<br>CDIh = 2.915" cx="269.63" cy="224.06" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1148<br>CDIx = 1.154<br>CDIh = 1.106" cx="215.53" cy="317.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1150<br>CDIx = 1.177<br>CDIh = 2.583" cx="218.73" cy="241.16" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1152<br>CDIx = 1.032<br>CDIh = 0.849" cx="198.70" cy="330.33" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1154<br>CDIx = 1.144<br>CDIh = 0.965" cx="214.17" cy="324.38" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1155<br>CDIx = 1.185<br>CDIh = 1.246" cx="219.90" cy="309.93" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1158<br>CDIx = 1.006<br>CDIh = 0.992" cx="195.12" cy="322.96" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1159<br>CDIx = 1.654<br>CDIh = 1.557" cx="284.67" cy="293.93" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1162<br>CDIx = 1.808<br>CDIh = 3.179" cx="306.01" cy="210.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1164<br>CDIx = 1.400<br>CDIh = 1.928" cx="249.64" cy="274.82" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1166<br>CDIx = 1.804<br>CDIh = 2.304" cx="305.46" cy="255.53" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1167<br>CDIx = 0.942<br>CDIh = 0.864" cx="186.20" cy="329.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1170<br>CDIx = 1.124<br>CDIh = 2.914" cx="211.45" cy="224.16" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1171<br>CDIx = 0.862<br>CDIh = 1.373" cx="175.26" cy="303.40" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1174<br>CDIx = 1.531<br>CDIh = 2.018" cx="267.74" cy="270.24" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1175<br>CDIx = 1.668<br>CDIh = 3.339" cx="286.61" cy="202.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1177<br>CDIx = 1.267<br>CDIh = 1.845" cx="231.20" cy="279.09" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1179<br>CDIx = 1.565<br>CDIh = 2.195" cx="272.47" cy="261.11" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1181<br>CDIx = 1.239<br>CDIh = 1.973" cx="227.29" cy="272.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1183<br>CDIx = 1.164<br>CDIh = 1.479" cx="216.99" cy="297.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1186<br>CDIx = 1.146<br>CDIh = 1.494" cx="214.42" cy="297.19" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1187<br>CDIx = 1.651<br>CDIh = 3.544" cx="284.33" cy="191.73" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1189<br>CDIx = 1.628<br>CDIh = 2.272" cx="281.12" cy="257.14" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1191<br>CDIx = 1.037<br>CDIh = 2.394" cx="199.44" cy="250.88" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1193<br>CDIx = 1.021<br>CDIh = 1.448" cx="197.21" cy="299.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1196<br>CDIx = 1.474<br>CDIh = 1.294" cx="259.85" cy="307.45" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1198<br>CDIx = 1.207<br>CDIh = 1.493" cx="222.89" cy="297.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1200<br>CDIx = 1.306<br>CDIh = 1.473" cx="236.60" cy="298.24" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1202<br>CDIx = 1.649<br>CDIh = 1.642" cx="283.99" cy="289.57" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1204<br>CDIx = 1.035<br>CDIh = 1.022" cx="199.11" cy="321.42" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1205<br>CDIx = 1.063<br>CDIh = 0.772" cx="202.99" cy="334.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1207<br>CDIx = 1.481<br>CDIh = 3.069" cx="260.84" cy="216.18" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1209<br>CDIx = 1.256<br>CDIh = 2.283" cx="229.64" cy="256.61" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1211<br>CDIx = 1.371<br>CDIh = 3.632" cx="245.63" cy="187.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1214<br>CDIx = 1.478<br>CDIh = 2.486" cx="260.44" cy="246.16" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1216<br>CDIx = 1.001<br>CDIh = 0.678" cx="194.47" cy="339.14" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1218<br>CDIx = 0.996<br>CDIh = 0.923" cx="193.80" cy="326.51" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1219<br>CDIx = 1.549<br>CDIh = 2.566" cx="270.16" cy="242.04" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1222<br>CDIx = 1.025<br>CDIh = 1.177" cx="197.69" cy="313.47" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1224<br>CDIx = 1.424<br>CDIh = 1.416" cx="252.90" cy="301.19" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1226<br>CDIx = 0.919<br>CDIh = 1.330" cx="183.10" cy="305.59" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1228<br>CDIx = 0.624<br>CDIh = 1.200" cx="142.26" cy="312.27" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1230<br>CDIx = 0.700<br>CDIh = 1.058" cx="152.75" cy="319.57" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1231<br>CDIx = 1.104<br>CDIh = 2.001" cx="208.70" cy="271.09" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1234<br>CDIx = 1.313<br>CDIh = 1.300" cx="237.64" cy="307.15" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1236<br>CDIx = 1.416<br>CDIh = 2.066" cx="251.85" cy="267.73" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1238<br>CDIx = 1.555<br>CDIh = 2.158" cx="271.05" cy="263.00" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1239<br>CDIx = 0.887<br>CDIh = 0.881" cx="178.63" cy="328.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1242<br>CDIx = 1.057<br>CDIh = 1.154" cx="202.22" cy="314.67" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1243<br>CDIx = 1.206<br>CDIh = 1.002" cx="222.75" cy="322.47" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1246<br>CDIx = 1.080<br>CDIh = 1.139" cx="205.28" cy="315.43" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1247<br>CDIx = 1.547<br>CDIh = 1.054" cx="269.95" cy="319.82" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1250<br>CDIx = 1.423<br>CDIh = 2.308" cx="252.71" cy="255.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1252<br>CDIx = 1.596<br>CDIh = 2.592" cx="276.71" cy="240.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1254<br>CDIx = 1.019<br>CDIh = 0.811" cx="196.91" cy="332.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1255<br>CDIx = 1.410<br>CDIh = 3.353" cx="251.01" cy="201.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1258<br>CDIx = 0.701<br>CDIh = 1.127" cx="152.92" cy="316.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1260<br>CDIx = 1.582<br>CDIh = 1.731" cx="274.81" cy="284.99" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1262<br>CDIx = 1.211<br>CDIh = 1.064" cx="223.46" cy="319.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1263<br>CDIx = 1.114<br>CDIh = 0.930" cx="210.12" cy="326.19" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1265<br>CDIx = 1.661<br>CDIh = 2.936" cx="285.72" cy="223.01" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1268<br>CDIx = 1.240<br>CDIh = 1.833" cx="227.47" cy="279.74" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1269<br>CDIx = 0.635<br>CDIh = 0.728" cx="143.82" cy="336.57" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1272<br>CDIx = 0.870<br>CDIh = 1.336" cx="176.36" cy="305.32" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1274<br>CDIx = 0.810<br>CDIh = 0.593" cx="168.01" cy="343.49" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1275<br>CDIx = 0.915<br>CDIh = 1.112" cx="182.55" cy="316.79" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1278<br>CDIx = 0.930<br>CDIh = 1.055" cx="184.54" cy="319.76" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1280<br>CDIx = 1.191<br>CDIh = 1.296" cx="220.65" cy="307.33" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1282<br>CDIx = 1.331<br>CDIh = 1.790" cx="240.05" cy="281.96" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1283<br>CDIx = 0.982<br>CDIh = 0.625" cx="191.81" cy="341.88" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1285<br>CDIx = 1.408<br>CDIh = 1.370" cx="250.72" cy="303.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1288<br>CDIx = 1.222<br>CDIh = 0.640" cx="224.92" cy="341.11" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1289<br>CDIx = 1.453<br>CDIh = 1.626" cx="256.89" cy="290.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1291<br>CDIx = 1.130<br>CDIh = 1.471" cx="212.29" cy="298.35" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1293<br>CDIx = 1.304<br>CDIh = 1.895" cx="236.30" cy="276.53" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1296<br>CDIx = 0.972<br>CDIh = 0.958" cx="190.36" cy="324.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1298<br>CDIx = 1.007<br>CDIh = 0.661" cx="195.26" cy="340.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1300<br>CDIx = 1.642<br>CDIh = 1.868" cx="283.06" cy="277.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1302<br>CDIx = 0.972<br>CDIh = 2.081" cx="190.44" cy="266.96" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1304<br>CDIx = 1.139<br>CDIh = 0.805" cx="213.55" cy="332.62" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1306<br>CDIx = 1.375<br>CDIh = 2.194" cx="246.19" cy="261.18" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1308<br>CDIx = 0.780<br>CDIh = 0.706" cx="163.92" cy="337.69" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1310<br>CDIx = 1.066<br>CDIh = 1.150" cx="203.38" cy="314.84" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1312<br>CDIx = 1.269<br>CDIh = 0.956" cx="231.53" cy="324.81" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1314<br>CDIx = 0.908<br>CDIh = 0.636" cx="181.59" cy="341.28" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1316<br>CDIx = 1.519<br>CDIh = 1.311" cx="266.04" cy="306.59" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1318<br>CDIx = 1.528<br>CDIh = 2.284" cx="267.26" cy="256.56" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1320<br>CDIx = 1.000<br>CDIh = 0.972" cx="194.31" cy="323.99" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1322<br>CDIx = 1.571<br>CDIh = 2.393" cx="273.25" cy="250.91" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1323<br>CDIx = 1.153<br>CDIh = 0.958" cx="215.41" cy="324.72" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1326<br>CDIx = 1.061<br>CDIh = 1.127" cx="202.75" cy="316.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1328<br>CDIx = 1.366<br>CDIh = 3.015" cx="244.92" cy="218.94" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1329<br>CDIx = 1.158<br>CDIh = 1.152" cx="216.11" cy="314.73" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1331<br>CDIx = 1.226<br>CDIh = 1.301" cx="225.58" cy="307.07" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1333<br>CDIx = 1.009<br>CDIh = 0.878" cx="195.55" cy="328.82" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1335<br>CDIx = 0.919<br>CDIh = 1.263" cx="183.05" cy="309.06" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1337<br>CDIx = 0.995<br>CDIh = 1.013" cx="193.59" cy="321.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1340<br>CDIx = 1.028<br>CDIh = 1.084" cx="198.19" cy="318.24" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1342<br>CDIx = 1.157<br>CDIh = 1.112" cx="216.04" cy="316.83" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1344<br>CDIx = 1.100<br>CDIh = 1.051" cx="208.09" cy="319.95" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1345<br>CDIx = 1.333<br>CDIh = 1.411" cx="240.28" cy="301.45" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1347<br>CDIx = 1.282<br>CDIh = 0.617" cx="233.33" cy="342.26" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1350<br>CDIx = 0.789<br>CDIh = 0.901" cx="165.07" cy="327.67" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1351<br>CDIx = 1.387<br>CDIh = 1.698" cx="247.80" cy="286.67" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1354<br>CDIx = 1.246<br>CDIh = 1.417" cx="228.35" cy="301.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1356<br>CDIx = 0.883<br>CDIh = 0.676" cx="178.16" cy="339.25" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1358<br>CDIx = 1.189<br>CDIh = 1.278" cx="220.41" cy="308.28" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1359<br>CDIx = 1.141<br>CDIh = 1.282" cx="213.84" cy="308.08" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1361<br>CDIx = 0.900<br>CDIh = 1.128" cx="180.42" cy="315.99" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1363<br>CDIx = 1.822<br>CDIh = 2.834" cx="307.94" cy="228.26" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1365<br>CDIx = 0.968<br>CDIh = 1.315" cx="189.86" cy="306.35" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1368<br>CDIx = 1.248<br>CDIh = 1.268" cx="228.65" cy="308.77" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1369<br>CDIx = 0.781<br>CDIh = 0.852" cx="164.05" cy="330.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1371<br>CDIx = 1.065<br>CDIh = 1.860" cx="203.21" cy="278.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1374<br>CDIx = 0.813<br>CDIh = 0.702" cx="168.39" cy="337.89" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1376<br>CDIx = 1.341<br>CDIh = 2.718" cx="241.49" cy="234.20" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1378<br>CDIx = 0.900<br>CDIh = 0.926" cx="180.44" cy="326.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1380<br>CDIx = 1.558<br>CDIh = 3.102" cx="271.39" cy="214.49" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1381<br>CDIx = 1.479<br>CDIh = 2.312" cx="260.56" cy="255.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1384<br>CDIx = 1.278<br>CDIh = 3.103" cx="232.78" cy="214.42" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1385<br>CDIx = 0.817<br>CDIh = 1.312" cx="168.97" cy="306.53" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1387<br>CDIx = 1.231<br>CDIh = 1.719" cx="226.19" cy="285.60" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1389<br>CDIx = 1.905<br>CDIh = 1.770" cx="319.39" cy="282.97" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1391<br>CDIx = 1.378<br>CDIh = 1.674" cx="246.60" cy="287.89" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1394<br>CDIx = 1.456<br>CDIh = 1.484" cx="257.32" cy="297.70" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1395<br>CDIx = 0.875<br>CDIh = 0.643" cx="177.06" cy="340.91" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1398<br>CDIx = 1.213<br>CDIh = 0.908" cx="223.73" cy="327.31" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1400<br>CDIx = 0.937<br>CDIh = 0.621" cx="185.56" cy="342.05" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1402<br>CDIx = 0.999<br>CDIh = 0.851" cx="194.16" cy="330.24" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1404<br>CDIx = 1.264<br>CDIh = 1.461" cx="230.76" cy="298.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1405<br>CDIx = 0.750<br>CDIh = 0.717" cx="159.71" cy="337.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1407<br>CDIx = 1.490<br>CDIh = 2.598" cx="261.98" cy="240.38" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1409<br>CDIx = 1.755<br>CDIh = 2.702" cx="298.67" cy="235.06" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1411<br>CDIx = 0.968<br>CDIh = 1.127" cx="189.87" cy="316.04" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1413<br>CDIx = 1.206<br>CDIh = 0.926" cx="222.71" cy="326.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1415<br>CDIx = 1.430<br>CDIh = 1.203" cx="253.71" cy="312.13" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1418<br>CDIx = 0.974<br>CDIh = 0.398" cx="190.70" cy="353.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1420<br>CDIx = 1.181<br>CDIh = 0.811" cx="219.30" cy="332.32" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1421<br>CDIx = 0.986<br>CDIh = 0.547" cx="192.36" cy="345.89" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1424<br>CDIx = 1.539<br>CDIh = 1.953" cx="268.78" cy="273.54" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1425<br>CDIx = 1.094<br>CDIh = 2.067" cx="207.33" cy="267.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1427<br>CDIx = 2.107<br>CDIh = 2.473" cx="347.38" cy="246.80" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1429<br>CDIx = 1.267<br>CDIh = 0.790" cx="231.14" cy="333.38" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1432<br>CDIx = 1.417<br>CDIh = 3.145" cx="251.99" cy="212.23" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1434<br>CDIx = 0.736<br>CDIh = 0.909" cx="157.79" cy="327.25" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1435<br>CDIx = 1.500<br>CDIh = 1.324" cx="263.42" cy="305.89" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1437<br>CDIx = 1.314<br>CDIh = 1.275" cx="237.67" cy="308.43" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1440<br>CDIx = 1.255<br>CDIh = 1.872" cx="229.61" cy="277.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1441<br>CDIx = 1.593<br>CDIh = 2.712" cx="276.34" cy="234.51" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1443<br>CDIx = 0.869<br>CDIh = 0.849" cx="176.21" cy="330.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1445<br>CDIx = 1.048<br>CDIh = 1.587" cx="200.90" cy="292.36" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1448<br>CDIx = 1.392<br>CDIh = 1.812" cx="248.52" cy="280.79" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1449<br>CDIx = 1.477<br>CDIh = 2.255" cx="260.18" cy="258.02" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1451<br>CDIx = 0.617<br>CDIh = 0.897" cx="141.31" cy="327.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1455<br>CDIx = 1.630<br>CDIh = 1.921" cx="281.35" cy="275.21" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1457<br>CDIx = 1.001<br>CDIh = 1.207" cx="194.48" cy="311.93" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1460<br>CDIx = 1.836<br>CDIh = 3.849" cx="309.96" cy="176.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1466<br>CDIx = 1.597<br>CDIh = 1.650" cx="276.88" cy="289.14" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1468<br>CDIx = 1.436<br>CDIh = 1.861" cx="254.51" cy="278.27" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1470<br>CDIx = 1.563<br>CDIh = 2.450" cx="272.16" cy="247.98" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1471<br>CDIx = 1.290<br>CDIh = 1.371" cx="234.37" cy="303.48" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1474<br>CDIx = 1.459<br>CDIh = 2.153" cx="257.77" cy="263.28" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1476<br>CDIx = 1.392<br>CDIh = 1.397" cx="248.53" cy="302.17" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1478<br>CDIx = 1.623<br>CDIh = 1.656" cx="280.42" cy="288.84" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1479<br>CDIx = 1.202<br>CDIh = 1.281" cx="222.20" cy="308.12" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1482<br>CDIx = 1.517<br>CDIh = 2.962" cx="265.77" cy="221.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1483<br>CDIx = 1.184<br>CDIh = 1.228" cx="219.78" cy="310.84" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1485<br>CDIx = 1.382<br>CDIh = 3.324" cx="247.16" cy="203.04" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1487<br>CDIx = 1.555<br>CDIh = 1.483" cx="270.98" cy="297.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1489<br>CDIx = 0.802<br>CDIh = 1.353" cx="166.94" cy="304.44" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1491<br>CDIx = 1.223<br>CDIh = 1.179" cx="225.17" cy="313.38" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1493<br>CDIx = 0.794<br>CDIh = 1.053" cx="165.86" cy="319.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1495<br>CDIx = 1.355<br>CDIh = 1.136" cx="243.33" cy="315.58" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1498<br>CDIx = 1.050<br>CDIh = 0.651" cx="201.22" cy="340.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1500<br>CDIx = 2.033<br>CDIh = 3.310" cx="337.15" cy="203.75" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1501<br>CDIx = 1.197<br>CDIh = 1.040" cx="221.56" cy="320.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1504<br>CDIx = 1.856<br>CDIh = 1.796" cx="312.60" cy="281.62" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1506<br>CDIx = 1.165<br>CDIh = 2.024" cx="217.14" cy="269.91" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1508<br>CDIx = 1.804<br>CDIh = 3.058" cx="305.49" cy="216.71" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1509<br>CDIx = 1.400<br>CDIh = 1.780" cx="249.53" cy="282.43" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1511<br>CDIx = 1.758<br>CDIh = 2.994" cx="299.09" cy="220.01" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1514<br>CDIx = 1.709<br>CDIh = 2.733" cx="292.36" cy="233.46" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1516<br>CDIx = 1.516<br>CDIh = 1.879" cx="265.61" cy="277.35" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1517<br>CDIx = 1.267<br>CDIh = 1.022" cx="231.21" cy="321.42" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1520<br>CDIx = 0.635<br>CDIh = 0.928" cx="143.86" cy="326.25" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1522<br>CDIx = 1.542<br>CDIh = 2.619" cx="269.24" cy="239.29" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1523<br>CDIx = 1.677<br>CDIh = 2.073" cx="287.90" cy="267.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1526<br>CDIx = 1.188<br>CDIh = 1.023" cx="220.31" cy="321.41" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1527<br>CDIx = 2.257<br>CDIh = 3.776" cx="368.14" cy="179.78" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1529<br>CDIx = 1.640<br>CDIh = 2.177" cx="282.85" cy="262.06" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1531<br>CDIx = 1.449<br>CDIh = 1.368" cx="256.35" cy="303.62" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1533<br>CDIx = 1.016<br>CDIh = 1.413" cx="196.57" cy="301.34" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1535<br>CDIx = 0.985<br>CDIh = 0.873" cx="192.25" cy="329.08" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1537<br>CDIx = 1.191<br>CDIh = 2.135" cx="220.71" cy="264.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1540<br>CDIx = 1.025<br>CDIh = 1.553" cx="197.79" cy="294.13" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1541<br>CDIx = 1.519<br>CDIh = 2.808" cx="266.08" cy="229.61" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1544<br>CDIx = 1.057<br>CDIh = 0.972" cx="202.20" cy="324.02" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1546<br>CDIx = 1.196<br>CDIh = 1.331" cx="221.43" cy="305.57" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1547<br>CDIx = 1.497<br>CDIh = 1.624" cx="263.00" cy="290.48" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1550<br>CDIx = 0.867<br>CDIh = 1.248" cx="175.87" cy="309.82" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1552<br>CDIx = 1.702<br>CDIh = 3.058" cx="291.37" cy="216.75" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1553<br>CDIx = 1.361<br>CDIh = 1.119" cx="244.14" cy="316.46" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1556<br>CDIx = 0.964<br>CDIh = 0.807" cx="189.35" cy="332.50" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1557<br>CDIx = 1.359<br>CDIh = 1.725" cx="243.92" cy="285.27" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1559<br>CDIx = 0.983<br>CDIh = 0.834" cx="191.97" cy="331.10" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1562<br>CDIx = 1.239<br>CDIh = 0.884" cx="227.30" cy="328.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1566<br>CDIx = 1.836<br>CDIh = 1.784" cx="309.94" cy="282.24" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1567<br>CDIx = 0.985<br>CDIh = 0.635" cx="192.18" cy="341.35" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1570<br>CDIx = 1.419<br>CDIh = 1.663" cx="252.20" cy="288.46" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1571<br>CDIx = 1.676<br>CDIh = 3.138" cx="287.83" cy="212.60" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1574<br>CDIx = 0.997<br>CDIh = 0.871" cx="193.86" cy="329.22" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1575<br>CDIx = 1.871<br>CDIh = 3.431" cx="314.72" cy="197.57" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1578<br>CDIx = 1.086<br>CDIh = 1.257" cx="206.22" cy="309.37" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1580<br>CDIx = 1.758<br>CDIh = 4.383" cx="299.12" cy="148.59" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1581<br>CDIx = 1.459<br>CDIh = 1.663" cx="257.75" cy="288.49" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1584<br>CDIx = 2.097<br>CDIh = 3.695" cx="346.03" cy="183.97" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1586<br>CDIx = 0.830<br>CDIh = 1.060" cx="170.81" cy="319.46" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1587<br>CDIx = 1.226<br>CDIh = 1.717" cx="225.60" cy="285.69" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1590<br>CDIx = 1.109<br>CDIh = 1.202" cx="209.36" cy="312.18" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1592<br>CDIx = 1.146<br>CDIh = 1.478" cx="214.53" cy="297.98" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1594<br>CDIx = 1.106<br>CDIh = 0.797" cx="209.00" cy="333.03" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1595<br>CDIx = 1.829<br>CDIh = 3.856" cx="308.90" cy="175.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1597<br>CDIx = 1.632<br>CDIh = 2.419" cx="281.66" cy="249.59" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1599<br>CDIx = 1.144<br>CDIh = 1.060" cx="214.25" cy="319.49" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1601<br>CDIx = 1.835<br>CDIh = 2.386" cx="309.69" cy="251.27" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1604<br>CDIx = 1.044<br>CDIh = 1.422" cx="200.44" cy="300.86" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1606<br>CDIx = 0.885<br>CDIh = 0.818" cx="178.38" cy="331.95" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1608<br>CDIx = 1.100<br>CDIh = 1.337" cx="208.15" cy="305.23" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1610<br>CDIx = 1.474<br>CDIh = 1.609" cx="259.89" cy="291.27" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1612<br>CDIx = 1.394<br>CDIh = 1.068" cx="248.76" cy="319.08" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1614<br>CDIx = 1.003<br>CDIh = 0.525" cx="194.71" cy="347.02" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1615<br>CDIx = 1.270<br>CDIh = 1.293" cx="231.69" cy="307.51" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1618<br>CDIx = 2.125<br>CDIh = 2.322" cx="349.84" cy="254.56" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1619<br>CDIx = 1.560<br>CDIh = 1.387" cx="271.70" cy="302.68" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1622<br>CDIx = 0.823<br>CDIh = 0.917" cx="169.79" cy="326.86" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1624<br>CDIx = 1.101<br>CDIh = 1.351" cx="208.27" cy="304.52" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1625<br>CDIx = 1.059<br>CDIh = 1.457" cx="202.48" cy="299.07" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1627<br>CDIx = 1.144<br>CDIh = 1.256" cx="214.19" cy="309.41" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1630<br>CDIx = 0.995<br>CDIh = 0.877" cx="193.63" cy="328.87" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1631<br>CDIx = 1.424<br>CDIh = 2.225" cx="252.90" cy="259.58" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1634<br>CDIx = 1.415<br>CDIh = 1.568" cx="251.68" cy="293.38" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1636<br>CDIx = 1.139<br>CDIh = 1.794" cx="213.49" cy="281.72" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1638<br>CDIx = 1.546<br>CDIh = 1.418" cx="269.74" cy="301.05" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1639<br>CDIx = 1.634<br>CDIh = 1.985" cx="281.94" cy="271.92" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1642<br>CDIx = 1.086<br>CDIh = 0.848" cx="206.19" cy="330.38" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1643<br>CDIx = 0.968<br>CDIh = 1.360" cx="189.85" cy="304.08" r="4.5" fill="#2a78d6" opacity="0.75"/>
+<circle class="dot" data-tip="Person #1645<br>CDIx = 1.255<br>CDIh = 2.390" cx="229.53" cy="251.10" r="4.5" fill="#2a78d6" opacity="0.75"/>
+        <text class="axis-label" x="298.00" y="414" text-anchor="middle">CDIx (normalized feature space)</text>
+        <text class="axis-label" x="14" y="24" transform="rotate(-90 14 24)" text-anchor="end">CDIh (latent space)</text>
+      </svg>
+      <p class="card-note">Pearson r is a real, computed descriptive statistic from this run pair's own paired sample -- an association, never evidence that CDIx and CDIh measure the same thing, never a causal mechanism, and never a performance ranking of either space.</p>
+      <table class="data-table" id="scatter-table"><thead><tr><th>Person</th><th>CDIx</th><th>CDIh</th></tr></thead>
+        <tbody><tr><td>Person #784</td><td>0.000</td><td>1.174</td></tr><tr><td>Person #786</td><td>0.911</td><td>0.816</td></tr><tr><td>Person #788</td><td>1.095</td><td>2.252</td></tr><tr><td>Person #789</td><td>0.993</td><td>1.115</td></tr><tr><td>Person #792</td><td>0.677</td><td>1.432</td></tr><tr><td>Person #793</td><td>0.890</td><td>0.534</td></tr><tr><td>Person #795</td><td>0.997</td><td>0.718</td></tr><tr><td>Person #797</td><td>1.230</td><td>0.696</td></tr><tr><td>Person #800</td><td>1.345</td><td>1.557</td></tr><tr><td>Person #802</td><td>1.072</td><td>0.660</td></tr><tr><td>Person #804</td><td>1.108</td><td>2.136</td></tr><tr><td>Person #806</td><td>1.443</td><td>1.589</td></tr><tr><td>Person #807</td><td>0.955</td><td>1.238</td></tr><tr><td>Person #810</td><td>1.194</td><td>0.570</td></tr><tr><td>Person #811</td><td>2.096</td><td>2.958</td></tr><tr><td>Person #814</td><td>1.075</td><td>1.261</td></tr><tr><td>Person #816</td><td>1.256</td><td>0.751</td></tr><tr><td>Person #817</td><td>1.960</td><td>2.396</td></tr><tr><td>Person #819</td><td>1.150</td><td>0.598</td></tr><tr><td>Person #822</td><td>3.004</td><td>6.388</td></tr><tr><td>Person #824</td><td>1.045</td><td>1.340</td></tr><tr><td>Person #826</td><td>0.809</td><td>0.921</td></tr><tr><td>Person #827</td><td>1.506</td><td>2.210</td></tr><tr><td>Person #830</td><td>1.093</td><td>1.224</td></tr><tr><td>Person #832</td><td>1.015</td><td>1.185</td></tr><tr><td>Person #834</td><td>1.437</td><td>1.129</td></tr><tr><td>Person #836</td><td>0.787</td><td>0.853</td></tr><tr><td>Person #838</td><td>1.162</td><td>2.226</td></tr><tr><td>Person #839</td><td>1.787</td><td>2.103</td></tr><tr><td>Person #842</td><td>1.136</td><td>1.037</td></tr><tr><td>Person #844</td><td>0.944</td><td>0.527</td></tr><tr><td>Person #846</td><td>1.325</td><td>1.300</td></tr><tr><td>Person #847</td><td>0.976</td><td>1.561</td></tr><tr><td>Person #849</td><td>0.858</td><td>1.129</td></tr><tr><td>Person #852</td><td>1.148</td><td>1.395</td></tr><tr><td>Person #854</td><td>1.425</td><td>1.735</td></tr><tr><td>Person #856</td><td>1.120</td><td>0.933</td></tr><tr><td>Person #857</td><td>1.090</td><td>0.851</td></tr><tr><td>Person #859</td><td>1.489</td><td>1.269</td></tr><tr><td>Person #861</td><td>1.532</td><td>1.359</td></tr><tr><td>Person #864</td><td>1.207</td><td>1.759</td></tr><tr><td>Person #865</td><td>1.377</td><td>1.484</td></tr><tr><td>Person #867</td><td>0.905</td><td>0.482</td></tr><tr><td>Person #870</td><td>1.067</td><td>1.102</td></tr><tr><td>Person #871</td><td>1.490</td><td>1.966</td></tr><tr><td>Person #873</td><td>1.141</td><td>0.679</td></tr><tr><td>Person #876</td><td>1.187</td><td>1.050</td></tr><tr><td>Person #878</td><td>0.894</td><td>0.651</td></tr><tr><td>Person #879</td><td>1.165</td><td>1.159</td></tr><tr><td>Person #881</td><td>0.935</td><td>0.666</td></tr><tr><td>Person #884</td><td>0.915</td><td>0.935</td></tr><tr><td>Person #886</td><td>1.260</td><td>1.062</td></tr><tr><td>Person #887</td><td>1.042</td><td>1.186</td></tr><tr><td>Person #890</td><td>1.145</td><td>2.150</td></tr><tr><td>Person #892</td><td>1.013</td><td>1.176</td></tr><tr><td>Person #894</td><td>1.443</td><td>0.751</td></tr><tr><td>Person #896</td><td>0.955</td><td>1.484</td></tr><tr><td>Person #897</td><td>1.110</td><td>0.813</td></tr><tr><td>Person #900</td><td>1.109</td><td>1.720</td></tr><tr><td>Person #902</td><td>1.336</td><td>1.111</td></tr><tr><td>Person #904</td><td>1.287</td><td>0.996</td></tr><tr><td>Person #905</td><td>1.899</td><td>2.788</td></tr><tr><td>Person #907</td><td>1.149</td><td>0.910</td></tr><tr><td>Person #910</td><td>1.264</td><td>0.835</td></tr><tr><td>Person #911</td><td>0.847</td><td>0.907</td></tr><tr><td>Person #915</td><td>0.866</td><td>0.978</td></tr><tr><td>Person #918</td><td>1.159</td><td>1.672</td></tr><tr><td>Person #920</td><td>0.883</td><td>0.636</td></tr><tr><td>Person #922</td><td>1.593</td><td>1.443</td></tr><tr><td>Person #923</td><td>1.652</td><td>2.949</td></tr><tr><td>Person #925</td><td>1.353</td><td>2.331</td></tr><tr><td>Person #927</td><td>1.352</td><td>2.979</td></tr><tr><td>Person #929</td><td>1.152</td><td>1.267</td></tr><tr><td>Person #931</td><td>1.145</td><td>1.988</td></tr><tr><td>Person #933</td><td>0.808</td><td>0.877</td></tr><tr><td>Person #935</td><td>0.966</td><td>0.719</td></tr><tr><td>Person #938</td><td>1.042</td><td>1.180</td></tr><tr><td>Person #939</td><td>0.797</td><td>0.901</td></tr><tr><td>Person #942</td><td>0.914</td><td>1.068</td></tr><tr><td>Person #944</td><td>1.311</td><td>1.048</td></tr><tr><td>Person #946</td><td>0.970</td><td>2.287</td></tr><tr><td>Person #947</td><td>1.177</td><td>1.335</td></tr><tr><td>Person #949</td><td>1.073</td><td>1.947</td></tr><tr><td>Person #954</td><td>1.245</td><td>2.005</td></tr><tr><td>Person #957</td><td>1.321</td><td>2.427</td></tr><tr><td>Person #960</td><td>1.079</td><td>1.302</td></tr><tr><td>Person #962</td><td>0.840</td><td>0.541</td></tr><tr><td>Person #964</td><td>0.936</td><td>0.685</td></tr><tr><td>Person #966</td><td>1.196</td><td>2.600</td></tr><tr><td>Person #967</td><td>0.995</td><td>0.472</td></tr><tr><td>Person #970</td><td>1.256</td><td>2.430</td></tr><tr><td>Person #972</td><td>1.203</td><td>1.162</td></tr><tr><td>Person #974</td><td>1.034</td><td>1.064</td></tr><tr><td>Person #975</td><td>1.525</td><td>1.378</td></tr><tr><td>Person #978</td><td>0.836</td><td>0.680</td></tr><tr><td>Person #979</td><td>0.851</td><td>1.086</td></tr><tr><td>Person #981</td><td>1.213</td><td>1.722</td></tr><tr><td>Person #983</td><td>0.933</td><td>1.600</td></tr><tr><td>Person #986</td><td>1.148</td><td>1.700</td></tr><tr><td>Person #988</td><td>0.802</td><td>0.877</td></tr><tr><td>Person #989</td><td>0.894</td><td>1.200</td></tr><tr><td>Person #991</td><td>0.981</td><td>0.873</td></tr><tr><td>Person #993</td><td>0.800</td><td>0.931</td></tr><tr><td>Person #995</td><td>1.004</td><td>1.656</td></tr><tr><td>Person #998</td><td>0.960</td><td>1.124</td></tr><tr><td>Person #1000</td><td>1.422</td><td>2.581</td></tr><tr><td>Person #1001</td><td>1.038</td><td>0.824</td></tr><tr><td>Person #1003</td><td>1.299</td><td>1.886</td></tr><tr><td>Person #1006</td><td>1.102</td><td>0.991</td></tr><tr><td>Person #1007</td><td>1.553</td><td>1.562</td></tr><tr><td>Person #1010</td><td>1.034</td><td>1.804</td></tr><tr><td>Person #1012</td><td>1.938</td><td>3.462</td></tr><tr><td>Person #1014</td><td>1.772</td><td>1.665</td></tr><tr><td>Person #1015</td><td>1.829</td><td>2.211</td></tr><tr><td>Person #1017</td><td>1.433</td><td>1.373</td></tr><tr><td>Person #1022</td><td>0.814</td><td>0.737</td></tr><tr><td>Person #1024</td><td>1.083</td><td>1.749</td></tr><tr><td>Person #1026</td><td>0.751</td><td>0.779</td></tr><tr><td>Person #1028</td><td>1.070</td><td>1.435</td></tr><tr><td>Person #1029</td><td>1.300</td><td>1.315</td></tr><tr><td>Person #1032</td><td>0.981</td><td>0.904</td></tr><tr><td>Person #1034</td><td>1.162</td><td>0.829</td></tr><tr><td>Person #1036</td><td>1.519</td><td>1.337</td></tr><tr><td>Person #1038</td><td>1.343</td><td>1.220</td></tr><tr><td>Person #1040</td><td>1.560</td><td>2.155</td></tr><tr><td>Person #1042</td><td>1.405</td><td>2.381</td></tr><tr><td>Person #1044</td><td>1.295</td><td>0.987</td></tr><tr><td>Person #1045</td><td>0.868</td><td>0.580</td></tr><tr><td>Person #1048</td><td>1.296</td><td>1.129</td></tr><tr><td>Person #1050</td><td>1.355</td><td>1.221</td></tr><tr><td>Person #1052</td><td>1.136</td><td>1.180</td></tr><tr><td>Person #1054</td><td>0.923</td><td>0.566</td></tr><tr><td>Person #1055</td><td>1.082</td><td>0.935</td></tr><tr><td>Person #1057</td><td>1.402</td><td>1.308</td></tr><tr><td>Person #1060</td><td>0.933</td><td>1.497</td></tr><tr><td>Person #1061</td><td>1.201</td><td>1.393</td></tr><tr><td>Person #1063</td><td>1.146</td><td>0.723</td></tr><tr><td>Person #1066</td><td>1.450</td><td>1.938</td></tr><tr><td>Person #1068</td><td>0.948</td><td>1.510</td></tr><tr><td>Person #1070</td><td>1.264</td><td>1.454</td></tr><tr><td>Person #1072</td><td>1.593</td><td>2.276</td></tr><tr><td>Person #1074</td><td>1.139</td><td>1.351</td></tr><tr><td>Person #1078</td><td>2.201</td><td>4.504</td></tr><tr><td>Person #1080</td><td>1.508</td><td>1.420</td></tr><tr><td>Person #1081</td><td>1.054</td><td>0.922</td></tr><tr><td>Person #1084</td><td>0.988</td><td>0.715</td></tr><tr><td>Person #1085</td><td>1.228</td><td>1.388</td></tr><tr><td>Person #1088</td><td>1.756</td><td>1.776</td></tr><tr><td>Person #1090</td><td>1.164</td><td>1.328</td></tr><tr><td>Person #1091</td><td>1.830</td><td>3.041</td></tr><tr><td>Person #1094</td><td>1.043</td><td>1.929</td></tr><tr><td>Person #1096</td><td>1.050</td><td>2.186</td></tr><tr><td>Person #1098</td><td>0.872</td><td>0.978</td></tr><tr><td>Person #1099</td><td>0.978</td><td>1.029</td></tr><tr><td>Person #1102</td><td>0.987</td><td>1.152</td></tr><tr><td>Person #1103</td><td>0.926</td><td>0.760</td></tr><tr><td>Person #1106</td><td>1.753</td><td>3.494</td></tr><tr><td>Person #1108</td><td>1.093</td><td>0.938</td></tr><tr><td>Person #1109</td><td>1.095</td><td>1.568</td></tr><tr><td>Person #1112</td><td>1.652</td><td>2.259</td></tr><tr><td>Person #1114</td><td>0.906</td><td>2.412</td></tr><tr><td>Person #1115</td><td>0.914</td><td>1.565</td></tr><tr><td>Person #1119</td><td>1.442</td><td>1.323</td></tr><tr><td>Person #1121</td><td>1.280</td><td>1.968</td></tr><tr><td>Person #1123</td><td>1.219</td><td>1.595</td></tr><tr><td>Person #1125</td><td>1.992</td><td>1.957</td></tr><tr><td>Person #1127</td><td>1.693</td><td>2.592</td></tr><tr><td>Person #1129</td><td>1.960</td><td>3.372</td></tr><tr><td>Person #1131</td><td>1.662</td><td>2.687</td></tr><tr><td>Person #1133</td><td>1.941</td><td>3.056</td></tr><tr><td>Person #1136</td><td>1.237</td><td>2.267</td></tr><tr><td>Person #1137</td><td>1.413</td><td>1.562</td></tr><tr><td>Person #1140</td><td>1.252</td><td>1.737</td></tr><tr><td>Person #1141</td><td>1.693</td><td>3.114</td></tr><tr><td>Person #1144</td><td>1.059</td><td>1.570</td></tr><tr><td>Person #1145</td><td>1.545</td><td>2.915</td></tr><tr><td>Person #1148</td><td>1.154</td><td>1.106</td></tr><tr><td>Person #1150</td><td>1.177</td><td>2.583</td></tr><tr><td>Person #1152</td><td>1.032</td><td>0.849</td></tr><tr><td>Person #1154</td><td>1.144</td><td>0.965</td></tr><tr><td>Person #1155</td><td>1.185</td><td>1.246</td></tr><tr><td>Person #1158</td><td>1.006</td><td>0.992</td></tr><tr><td>Person #1159</td><td>1.654</td><td>1.557</td></tr><tr><td>Person #1162</td><td>1.808</td><td>3.179</td></tr><tr><td>Person #1164</td><td>1.400</td><td>1.928</td></tr><tr><td>Person #1166</td><td>1.804</td><td>2.304</td></tr><tr><td>Person #1167</td><td>0.942</td><td>0.864</td></tr><tr><td>Person #1170</td><td>1.124</td><td>2.914</td></tr><tr><td>Person #1171</td><td>0.862</td><td>1.373</td></tr><tr><td>Person #1174</td><td>1.531</td><td>2.018</td></tr><tr><td>Person #1175</td><td>1.668</td><td>3.339</td></tr><tr><td>Person #1177</td><td>1.267</td><td>1.845</td></tr><tr><td>Person #1179</td><td>1.565</td><td>2.195</td></tr><tr><td>Person #1181</td><td>1.239</td><td>1.973</td></tr><tr><td>Person #1183</td><td>1.164</td><td>1.479</td></tr><tr><td>Person #1186</td><td>1.146</td><td>1.494</td></tr><tr><td>Person #1187</td><td>1.651</td><td>3.544</td></tr><tr><td>Person #1189</td><td>1.628</td><td>2.272</td></tr><tr><td>Person #1191</td><td>1.037</td><td>2.394</td></tr><tr><td>Person #1193</td><td>1.021</td><td>1.448</td></tr><tr><td>Person #1196</td><td>1.474</td><td>1.294</td></tr><tr><td>Person #1198</td><td>1.207</td><td>1.493</td></tr><tr><td>Person #1200</td><td>1.306</td><td>1.473</td></tr><tr><td>Person #1202</td><td>1.649</td><td>1.642</td></tr><tr><td>Person #1204</td><td>1.035</td><td>1.022</td></tr><tr><td>Person #1205</td><td>1.063</td><td>0.772</td></tr><tr><td>Person #1207</td><td>1.481</td><td>3.069</td></tr><tr><td>Person #1209</td><td>1.256</td><td>2.283</td></tr><tr><td>Person #1211</td><td>1.371</td><td>3.632</td></tr><tr><td>Person #1214</td><td>1.478</td><td>2.486</td></tr><tr><td>Person #1216</td><td>1.001</td><td>0.678</td></tr><tr><td>Person #1218</td><td>0.996</td><td>0.923</td></tr><tr><td>Person #1219</td><td>1.549</td><td>2.566</td></tr><tr><td>Person #1222</td><td>1.025</td><td>1.177</td></tr><tr><td>Person #1224</td><td>1.424</td><td>1.416</td></tr><tr><td>Person #1226</td><td>0.919</td><td>1.330</td></tr><tr><td>Person #1228</td><td>0.624</td><td>1.200</td></tr><tr><td>Person #1230</td><td>0.700</td><td>1.058</td></tr><tr><td>Person #1231</td><td>1.104</td><td>2.001</td></tr><tr><td>Person #1234</td><td>1.313</td><td>1.300</td></tr><tr><td>Person #1236</td><td>1.416</td><td>2.066</td></tr><tr><td>Person #1238</td><td>1.555</td><td>2.158</td></tr><tr><td>Person #1239</td><td>0.887</td><td>0.881</td></tr><tr><td>Person #1242</td><td>1.057</td><td>1.154</td></tr><tr><td>Person #1243</td><td>1.206</td><td>1.002</td></tr><tr><td>Person #1246</td><td>1.080</td><td>1.139</td></tr><tr><td>Person #1247</td><td>1.547</td><td>1.054</td></tr><tr><td>Person #1250</td><td>1.423</td><td>2.308</td></tr><tr><td>Person #1252</td><td>1.596</td><td>2.592</td></tr><tr><td>Person #1254</td><td>1.019</td><td>0.811</td></tr><tr><td>Person #1255</td><td>1.410</td><td>3.353</td></tr><tr><td>Person #1258</td><td>0.701</td><td>1.127</td></tr><tr><td>Person #1260</td><td>1.582</td><td>1.731</td></tr><tr><td>Person #1262</td><td>1.211</td><td>1.064</td></tr><tr><td>Person #1263</td><td>1.114</td><td>0.930</td></tr><tr><td>Person #1265</td><td>1.661</td><td>2.936</td></tr><tr><td>Person #1268</td><td>1.240</td><td>1.833</td></tr><tr><td>Person #1269</td><td>0.635</td><td>0.728</td></tr><tr><td>Person #1272</td><td>0.870</td><td>1.336</td></tr><tr><td>Person #1274</td><td>0.810</td><td>0.593</td></tr><tr><td>Person #1275</td><td>0.915</td><td>1.112</td></tr><tr><td>Person #1278</td><td>0.930</td><td>1.055</td></tr><tr><td>Person #1280</td><td>1.191</td><td>1.296</td></tr><tr><td>Person #1282</td><td>1.331</td><td>1.790</td></tr><tr><td>Person #1283</td><td>0.982</td><td>0.625</td></tr><tr><td>Person #1285</td><td>1.408</td><td>1.370</td></tr><tr><td>Person #1288</td><td>1.222</td><td>0.640</td></tr><tr><td>Person #1289</td><td>1.453</td><td>1.626</td></tr><tr><td>Person #1291</td><td>1.130</td><td>1.471</td></tr><tr><td>Person #1293</td><td>1.304</td><td>1.895</td></tr><tr><td>Person #1296</td><td>0.972</td><td>0.958</td></tr><tr><td>Person #1298</td><td>1.007</td><td>0.661</td></tr><tr><td>Person #1300</td><td>1.642</td><td>1.868</td></tr><tr><td>Person #1302</td><td>0.972</td><td>2.081</td></tr><tr><td>Person #1304</td><td>1.139</td><td>0.805</td></tr><tr><td>Person #1306</td><td>1.375</td><td>2.194</td></tr><tr><td>Person #1308</td><td>0.780</td><td>0.706</td></tr><tr><td>Person #1310</td><td>1.066</td><td>1.150</td></tr><tr><td>Person #1312</td><td>1.269</td><td>0.956</td></tr><tr><td>Person #1314</td><td>0.908</td><td>0.636</td></tr><tr><td>Person #1316</td><td>1.519</td><td>1.311</td></tr><tr><td>Person #1318</td><td>1.528</td><td>2.284</td></tr><tr><td>Person #1320</td><td>1.000</td><td>0.972</td></tr><tr><td>Person #1322</td><td>1.571</td><td>2.393</td></tr><tr><td>Person #1323</td><td>1.153</td><td>0.958</td></tr><tr><td>Person #1326</td><td>1.061</td><td>1.127</td></tr><tr><td>Person #1328</td><td>1.366</td><td>3.015</td></tr><tr><td>Person #1329</td><td>1.158</td><td>1.152</td></tr><tr><td>Person #1331</td><td>1.226</td><td>1.301</td></tr><tr><td>Person #1333</td><td>1.009</td><td>0.878</td></tr><tr><td>Person #1335</td><td>0.919</td><td>1.263</td></tr><tr><td>Person #1337</td><td>0.995</td><td>1.013</td></tr><tr><td>Person #1340</td><td>1.028</td><td>1.084</td></tr><tr><td>Person #1342</td><td>1.157</td><td>1.112</td></tr><tr><td>Person #1344</td><td>1.100</td><td>1.051</td></tr><tr><td>Person #1345</td><td>1.333</td><td>1.411</td></tr><tr><td>Person #1347</td><td>1.282</td><td>0.617</td></tr><tr><td>Person #1350</td><td>0.789</td><td>0.901</td></tr><tr><td>Person #1351</td><td>1.387</td><td>1.698</td></tr><tr><td>Person #1354</td><td>1.246</td><td>1.417</td></tr><tr><td>Person #1356</td><td>0.883</td><td>0.676</td></tr><tr><td>Person #1358</td><td>1.189</td><td>1.278</td></tr><tr><td>Person #1359</td><td>1.141</td><td>1.282</td></tr><tr><td>Person #1361</td><td>0.900</td><td>1.128</td></tr><tr><td>Person #1363</td><td>1.822</td><td>2.834</td></tr><tr><td>Person #1365</td><td>0.968</td><td>1.315</td></tr><tr><td>Person #1368</td><td>1.248</td><td>1.268</td></tr><tr><td>Person #1369</td><td>0.781</td><td>0.852</td></tr><tr><td>Person #1371</td><td>1.065</td><td>1.860</td></tr><tr><td>Person #1374</td><td>0.813</td><td>0.702</td></tr><tr><td>Person #1376</td><td>1.341</td><td>2.718</td></tr><tr><td>Person #1378</td><td>0.900</td><td>0.926</td></tr><tr><td>Person #1380</td><td>1.558</td><td>3.102</td></tr><tr><td>Person #1381</td><td>1.479</td><td>2.312</td></tr><tr><td>Person #1384</td><td>1.278</td><td>3.103</td></tr><tr><td>Person #1385</td><td>0.817</td><td>1.312</td></tr><tr><td>Person #1387</td><td>1.231</td><td>1.719</td></tr><tr><td>Person #1389</td><td>1.905</td><td>1.770</td></tr><tr><td>Person #1391</td><td>1.378</td><td>1.674</td></tr><tr><td>Person #1394</td><td>1.456</td><td>1.484</td></tr><tr><td>Person #1395</td><td>0.875</td><td>0.643</td></tr><tr><td>Person #1398</td><td>1.213</td><td>0.908</td></tr><tr><td>Person #1400</td><td>0.937</td><td>0.621</td></tr><tr><td>Person #1402</td><td>0.999</td><td>0.851</td></tr><tr><td>Person #1404</td><td>1.264</td><td>1.461</td></tr><tr><td>Person #1405</td><td>0.750</td><td>0.717</td></tr><tr><td>Person #1407</td><td>1.490</td><td>2.598</td></tr><tr><td>Person #1409</td><td>1.755</td><td>2.702</td></tr><tr><td>Person #1411</td><td>0.968</td><td>1.127</td></tr><tr><td>Person #1413</td><td>1.206</td><td>0.926</td></tr><tr><td>Person #1415</td><td>1.430</td><td>1.203</td></tr><tr><td>Person #1418</td><td>0.974</td><td>0.398</td></tr><tr><td>Person #1420</td><td>1.181</td><td>0.811</td></tr><tr><td>Person #1421</td><td>0.986</td><td>0.547</td></tr><tr><td>Person #1424</td><td>1.539</td><td>1.953</td></tr><tr><td>Person #1425</td><td>1.094</td><td>2.067</td></tr><tr><td>Person #1427</td><td>2.107</td><td>2.473</td></tr><tr><td>Person #1429</td><td>1.267</td><td>0.790</td></tr><tr><td>Person #1432</td><td>1.417</td><td>3.145</td></tr><tr><td>Person #1434</td><td>0.736</td><td>0.909</td></tr><tr><td>Person #1435</td><td>1.500</td><td>1.324</td></tr><tr><td>Person #1437</td><td>1.314</td><td>1.275</td></tr><tr><td>Person #1440</td><td>1.255</td><td>1.872</td></tr><tr><td>Person #1441</td><td>1.593</td><td>2.712</td></tr><tr><td>Person #1443</td><td>0.869</td><td>0.849</td></tr><tr><td>Person #1445</td><td>1.048</td><td>1.587</td></tr><tr><td>Person #1448</td><td>1.392</td><td>1.812</td></tr><tr><td>Person #1449</td><td>1.477</td><td>2.255</td></tr><tr><td>Person #1451</td><td>0.617</td><td>0.897</td></tr><tr><td>Person #1455</td><td>1.630</td><td>1.921</td></tr><tr><td>Person #1457</td><td>1.001</td><td>1.207</td></tr><tr><td>Person #1460</td><td>1.836</td><td>3.849</td></tr><tr><td>Person #1466</td><td>1.597</td><td>1.650</td></tr><tr><td>Person #1468</td><td>1.436</td><td>1.861</td></tr><tr><td>Person #1470</td><td>1.563</td><td>2.450</td></tr><tr><td>Person #1471</td><td>1.290</td><td>1.371</td></tr><tr><td>Person #1474</td><td>1.459</td><td>2.153</td></tr><tr><td>Person #1476</td><td>1.392</td><td>1.397</td></tr><tr><td>Person #1478</td><td>1.623</td><td>1.656</td></tr><tr><td>Person #1479</td><td>1.202</td><td>1.281</td></tr><tr><td>Person #1482</td><td>1.517</td><td>2.962</td></tr><tr><td>Person #1483</td><td>1.184</td><td>1.228</td></tr><tr><td>Person #1485</td><td>1.382</td><td>3.324</td></tr><tr><td>Person #1487</td><td>1.555</td><td>1.483</td></tr><tr><td>Person #1489</td><td>0.802</td><td>1.353</td></tr><tr><td>Person #1491</td><td>1.223</td><td>1.179</td></tr><tr><td>Person #1493</td><td>0.794</td><td>1.053</td></tr><tr><td>Person #1495</td><td>1.355</td><td>1.136</td></tr><tr><td>Person #1498</td><td>1.050</td><td>0.651</td></tr><tr><td>Person #1500</td><td>2.033</td><td>3.310</td></tr><tr><td>Person #1501</td><td>1.197</td><td>1.040</td></tr><tr><td>Person #1504</td><td>1.856</td><td>1.796</td></tr><tr><td>Person #1506</td><td>1.165</td><td>2.024</td></tr><tr><td>Person #1508</td><td>1.804</td><td>3.058</td></tr><tr><td>Person #1509</td><td>1.400</td><td>1.780</td></tr><tr><td>Person #1511</td><td>1.758</td><td>2.994</td></tr><tr><td>Person #1514</td><td>1.709</td><td>2.733</td></tr><tr><td>Person #1516</td><td>1.516</td><td>1.879</td></tr><tr><td>Person #1517</td><td>1.267</td><td>1.022</td></tr><tr><td>Person #1520</td><td>0.635</td><td>0.928</td></tr><tr><td>Person #1522</td><td>1.542</td><td>2.619</td></tr><tr><td>Person #1523</td><td>1.677</td><td>2.073</td></tr><tr><td>Person #1526</td><td>1.188</td><td>1.023</td></tr><tr><td>Person #1527</td><td>2.257</td><td>3.776</td></tr><tr><td>Person #1529</td><td>1.640</td><td>2.177</td></tr><tr><td>Person #1531</td><td>1.449</td><td>1.368</td></tr><tr><td>Person #1533</td><td>1.016</td><td>1.413</td></tr><tr><td>Person #1535</td><td>0.985</td><td>0.873</td></tr><tr><td>Person #1537</td><td>1.191</td><td>2.135</td></tr><tr><td>Person #1540</td><td>1.025</td><td>1.553</td></tr><tr><td>Person #1541</td><td>1.519</td><td>2.808</td></tr><tr><td>Person #1544</td><td>1.057</td><td>0.972</td></tr><tr><td>Person #1546</td><td>1.196</td><td>1.331</td></tr><tr><td>Person #1547</td><td>1.497</td><td>1.624</td></tr><tr><td>Person #1550</td><td>0.867</td><td>1.248</td></tr><tr><td>Person #1552</td><td>1.702</td><td>3.058</td></tr><tr><td>Person #1553</td><td>1.361</td><td>1.119</td></tr><tr><td>Person #1556</td><td>0.964</td><td>0.807</td></tr><tr><td>Person #1557</td><td>1.359</td><td>1.725</td></tr><tr><td>Person #1559</td><td>0.983</td><td>0.834</td></tr><tr><td>Person #1562</td><td>1.239</td><td>0.884</td></tr><tr><td>Person #1566</td><td>1.836</td><td>1.784</td></tr><tr><td>Person #1567</td><td>0.985</td><td>0.635</td></tr><tr><td>Person #1570</td><td>1.419</td><td>1.663</td></tr><tr><td>Person #1571</td><td>1.676</td><td>3.138</td></tr><tr><td>Person #1574</td><td>0.997</td><td>0.871</td></tr><tr><td>Person #1575</td><td>1.871</td><td>3.431</td></tr><tr><td>Person #1578</td><td>1.086</td><td>1.257</td></tr><tr><td>Person #1580</td><td>1.758</td><td>4.383</td></tr><tr><td>Person #1581</td><td>1.459</td><td>1.663</td></tr><tr><td>Person #1584</td><td>2.097</td><td>3.695</td></tr><tr><td>Person #1586</td><td>0.830</td><td>1.060</td></tr><tr><td>Person #1587</td><td>1.226</td><td>1.717</td></tr><tr><td>Person #1590</td><td>1.109</td><td>1.202</td></tr><tr><td>Person #1592</td><td>1.146</td><td>1.478</td></tr><tr><td>Person #1594</td><td>1.106</td><td>0.797</td></tr><tr><td>Person #1595</td><td>1.829</td><td>3.856</td></tr><tr><td>Person #1597</td><td>1.632</td><td>2.419</td></tr><tr><td>Person #1599</td><td>1.144</td><td>1.060</td></tr><tr><td>Person #1601</td><td>1.835</td><td>2.386</td></tr><tr><td>Person #1604</td><td>1.044</td><td>1.422</td></tr><tr><td>Person #1606</td><td>0.885</td><td>0.818</td></tr><tr><td>Person #1608</td><td>1.100</td><td>1.337</td></tr><tr><td>Person #1610</td><td>1.474</td><td>1.609</td></tr><tr><td>Person #1612</td><td>1.394</td><td>1.068</td></tr><tr><td>Person #1614</td><td>1.003</td><td>0.525</td></tr><tr><td>Person #1615</td><td>1.270</td><td>1.293</td></tr><tr><td>Person #1618</td><td>2.125</td><td>2.322</td></tr><tr><td>Person #1619</td><td>1.560</td><td>1.387</td></tr><tr><td>Person #1622</td><td>0.823</td><td>0.917</td></tr><tr><td>Person #1624</td><td>1.101</td><td>1.351</td></tr><tr><td>Person #1625</td><td>1.059</td><td>1.457</td></tr><tr><td>Person #1627</td><td>1.144</td><td>1.256</td></tr><tr><td>Person #1630</td><td>0.995</td><td>0.877</td></tr><tr><td>Person #1631</td><td>1.424</td><td>2.225</td></tr><tr><td>Person #1634</td><td>1.415</td><td>1.568</td></tr><tr><td>Person #1636</td><td>1.139</td><td>1.794</td></tr><tr><td>Person #1638</td><td>1.546</td><td>1.418</td></tr><tr><td>Person #1639</td><td>1.634</td><td>1.985</td></tr><tr><td>Person #1642</td><td>1.086</td><td>0.848</td></tr><tr><td>Person #1643</td><td>0.968</td><td>1.360</td></tr><tr><td>Person #1645</td><td>1.255</td><td>2.390</td></tr></tbody></table>
+    </div>
+
+    <div class="chart-card">
+      <p class="card-title">Representative persons, two spaces side by side</p>
+      <p class="card-subtitle">The three persons at the lowest, median-closest, and highest CDIx among the paired set, each shown with their own real CDIx (left, own scale) and real CDIh (right, own, separate scale). A person's rank need not agree between the two spaces -- that disagreement, when it happens, is itself the point of this card, not an error.</p>
+      <svg class="chart-svg" viewBox="0 0 900 214" role="img" aria-label="Representative persons, CDIx and CDIh side by side">
+        
+      <text class="axis-label" x="70" y="12">&larr; CDIx (normalized feature space)</text>
+      <text class="axis-label" x="830" y="12" text-anchor="end">CDIh (latent space) &rarr;</text>
+        <line x1="450.00" x2="450.00" y1="10" y2="204" class="grid-line"/>
+        
+      <rect class="bar" data-tip="Person #784 (lowest CDIx)<br>CDIx = 0.000 (rank 1 of 422 paired persons)" x="320.00" y="26.00" width="1.00" height="30" fill="#2a78d6" opacity="0.85"/>
+      <text class="bar-label" x="314.00" y="45.00" text-anchor="end">0.000</text>
+      <rect class="bar" data-tip="Person #784 (lowest CDIx)<br>CDIh = 1.174 (rank 157 of 422 paired persons)" x="580.00" y="26.00" width="45.96" height="30" fill="#eb6834" opacity="0.85"/>
+      <text class="bar-label" x="631.96" y="45.00">1.174</text>
+      <text class="bar-label" x="450.00" y="31.00" text-anchor="middle" style="font-weight:600">Person #784</text>
+      <text class="axis-label" x="450.00" y="53.00" text-anchor="middle">lowest CDIx &middot; CDIx rank 1/422, CDIh rank 157/422</text>
+
+      <rect class="bar" data-tip="Person #1358 (closest to median CDIx)<br>CDIx = 1.189 (rank 211 of 422 paired persons)" x="221.06" y="80.00" width="98.94" height="30" fill="#2a78d6" opacity="0.85"/>
+      <text class="bar-label" x="215.06" y="99.00" text-anchor="end">1.189</text>
+      <rect class="bar" data-tip="Person #1358 (closest to median CDIx)<br>CDIh = 1.278 (rank 185 of 422 paired persons)" x="580.00" y="80.00" width="50.01" height="30" fill="#eb6834" opacity="0.85"/>
+      <text class="bar-label" x="636.01" y="99.00">1.278</text>
+      <text class="bar-label" x="450.00" y="85.00" text-anchor="middle" style="font-weight:600">Person #1358</text>
+      <text class="axis-label" x="450.00" y="107.00" text-anchor="middle">closest to median CDIx &middot; CDIx rank 211/422, CDIh rank 185/422</text>
+
+      <rect class="bar" data-tip="Person #822 (highest CDIx)<br>CDIx = 3.004 (rank 422 of 422 paired persons)" x="70.00" y="134.00" width="250.00" height="30" fill="#2a78d6" opacity="0.85"/>
+      <text class="bar-label" x="64.00" y="153.00" text-anchor="end">3.004</text>
+      <rect class="bar" data-tip="Person #822 (highest CDIx)<br>CDIh = 6.388 (rank 422 of 422 paired persons)" x="580.00" y="134.00" width="250.00" height="30" fill="#eb6834" opacity="0.85"/>
+      <text class="bar-label" x="836.00" y="153.00">6.388</text>
+      <text class="bar-label" x="450.00" y="139.00" text-anchor="middle" style="font-weight:600">Person #822</text>
+      <text class="axis-label" x="450.00" y="161.00" text-anchor="middle">highest CDIx &middot; CDIx rank 422/422, CDIh rank 422/422</text>
+      </svg>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch fill" style="background:#2a78d6"></span>CDIx</div>
+        <div class="legend-item"><span class="legend-swatch fill" style="background:#eb6834"></span>CDIh</div>
+      </div>
+      <table class="data-table" id="representatives-table"><thead><tr><th>Person</th><th>Role</th><th>CDIx</th><th>CDIh</th></tr></thead>
+        <tbody><tr><td>Person #784</td><td>lowest CDIx</td><td>0.000 (rank 1/422)</td><td>1.174 (rank 157/422)</td></tr><tr><td>Person #1358</td><td>closest to median CDIx</td><td>1.189 (rank 211/422)</td><td>1.278 (rank 185/422)</td></tr><tr><td>Person #822</td><td>highest CDIx</td><td>3.004 (rank 422/422)</td><td>6.388 (rank 422/422)</td></tr></tbody></table>
+    </div>
+</div>
+<div class="tooltip" id="tooltip"></div>
+<script>
+  const tooltip = document.getElementById('tooltip');
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = evt.clientX + 'px';
+    tooltip.style.top = (evt.clientY - 10) + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTip() { tooltip.style.opacity = '0'; }
+  document.getElementById('toggle-view').addEventListener('click', function () {
+    const svgEls = document.querySelectorAll('.chart-svg');
+    const tableEls = document.querySelectorAll('.data-table');
+    const showingTable = tableEls.length ? !tableEls[0].classList.contains('visible') : false;
+    svgEls.forEach(function (el) { el.classList.toggle('hidden-by-table', showingTable); });
+    tableEls.forEach(function (el) { el.classList.toggle('visible', showingTable); });
+    this.textContent = showingTable ? 'Show charts' : 'Show tables';
+  });
+  
+    document.querySelectorAll('[data-tip]').forEach(function (el) {
+      el.addEventListener('mouseenter', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mousemove', function (e) { showTip(e, el.getAttribute('data-tip')); });
+      el.addEventListener('mouseleave', hideTip);
+    });
+</script>
+</body>
+</html>

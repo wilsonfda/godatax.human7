@@ -1,0 +1,14 @@
+{
+  "name": "f5-geometric-curvature",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Separates what this layer's own 'is the Curvature Depth Index a geometric curvature?' question actually resolves into: two real, explicit transforms of an already-frozen CDIx/CDIh value -- a linear visual-depth rescaling (profundidade_visual = a * CDI(t), a > 0, GDX_HNF_VISDEPTH_RUN/VALUE) and a Gaussian dip curve (y(s) = -CDI(t) * exp(-s^2/(2*sigma^2)), sigma > 0, GDX_HNF_DEPTHCURVE_RUN/VALUE, storing only the curve's real deepest point) -- and a permanent, schema-enforced refusal to compute a true Riemannian scalar curvature (no manifold/metric/connection is defined anywhere in this project's own pipeline). Never recomputes CDIx or CDIh itself.",
+  "main": "generate_geometric_curvature.js",
+  "scripts": {
+    "generate": "node generate_geometric_curvature.js",
+    "sample": "node generate_geometric_curvature.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "gdx-skill-create-spu-agent",
+  "version": "1.0.0",
+  "description": "Guides creation/verification of the Neo4j Aura Agent for the GDX_HUMAN7 knowledge graph -- checks the target Aura instance is reachable, then walks through the Name/Description/Prompt instruction/sharing scope to use (reusing the exact prompt from 11.gdx.llm.agent.mcp/prompt.instruction.txt), since Aura has no management API to create or read back an Agent's configuration.",
+  "main": "create_spu_agent.js",
+  "scripts": {
+    "start": "node create_spu_agent.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "neo4j-driver": "^6.2.0"
+  }
+}

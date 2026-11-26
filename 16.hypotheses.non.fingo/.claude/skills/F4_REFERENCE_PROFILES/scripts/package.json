@@ -1,0 +1,14 @@
+{
+  "name": "f4-reference-profiles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Annotates the three reference bases F4_CURV_DEPTH_KPI_ORIG_CHARACTERISTICS already freezes (GDX_HNF_CDI_REFERENCE_SET/GDX_HNF_CDI_REFERENCE_VALUE) with structured stratification (GDX_HNF_REFPROF_STRATUM) and norm-source provenance (GDX_HNF_REFPROF_NORM_SOURCE), and pairs one PERSONAL_BASELINE-scored GDX_HNF_CDI_RUN with one STUDY_COHORT/POPULATION_REFERENCE-scored GDX_HNF_CDI_RUN evaluated against the same GDX_HNF_FEATURE_SPACE_RUN, freezing CDIpersonal and CDIpopulation side by side (GDX_HNF_REFPROF_DUAL_RUN/GDX_HNF_REFPROF_DUAL_VALUE) without ever fusing them. Never computes CDIx or a reference center itself -- that stays F4_CURV_DEPTH_KPI_ORIG_CHARACTERISTICS's own job.",
+  "main": "generate_reference_profiles.js",
+  "scripts": {
+    "generate": "node generate_reference_profiles.js",
+    "sample": "node generate_reference_profiles.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

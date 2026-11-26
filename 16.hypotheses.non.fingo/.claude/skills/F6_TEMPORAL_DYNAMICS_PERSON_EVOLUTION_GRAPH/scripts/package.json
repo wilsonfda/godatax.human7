@@ -1,0 +1,14 @@
+{
+  "name": "f6-temporal-dynamics-person-evolution-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders this folder's own 'before-during-after-follow-up' figure for one study, as a standalone HTML page: a line connecting one subject's own real CDIx(t) across real sessions, segments tinted by the sign of their own real DELTA_CDI (never implying better/worse), with hover detail per point and per segment. Reads the already-written GDX_HNF_TRAJECTORY_RUN/POINT/STEP rows (F6_TEMPORAL_DYNAMICS_PERSON_EVOLUTION's own output) -- never recomputes CDIx or re-groups sessions itself.",
+  "main": "generate_temporal_dynamics_graph.js",
+  "scripts": {
+    "generate": "node generate_temporal_dynamics_graph.js",
+    "sample": "node generate_temporal_dynamics_graph.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}

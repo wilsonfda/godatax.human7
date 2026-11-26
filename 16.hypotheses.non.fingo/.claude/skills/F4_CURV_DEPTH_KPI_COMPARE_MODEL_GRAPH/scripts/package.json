@@ -1,0 +1,14 @@
+{
+  "name": "f4-curv-depth-kpi-compare-model-graph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Read-only HTML comparison for the F4 comparison layer: reads the real GDX_HNF_CDI_COMPARE_* rows already written by F4_CURV_DEPTH_KPI_COMPARE_MODEL, computes Pearson r, ranks and representative persons at render time, and renders a standalone page (paired distributions, a CDIx-vs-CDIh scatter with Pearson r, representative-person bars) shaped after this project's own 'two spaces' comparison figure. Never writes to the database.",
+  "main": "generate_curvature_depth_compare_graph.js",
+  "scripts": {
+    "generate": "node generate_curvature_depth_compare_graph.js",
+    "sample": "node generate_curvature_depth_compare_graph.js --sample"
+  },
+  "dependencies": {
+    "node-firebird": "^2.21.0"
+  }
+}
